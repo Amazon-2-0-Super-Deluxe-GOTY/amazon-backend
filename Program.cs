@@ -1,6 +1,7 @@
-
 using amazon_backend.Data;
 using Microsoft.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
+
 
 namespace amazon_backend
 {
@@ -19,11 +20,14 @@ namespace amazon_backend
 
             // register db context
             // enabled entity framework
-            builder.Services.AddDbContext<DataContext>(
-                options => options.
-                    UseSqlServer(builder.Configuration.GetConnectionString("MSSQL"))
-                );
-
+            String? connectionString = builder.Configuration.GetConnectionString("MySQL");
+            if (connectionString != null)
+            {
+                builder.Services.AddDbContext<DataContext>(
+                    options => options.
+                        UseMySQL(connectionString)
+                    );
+            }
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -31,6 +35,7 @@ namespace amazon_backend
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+
             }
 
             app.UseHttpsRedirection();

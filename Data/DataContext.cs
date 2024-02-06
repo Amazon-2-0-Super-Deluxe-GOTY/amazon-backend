@@ -4,7 +4,7 @@ namespace amazon_backend.Data
 {
     public class DataContext:DbContext
     {
-        // Entities: DbSet<Entity.Class> classes{get;set;}
+        // Entities:public DbSet<Entity.Class> classes{get;set;}
 
         public DataContext(DbContextOptions options):base(options)
         {
