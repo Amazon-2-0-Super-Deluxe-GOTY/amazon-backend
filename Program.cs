@@ -20,14 +20,15 @@ namespace amazon_backend
 
             // register db context
             // enabled entity framework
-            String? connectionString = builder.Configuration.GetConnectionString("MySQL");
-            if (connectionString != null)
+            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
+            if (connectionString == null)
             {
-                builder.Services.AddDbContext<DataContext>(
-                    options => options.
-                        UseMySQL(connectionString)
-                    );
+                throw new Exception("No connection string in appsettings.json");
             }
+            builder.Services.AddDbContext<DataContext>(
+                options => options.
+                    UseMySQL(connectionString)
+                );
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
