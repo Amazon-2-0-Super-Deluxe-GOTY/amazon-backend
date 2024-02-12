@@ -22,17 +22,17 @@ namespace amazon_backend.Controllers
         {
             if(name is not null)
             {
-                return categoryDao.GetCategoriesByName(name);
+                return categoryDao.GetByName(name);
             }
 
-            return categoryDao.GetAllCategories();
+            return categoryDao.GetAll();
         }
 
         [HttpGet]
         [Route("{id}")]
         public Category? GetCategoryById(uint id)
         {
-            return categoryDao.GetCategoryById(id);
+            return categoryDao.GetById(id);
         }
     }
 }
