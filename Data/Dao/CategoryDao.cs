@@ -1,18 +1,7 @@
 ﻿using amazon_backend.Data.Entity;
-using System.Xml.Linq;
 
 namespace amazon_backend.Data.Dao
 {
-    public interface IDataAccessObject<T, Tid>
-    {
-        T[] GetAll();
-        T GetById(Tid id);
-        void Add(T item);
-        void Update(T item);
-        void Restore(Tid id);
-        void Delete(Tid id);
-    }
-
     public interface ICategoryDAO : IDataAccessObject<Category, uint>
     {
         Category[] GetByName(string name);
