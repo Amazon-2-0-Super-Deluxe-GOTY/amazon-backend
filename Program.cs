@@ -1,4 +1,5 @@
 using amazon_backend.Data;
+using amazon_backend.Data.Dao;
 using Microsoft.EntityFrameworkCore;
 using MySql.Data.MySqlClient;
 
@@ -18,6 +19,8 @@ namespace amazon_backend
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            
+
             // register db context
             // enabled entity framework
             string? connectionString = builder.Configuration.GetConnectionString("MySQL");
@@ -29,6 +32,11 @@ namespace amazon_backend
                 options => options.
                     UseMySQL(connectionString)
                 );
+
+            // services that rely on DbContext
+            builder.Services.AddScoped<ICategoryDAO, CategoryDao>();
+            builder.Services.AddScoped<IUserDao, UserDao>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

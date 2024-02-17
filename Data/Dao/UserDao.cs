@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data.Dao
 {
-    interface IUserDao : IDataAccessObject<User, string>
+    public interface IUserDao : IDataAccessObject<User, string>
     {
         Task<User[]> GetByRoleAsync(string role);
         Task<User[]> GetAllAsync();
@@ -22,6 +22,7 @@ namespace amazon_backend.Data.Dao
         public void Add(User item)
         {
             dataContext.Users.Add(item);
+            dataContext.SaveChanges();
         }
 
         public void Delete(string id)
