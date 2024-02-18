@@ -5,6 +5,7 @@ namespace amazon_backend.Data.Dao
     public interface ICategoryDAO : IDataAccessObject<Category, uint>
     {
         Category[] GetByName(string name);
+        void Restore(uint id);
     }
 
     public class CategoryDao : ICategoryDAO
@@ -39,7 +40,7 @@ namespace amazon_backend.Data.Dao
 
         public void Update(Category category)
         {
-            _context.Update(category);
+            _context.Categories.Update(category);
             _context.SaveChanges();
         }
 
