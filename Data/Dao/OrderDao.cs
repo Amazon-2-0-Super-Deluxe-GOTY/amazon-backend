@@ -1,5 +1,4 @@
 ﻿using amazon_backend.Data.Entity;
-using Mysqlx.Crud;
 
 namespace amazon_backend.Data.Dao
 {
