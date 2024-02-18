@@ -7,10 +7,6 @@ namespace amazon_backend.Data
     {
         // Entities:public DbSet<Entity.Class> classes{get;set;}
         public DbSet<Category> Categories { get; set; }
-        public DbSet<Order> Orders { get; set; }
-        public DbSet<WishList> WishLists { get; set; }
-        public DbSet<WishListItem> WishListItems { get; set; }
-
 
         public DataContext(DbContextOptions options) : base(options)
         {
