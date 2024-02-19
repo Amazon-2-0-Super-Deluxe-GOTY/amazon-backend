@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data.Dao
 {
-    public interface IUserDao : IDataAccessObject<User, string>
+    public interface IUserDao : IDataAccessObject<User, Guid>
     {
         Task<User[]> GetByRoleAsync(string role);
         Task<User[]> GetAllAsync();
-        void Restore(string id);
+        void Restore(Guid id);
     }
 
     public class UserDao : IUserDao
@@ -25,7 +25,7 @@ namespace amazon_backend.Data.Dao
             dataContext.SaveChanges();
         }
 
-        public void Delete(string id)
+        public void Delete(Guid id)
         {
             User? user = dataContext.Users.Find(id);
 
@@ -46,7 +46,7 @@ namespace amazon_backend.Data.Dao
             return dataContext.Users.ToArrayAsync();
         }
 
-        public User? GetById(string id)
+        public User? GetById(Guid id)
         {
             return dataContext.Users.Find(id);
         }
@@ -56,7 +56,7 @@ namespace amazon_backend.Data.Dao
             return dataContext.Users.Where(u => u.Role == role.ToLower()).ToArrayAsync();
         }
 
-        public void Restore(string id)
+        public void Restore(Guid id)
         {
             User? user = dataContext.Users.Find(id);
 
