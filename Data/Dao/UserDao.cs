@@ -38,7 +38,7 @@ namespace amazon_backend.Data.Dao
 
         public User[] GetAll()
         {
-            return dataContext.Users.ToArray();
+            return dataContext.Users.Include(u => u.ClientProfile).ToArray();
         }
 
         public Task<User[]> GetAllAsync()
@@ -48,7 +48,7 @@ namespace amazon_backend.Data.Dao
 
         public User? GetById(Guid id)
         {
-            return dataContext.Users.Find(id);
+            return dataContext.Users.Include(u => u.ClientProfile).SingleOrDefault(u => u.Id == id);
         }
 
         public Task<User[]> GetByRoleAsync(string role)

@@ -9,7 +9,7 @@ namespace amazon_backend.Data.Entity
         public Guid Id { get; set; }
         [Required]
         public Guid UserId { get; set; }
-        public User User { get; set; }
+        //public User User { get; set; }
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string FirstName { get; set; }
