@@ -7,11 +7,8 @@ namespace amazon_backend.Data
     {
         // Entities:public DbSet<Entity.Class> classes{get;set;}
         public DbSet<Category> Categories { get; set; }
-<<<<<<< HEAD
         public DbSet<User> Users { get; set; }
         public DbSet<ClientProfile> ClientProfiles { get; set; }
-=======
->>>>>>> f5859efca099e9342acc8844a257bef893f07f6e
 
         public DataContext(DbContextOptions options) : base(options)
         {
