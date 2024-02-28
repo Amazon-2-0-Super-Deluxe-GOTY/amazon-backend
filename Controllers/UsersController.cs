@@ -24,7 +24,7 @@ namespace amazon_backend.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public Results<NotFound, Ok<User>> GetUser(string id)
+        public Results<NotFound, Ok<User>> GetUser(Guid id)
         {
             User? user = userDao.GetById(id);
 
@@ -38,7 +38,7 @@ namespace amazon_backend.Controllers
         {
             User user = new User()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid(),
                 Email = "example@example.com",
                 Password = "aabbcc",
                 PasswordSalt = "111",
@@ -51,7 +51,7 @@ namespace amazon_backend.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public Results<NotFound, Ok<User>> UpdateUser(string id)
+        public Results<NotFound, Ok<User>> UpdateUser(Guid id)
         {
             User? user = userDao.GetById(id);
 
@@ -65,7 +65,7 @@ namespace amazon_backend.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public IActionResult DeleteUser(string id)
+        public IActionResult DeleteUser(Guid id)
         {
             userDao.Delete(id);
             return Ok();
@@ -73,7 +73,7 @@ namespace amazon_backend.Controllers
 
         [HttpPut]
         [Route("{id}/restore")]
-        public IActionResult RestoreUser(string id)
+        public IActionResult RestoreUser(Guid id)
         {
             userDao.Restore(id);
             return Ok();
