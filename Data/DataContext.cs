@@ -8,6 +8,8 @@ namespace amazon_backend.Data
         // Entities:public DbSet<Entity.Class> classes{get;set;}
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<ProductImages> ProductImages { get; set; }
 
         public DataContext(DbContextOptions options) : base(options)
         {
@@ -20,6 +22,12 @@ namespace amazon_backend.Data
             modelBuilder.Entity<Category>()
                 .Property(b => b.IsDeleted)
                 .HasDefaultValue(false);
+
+            modelBuilder.Entity<ProductImages>()
+                .HasOne(pi => pi.Product)
+                .WithMany(p => p.productImages)
+                .HasForeignKey(pi => pi.ProductId)
+                .HasPrincipalKey(p => p.Id);
         }
     }
 }
