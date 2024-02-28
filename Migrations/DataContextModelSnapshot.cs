@@ -51,6 +51,16 @@ namespace amazon_backend.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Product");
+                });
+
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
                     b.Property<string>("Id")
@@ -83,6 +93,54 @@ namespace amazon_backend.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("WishLists");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.WishListItem", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("WishListId")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WishListId");
+
+                    b.ToTable("WishListItems");
+                });
+
             modelBuilder.Entity("amazon_backend.Data.Entity.Category", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.Category", "ParentCategory")
@@ -90,6 +148,36 @@ namespace amazon_backend.Migrations
                         .HasForeignKey("ParentCategoryId");
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.WishListItem", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("amazon_backend.Data.Entity.WishList", "WishList")
+                        .WithMany()
+                        .HasForeignKey("WishListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("WishList");
                 });
 #pragma warning restore 612, 618
         }

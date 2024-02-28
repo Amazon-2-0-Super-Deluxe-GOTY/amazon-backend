@@ -1,11 +1,16 @@
-﻿using System;
+﻿/*using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Review
+namespace amazon_backend.Data.Entity
 {
-    public int Id { get; set; }
-    public string Text { get; set; }
-    public int UserId { get; set; }
-    public User _User { get; set; }
-    public int ProductId { get; set; }
-    public Product _Product { get; set; }
+    public class Review
+    {
+        public int Id { get; set; }
+        public string Text { get; set; }
+        public int UserId { get; set; }
+        public User _User { get; set; }
+        public int ProductId { get; set; }
+        public Product _Product { get; set; }
+    }
 }
+*/
