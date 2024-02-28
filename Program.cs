@@ -36,6 +36,7 @@ namespace amazon_backend
             // services that rely on DbContext
             builder.Services.AddScoped<ICategoryDAO, CategoryDao>();
             builder.Services.AddScoped<IUserDao, UserDao>();
+            builder.Services.AddScoped<IClientProfileDao, ClientProfileDao>();
             builder.Services.AddScoped<IProductDao, ProductDao>();
 
             var app = builder.Build();

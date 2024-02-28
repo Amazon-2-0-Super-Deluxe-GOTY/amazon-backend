@@ -8,6 +8,7 @@ namespace amazon_backend.Data
         // Entities:public DbSet<Entity.Class> classes{get;set;}
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<ClientProfile> ClientProfiles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImages> ProductImages { get; set; }
 
