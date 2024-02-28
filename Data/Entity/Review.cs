@@ -1,4 +1,5 @@
-﻿using System;
+﻿using amazon_backend.Data.Entity;
+using System;
 
 public class Review
 {
