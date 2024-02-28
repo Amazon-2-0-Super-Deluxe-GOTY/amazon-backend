@@ -11,6 +11,11 @@ namespace amazon_backend.Data
         public DbSet<ClientProfile> ClientProfiles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImages> ProductImages { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<WishList> WishLists { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<WishListItem> WishListItems { get; set; }
 
         public DataContext(DbContextOptions options) : base(options)
         {

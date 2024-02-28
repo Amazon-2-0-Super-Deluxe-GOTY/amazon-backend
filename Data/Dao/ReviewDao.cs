@@ -1,6 +1,7 @@
 ﻿using System;
-
+using amazon_backend.Data;
 using amazon_backend.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 public interface IReviewDao
 {
@@ -15,16 +16,16 @@ public interface IReviewDao
 
 public class ReviewDao : IReviewDao
 {
-    private readonly DatabaseContext _context;
+    private readonly DataContext _context;
 
-    public ReviewDao(DatabaseContext context)
+    public ReviewDao(DataContext context)
     {
         _context = context;
     }
 
     public Review GetReview(int id)
     {
-        return _context.Reviews.Include(r => r.User).Include(r => r.Product).FirstOrDefault(r => r.Id == id);
+        return _context.Reviews.Include(r => r._User).Include(r => r._Product).FirstOrDefault(r => r.Id == id);
     }
 
     public void AddReview(Review review)
@@ -48,11 +49,11 @@ public class ReviewDao : IReviewDao
 
     public List<Review> GetReviewsByUser(int userId)
     {
-        return _context.Reviews.Include(r => r.User).Include(r => r.Product).Where(r => r.UserId == userId).ToList();
+        return _context.Reviews.Include(r => r._User).Include(r => r._Product).Where(r => r.UserId == userId).ToList();
     }
 
     public List<Review> GetReviewsByProduct(int productId)
     {
-        return _context.Reviews.Include(r => r.User).Include(r => r.Product).Where(r => r.ProductId == productId).ToList();
+        return _context.Reviews.Include(r => r._User).Include(r => r._Product).Where(r => r.ProductId == productId).ToList();
     }
 }

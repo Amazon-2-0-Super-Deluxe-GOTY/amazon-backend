@@ -1,5 +1,7 @@
 ﻿using System;
+using amazon_backend.Data;
 using amazon_backend.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 
 public interface ICartDao
@@ -16,28 +18,29 @@ public class CartDao : ICartDao
 {
     private readonly DataContext _context;
 
-    public CartDao(DatabaseContext context)
+    public CartDao(DataContext context)
     {
         _context = context;
     }
 
     public Cart GetCart(int id)
     {
-        return _context.Carts.Include(c => c.Products).FirstOrDefault(c => c.Id == id);
+        //return _context.Carts.Include(c => c.Products).FirstOrDefault(c => c.Id == id);
+        return null;
     }
 
     public void AddToCart(int cartId, Product product)
     {
-        var cart = GetCart(cartId);
-        cart.Products.Add(product);
-        _context.SaveChanges();
+        //var cart = GetCart(cartId);
+        //cart.Products.Add(product);
+        //_context.SaveChanges();
     }
 
     public void RemoveFromCart(int cartId, Product product)
     {
-        var cart = GetCart(cartId);
-        cart.Products.Remove(product);
-        _context.SaveChanges();
+        //var cart = GetCart(cartId);
+        //cart.Products.Remove(product);
+        //_context.SaveChanges();
     }
 
     public void UpdateCart(Cart cart)
@@ -48,7 +51,8 @@ public class CartDao : ICartDao
 
     public List<Product> GetCartContents(int userId)
     {
-        var cart = _context.Carts.Include(c => c.Products).FirstOrDefault(c => c.UserId == userId);
-        return cart?.Products;
+        //var cart = _context.Carts.Include(c => c.Products).FirstOrDefault(c => c.UserId == userId);
+        //return cart?.Products;
+        return null;
     }
 }
