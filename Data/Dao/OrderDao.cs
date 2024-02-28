@@ -41,7 +41,7 @@ namespace amazon_backend.Data.Dao
             if (order != null)
             {
 
-                // _context.SaveChanges();
+                _context.SaveChanges();
             }
         }
 
@@ -51,7 +51,7 @@ namespace amazon_backend.Data.Dao
             if (order != null)
             {
 
-                // _context.SaveChanges();
+                _context.SaveChanges();
             }
         }
     }
