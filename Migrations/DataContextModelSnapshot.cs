@@ -53,9 +53,8 @@ namespace amazon_backend.Migrations
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
                 {
-                    b.Property<uint>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int unsigned");
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -129,16 +128,13 @@ namespace amazon_backend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<uint?>("ProductId1")
-                        .HasColumnType("int unsigned");
-
                     b.Property<string>("WishListId")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId1");
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("WishListId");
 
@@ -169,7 +165,9 @@ namespace amazon_backend.Migrations
                 {
                     b.HasOne("amazon_backend.Data.Entity.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId1");
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("amazon_backend.Data.Entity.WishList", "WishList")
                         .WithMany()
