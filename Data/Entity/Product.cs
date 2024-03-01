@@ -19,6 +19,8 @@ namespace amazon_backend.Data.Entity
 
         // Navigation properties
         [InverseProperty("Product")]
-        public List<ProductImages> productImages { get; set; }
+        public List<ProductImage> productImages { get; set; }
+        [InverseProperty("Product")]
+        public List<ProductProperty> pProps { get; set; }
     }
 }

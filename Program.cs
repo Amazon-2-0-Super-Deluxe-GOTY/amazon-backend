@@ -38,6 +38,7 @@ namespace amazon_backend
             builder.Services.AddScoped<IUserDao, UserDao>();
             builder.Services.AddScoped<IClientProfileDao, ClientProfileDao>();
             builder.Services.AddScoped<IProductDao, ProductDao>();
+            builder.Services.AddScoped<IProductPropsDao, ProductPropsDao>();
 
             var app = builder.Build();
 
