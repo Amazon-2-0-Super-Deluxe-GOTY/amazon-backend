@@ -7,7 +7,7 @@ namespace amazon_backend.Data.Dao
         Product[] GetProductsByCategory(Guid categoryId);
         Product[] GetProductsByBrand(string brand);
         Product[] GetProductsByBrandAndCategory(Guid catregoryId,string brand);
-        ProductImages[] GetProductImages(Guid productId);
+        ProductImage[] GetProductImages(Guid productId);
         void Restore(Guid id);
     }
     public class ProductDao : IProductDao
@@ -107,7 +107,7 @@ namespace amazon_backend.Data.Dao
             return null!;
         }
 
-        public ProductImages[] GetProductImages(Guid productId)
+        public ProductImage[] GetProductImages(Guid productId)
         {
             Product? product = _context.Products.Find(productId);
             if (product != null)

@@ -11,9 +11,11 @@ namespace amazon_backend.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ProductDao productDao;
-        public ProductsController(ProductDao productDao)
+        private readonly ProductPropsDao propsDao;
+        public ProductsController(ProductDao productDao, ProductPropsDao propsDao)
         {
             this.productDao = productDao;
+            this.propsDao = propsDao;
         }
         [HttpGet]
         public Product[] GetProducts()
@@ -67,7 +69,7 @@ namespace amazon_backend.Controllers
         }
         [HttpGet]
         [Route("/product-images/{id}")]
-        public Results<NotFound, Ok<ProductImages[]>> GetProductImages(string id)
+        public Results<NotFound, Ok<ProductImage[]>> GetProductImages(string id)
         {
             Guid productId;
             try
@@ -113,6 +115,23 @@ namespace amazon_backend.Controllers
             }
             productDao.Restore(productId);
             return Ok();
+        }
+        [HttpGet]
+        [Route("/product/props/{id}")]
+        public Results<NotFound, Ok<ProductProperty[]>> GetProdPropsByProductId(string id)
+        {
+            Guid productId;
+            try
+            {
+                productId = Guid.Parse(id);
+            }
+            catch
+            {
+                return TypedResults.NotFound();
+            }
+            var props = propsDao.GetAllProductPropsByProductId(productId);
+            if (props is not null) return TypedResults.Ok(props);
+            return TypedResults.NotFound();
         }
     }
 }
