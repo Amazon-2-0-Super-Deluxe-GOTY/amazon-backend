@@ -2,7 +2,7 @@
 
 namespace amazon_backend.Data.Dao
 {
-    public interface IOrderDAO : IDataAccessObject<Order, string>
+    public interface IOrderDAO : IDataAccessObject<Order, Guid>
     {
     }
 
@@ -18,7 +18,7 @@ namespace amazon_backend.Data.Dao
             return _context.Orders.ToArray();
         }
 
-        public Order GetById(string id)
+        public Order GetById(Guid id)
         {
             return _context.Orders.Find(id);
         }
@@ -35,23 +35,23 @@ namespace amazon_backend.Data.Dao
             _context.SaveChanges();
         }
 
-        public void Restore(string id)
+        public void Restore(Guid id)
         {
             var order = _context.Orders.Find(id);
             if (order != null)
             {
 
-                // _context.SaveChanges();
+                _context.SaveChanges();
             }
         }
 
-        public void Delete(string id)
+        public void Delete(Guid id)
         {
             var order = _context.Orders.Find(id);
             if (order != null)
             {
 
-                // _context.SaveChanges();
+                _context.SaveChanges();
             }
         }
     }
