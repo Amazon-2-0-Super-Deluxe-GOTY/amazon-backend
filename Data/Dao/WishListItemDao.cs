@@ -2,9 +2,9 @@
 
 namespace amazon_backend.Data.Dao
 {
-    public interface IWishListItemDAO : IDataAccessObject<WishListItem, string>
+    public interface IWishListItemDAO : IDataAccessObject<WishListItem, Guid>
     {
-
+        void Restore(Guid id);
     }
 
     public class WishListItemDao : IWishListItemDAO
@@ -20,7 +20,7 @@ namespace amazon_backend.Data.Dao
             return _context.WishListItems.ToArray();
         }
 
-        public WishListItem? GetById(string id)
+        public WishListItem? GetById(Guid id)
         {
             return _context.WishListItems.Find(id);
         }
@@ -37,25 +37,22 @@ namespace amazon_backend.Data.Dao
             _context.SaveChanges();
         }
 
-        public void Restore(string id)
+        public void Restore(Guid id)
         {
             var wishListItem = _context.WishListItems.Find(id);
             if (wishListItem != null)
             {
-                // wishListItem.IsDeleted = false;
-
+                wishListItem.IsDeleted = false;
                 _context.SaveChanges();
             }
         }
 
-        public void Delete(string id)
+        public void Delete(Guid id)
         {
             var wishListItem = _context.WishListItems.Find(id);
             if (wishListItem != null)
             {
-                // wishListItem.IsDeleted = true;
-
-                _context.WishListItems.Remove(wishListItem);
+                wishListItem.IsDeleted = true;
                 _context.SaveChanges();
             }
         }

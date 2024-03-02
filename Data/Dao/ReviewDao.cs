@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using amazon_backend.Data;
 using amazon_backend.Data.Entity;
 using Microsoft.EntityFrameworkCore;
@@ -57,3 +57,4 @@ public class ReviewDao : IReviewDao
         return _context.Reviews.Include(r => r._User).Include(r => r._Product).Where(r => r.ProductId == productId).ToList();
     }
 }
+*/
