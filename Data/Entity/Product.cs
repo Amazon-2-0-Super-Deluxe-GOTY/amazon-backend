@@ -18,6 +18,7 @@ namespace amazon_backend.Data.Entity
         public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
+
         [InverseProperty("Product")]
         public List<ProductImage> productImages { get; set; }
         [InverseProperty("Product")]
