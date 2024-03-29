@@ -28,11 +28,17 @@ namespace amazon_backend
             {
                 throw new Exception("No connection string in appsettings.json");
             }
-            builder.Services.AddDbContext<DataContext>(
-                options => options.
-                    UseMySQL(connectionString)
-                );
-
+            try
+            {
+                builder.Services.AddDbContext<DataContext>(
+                    options => options.
+                        UseMySQL(connectionString)
+                    );
+            }
+            catch(Exception ex)
+            {
+                // log
+            }
             // services that rely on DbContext
             builder.Services.AddScoped<ICategoryDAO, CategoryDao>();
             builder.Services.AddScoped<IUserDao, UserDao>();
