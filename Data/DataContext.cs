@@ -18,6 +18,10 @@ namespace amazon_backend.Data
         public DbSet<WishList> WishLists { get; set; }
         public DbSet<WishListItem> WishListItems { get; set; }
         public DbSet<ProductProperty> ProductProperties { get; set; }
+        public DbSet<CategoryPropertyKey> CategoryPropertyKeys { get; set; }
+        public DbSet<AboutProductItem> AboutProductItems { get; set; }
+        public DbSet<ProductColor> ProductColors { get; set; }
+        public DbSet<ProductRate> ProductRates { get; set; }
 
         public DataContext(DbContextOptions options) : base(options)
         {
@@ -42,6 +46,10 @@ namespace amazon_backend.Data
                 .WithMany(p => p.pProps)
                 .HasForeignKey(pp => pp.ProductId)
                 .HasPrincipalKey(p => p.Id);
+            modelBuilder.Entity<ProductRate>()
+                .HasKey(pr => new {pr.UserId, pr.ProductId});
+            modelBuilder.Entity<ProductRate>()
+                .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
         }
     }
 }
