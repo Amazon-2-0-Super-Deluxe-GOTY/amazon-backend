@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240406130248_RemakeProductsAndCategories")]
+    partial class RemakeProductsAndCategories
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -342,27 +345,6 @@ namespace amazon_backend.Migrations
                     b.ToTable("ProductProperties");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ProductRate", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<int>("Mark")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "ProductId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductRates", t =>
-                        {
-                            t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6");
-                        });
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.SellerProfile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -598,25 +580,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ProductRate", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
-                        .WithMany("ProductRates")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.User", "User")
-                        .WithMany("ProductRates")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.User", "User")
@@ -658,8 +621,6 @@ namespace amazon_backend.Migrations
 
                     b.Navigation("ProductColors");
 
-                    b.Navigation("ProductRates");
-
                     b.Navigation("Products");
 
                     b.Navigation("pProps");
@@ -670,8 +631,6 @@ namespace amazon_backend.Migrations
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
                     b.Navigation("ClientProfile");
-
-                    b.Navigation("ProductRates");
                 });
 #pragma warning restore 612, 618
         }

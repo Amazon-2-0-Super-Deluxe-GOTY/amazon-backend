@@ -10,11 +10,15 @@ namespace amazon_backend.Data.Entity
         public uint? ParentCategoryId { get; set; }
         public Category? ParentCategory { get; set; }
         [Required]
+        [Column(TypeName = "varchar(255)")]
         public string Name { get; set; }
+        [Column(TypeName = "varchar(255)")]
         public string? Description { get; set; }
-        [Required]
-        public string Image { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string? Image { get; set; }
         [Required]
         public bool IsDeleted { get; set; }
+        public bool IsVisible { get; set; }
+        List<CategoryPropertyKey>? CategoryPropertyKeys { get; set; }
     }
 }

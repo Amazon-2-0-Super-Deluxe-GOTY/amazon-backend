@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace amazon_backend.Data.Entity
 {
@@ -6,8 +7,12 @@ namespace amazon_backend.Data.Entity
     {
         public Guid Id { get; set; }
         public Guid CategoryId { get; set; }
+        [Comment("Main prodct reference")]
+        public Guid? ProductId { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string Name { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string? ShortDescription { get; set; }
         public double Price { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? ImageUrl { get; set; }
@@ -20,8 +25,12 @@ namespace amazon_backend.Data.Entity
         // Navigation properties
 
         [InverseProperty("Product")]
-        public List<ProductImage> productImages { get; set; }
+        public List<ProductImage>? productImages { get; set; }
         [InverseProperty("Product")]
-        public List<ProductProperty> pProps { get; set; }
+        public List<ProductProperty>? pProps { get; set; }
+        public List<AboutProductItem>? AboutProductItems { get; set; }
+        public List<Product>? Products { get; set; }
+        public List<ProductColor>? ProductColors { get; set; }
+        public List<ProductRate>? ProductRates { get; set; }
     }
 }
