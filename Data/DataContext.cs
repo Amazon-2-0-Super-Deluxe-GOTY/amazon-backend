@@ -1,4 +1,5 @@
-﻿using amazon_backend.Data.Entity;
+﻿using amazon_backend.Data.Dao;
+using amazon_backend.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data
@@ -14,6 +15,7 @@ namespace amazon_backend.Data
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItemDao> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<WishList> WishLists { get; set; }
         public DbSet<WishListItem> WishListItems { get; set; }
