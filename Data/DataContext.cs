@@ -10,7 +10,6 @@ namespace amazon_backend.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<ClientProfile> ClientProfiles { get; set; }
-        public DbSet<SellerProfile> SellerProfiles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Review> Reviews { get; set; }

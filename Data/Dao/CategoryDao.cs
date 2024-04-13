@@ -1,10 +1,11 @@
 ﻿using amazon_backend.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data.Dao
 {
     public interface ICategoryDAO : IDataAccessObject<Category, uint>
     {
-        Category[] GetByName(string name);
+        Task<Category> GetByName(string name);
         void Restore(uint id);
     }
 
@@ -27,9 +28,14 @@ namespace amazon_backend.Data.Dao
             return _context.Categories.Find(id);
         }
 
-        public Category[] GetByName(string name)
+        public async Task<Category> GetByName(string name)
         {
-            return _context.Categories.Where(c => c.Name.Contains(name.ToLower())).ToArray();
+            var category = await _context.Categories.Where(c => c.Name.Contains(name.ToLower())).FirstOrDefaultAsync();
+            if (category != null)
+            {
+                return category;
+            }
+            return null;
         }
 
         public void Add(Category category)

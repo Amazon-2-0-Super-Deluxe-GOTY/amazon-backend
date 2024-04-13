@@ -18,13 +18,8 @@ namespace amazon_backend.Controllers
         }
 
         [HttpGet]
-        public Category[] GetCategories([FromQuery] string? name)
-        {
-            if(name is not null)
-            {
-                return categoryDao.GetByName(name);
-            }
-
+        public Category[] GetCategories()
+        { 
             return categoryDao.GetAll();
         }
 

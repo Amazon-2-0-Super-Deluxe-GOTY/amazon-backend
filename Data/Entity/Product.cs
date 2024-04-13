@@ -6,7 +6,7 @@ namespace amazon_backend.Data.Entity
     public class Product
     {
         public Guid Id { get; set; }
-        public Guid CategoryId { get; set; }
+        public uint CategoryId { get; set; }
         [Comment("Main prodct reference")]
         public Guid? ProductId { get; set; }
         [Column(TypeName = "varchar(255)")]
@@ -23,7 +23,7 @@ namespace amazon_backend.Data.Entity
         public DateTime? DeletedAt { get; set; }
 
         // Navigation properties
-
+        public Category? Category { get; set; }
         [InverseProperty("Product")]
         public List<ProductImage>? productImages { get; set; }
         [InverseProperty("Product")]
