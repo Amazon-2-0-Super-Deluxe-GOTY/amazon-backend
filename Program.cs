@@ -1,5 +1,6 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
+using amazon_backend.Profiles;
 using Microsoft.EntityFrameworkCore;
 using MySql.Data.MySqlClient;
 
@@ -45,7 +46,7 @@ namespace amazon_backend
             builder.Services.AddScoped<IClientProfileDao, ClientProfileDao>();
             builder.Services.AddScoped<IProductDao, ProductDao>();
             builder.Services.AddScoped<IProductPropsDao, ProductPropsDao>();
-
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

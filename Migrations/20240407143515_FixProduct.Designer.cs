@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240407143515_FixProduct")]
+    partial class FixProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -281,8 +284,6 @@ namespace amazon_backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
                     b.HasIndex("ProductId");
 
                     b.ToTable("Products");
@@ -385,6 +386,47 @@ namespace amazon_backend.Migrations
                         {
                             t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6");
                         });
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.SellerProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("varchar(2083)");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<int>("InterestRate")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("OrganizationName")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SellerProfiles");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
@@ -554,17 +596,9 @@ namespace amazon_backend.Migrations
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
                 {
-                    b.HasOne("amazon_backend.Data.Entity.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("amazon_backend.Data.Entity.Product", null)
                         .WithMany("Products")
                         .HasForeignKey("ProductId");
-
-                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.ProductColor", b =>

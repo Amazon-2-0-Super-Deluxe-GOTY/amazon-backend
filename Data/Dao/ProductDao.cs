@@ -1,12 +1,13 @@
 ﻿using amazon_backend.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data.Dao
 {
     public interface IProductDao : IDataAccessObject<Product, Guid>
     {
-        Product[] GetProductsByCategory(Guid categoryId);
-        Product[] GetProductsByBrand(string brand);
-        Product[] GetProductsByBrandAndCategory(Guid catregoryId,string brand);
+        Task<Product?> GetByIdAsync(Guid id);
+        Task<Product[]> GetProductsByCategory(uint categoryId);
+        Task<Product[]> GetProductsByBrand(string brand);
         ProductImage[] GetProductImages(Guid productId);
         void Restore(Guid id);
     }
@@ -49,14 +50,14 @@ namespace amazon_backend.Data.Dao
             else return null!;
         }
 
-        public Product[] GetProductsByBrand(string brand)
+        public async Task<Product[]> GetProductsByBrand(string brand)
         {
             if (!string.IsNullOrEmpty(brand))
             {
                 try
                 {
-                    return _context.Products
-                        .Where(p => p.Brand.Contains(brand)).ToArray();
+                    return await _context.Products
+                        .Where(p => p.Brand.Contains(brand)).ToArrayAsync();
                 }
                 catch (ArgumentNullException ex)
                 {
@@ -70,6 +71,19 @@ namespace amazon_backend.Data.Dao
         public Product? GetById(Guid id)
         {
             return _context.Products.Find(id);
+        }
+
+        public async Task<Product?> GetByIdAsync(Guid id)
+        {
+            return await _context.Products
+                .Include(p => p.productImages)
+                .Include(p => p.Category)
+                .Include(p => p.pProps)
+                .Include(p => p.AboutProductItems)
+                .Include(p => p.ProductColors)
+                .Where(p => p.Id == id)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync();
         }
 
         public void Update(Product product)
@@ -91,20 +105,10 @@ namespace amazon_backend.Data.Dao
             }
         }
 
-        public Product[] GetProductsByCategory(Guid categoryId)
+        public async Task<Product[]> GetProductsByCategory(uint categoryId)
         {
-            return _context.Products
-                 .Where(p => p.CategoryId == categoryId).ToArray();
-        }
-
-        public Product[] GetProductsByBrandAndCategory(Guid catregoryId, string brand)
-        {
-            if (!string.IsNullOrEmpty(brand))
-            {
-                return _context.Products
-                    .Where(p => p.CategoryId == catregoryId && p.Brand.Contains(brand)).ToArray();
-            }
-            return null!;
+            return await _context.Products
+                .Where(p => p.CategoryId == categoryId).ToArrayAsync();
         }
 
         public ProductImage[] GetProductImages(Guid productId)

@@ -1,137 +1,108 @@
 ﻿using amazon_backend.Data.Dao;
 using amazon_backend.Data.Entity;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+using amazon_backend.Profiles.ProductProfiles;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace amazon_backend.Controllers
 {
-    [Route("products")]
+    [Route("api/products")]
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly ProductDao productDao;
-        private readonly ProductPropsDao propsDao;
-        public ProductsController(ProductDao productDao, ProductPropsDao propsDao)
+        private readonly IProductDao productDao;
+        private readonly IProductPropsDao propsDao;
+        private readonly ICategoryDAO categoryDAO;
+        private readonly IMapper mapper;
+        private const string GUID_PARSE = "Incorrect id";
+        private const string CATEGORY_NOT_FOUND = "Category not found";
+        private const string PRODUCT_NOT_FOUND = "Product not found";
+        private const string CATEGORY_NAME_REQUIRED = "Category name is required";
+        public ProductsController(IProductDao productDao, IProductPropsDao propsDao, ICategoryDAO categoryDAO, IMapper mapper)
         {
             this.productDao = productDao;
             this.propsDao = propsDao;
+            this.categoryDAO = categoryDAO;
+            this.mapper = mapper;
         }
         [HttpGet]
-        public Product[] GetProducts()
+        [Route("products-by-category/{category}")]
+        public async Task<IActionResult> GetProductsByCategory(string category)
         {
-            return productDao.GetAll();
-        }
-        [HttpPost]
-        public Product CreateProduct()
-        {
-            var product = new Product
+            if (string.IsNullOrEmpty(category))
             {
-                Id = Guid.NewGuid(),
-                CategoryId = Guid.NewGuid(),
-                Name = "Mouse Logitech",
-                Brand = "Logitech",
-                Price = 250.0,
-                DiscountPrice = 0,
-                CreatedAt = DateTime.Now,
-                ImageUrl = "./mouse.png"
+                return SendResponse(StatusCodes.Status400BadRequest, CATEGORY_NAME_REQUIRED, null);
+            }
+            Category? _category = await categoryDAO.GetByName(category);
+            if (_category == null)
+            {
+                return SendResponse(StatusCodes.Status404NotFound, CATEGORY_NOT_FOUND, null);
+            }
+
+            Product[]? products = await productDao.GetProductsByCategory(_category.Id);
+
+            if (products != null)
+            {
+                ProductCardProfile[] productCards = mapper.Map<ProductCardProfile[]>(products);
+                return SendResponse(StatusCodes.Status200OK, "Ok", productCards);
+            }
+            return SendResponse(StatusCodes.Status404NotFound, CATEGORY_NOT_FOUND, null);
+        }
+        [HttpGet]
+        [Route("product-by-id/{productId}")]
+        public async Task<IActionResult> GetProductById(string productId)
+        {
+            if (!Guid.TryParse(productId, out var id))
+            {
+                await Console.Out.WriteLineAsync(id.ToString());
+                return SendResponse(StatusCodes.Status400BadRequest, GUID_PARSE, null);
+            }
+            Product? product = await productDao.GetByIdAsync(id);
+            if (product != null)
+            {
+                try
+                {
+                    ProductViewProfile productView = mapper.Map<ProductViewProfile>(product);
+                    return SendResponse(StatusCodes.Status200OK, "Ok", productView);
+                }
+                catch(AutoMapperMappingException ex)
+                {
+                    await Console.Out.WriteLineAsync($"Mapping error: {ex.Message}");
+                }
+                return SendResponse(StatusCodes.Status200OK, "Ok", product);
+            }
+            return SendResponse(StatusCodes.Status404NotFound, PRODUCT_NOT_FOUND, null);
+        }
+
+        private IActionResult SendResponse(int statusCode, string message, object data, string contentType = "application/json")
+        {
+            HttpContext.Response.StatusCode = statusCode;
+            HttpContext.Response.ContentType = contentType;
+            var settings = new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore
             };
-            productDao.Add(product);
-            return product;
-        }
-        [HttpGet]
-        [Route("{id}")]
-        public Results<NotFound, Ok<Product>> GetProductById(string id)
-        {
-            Guid productId;
             try
             {
-                productId = Guid.Parse(id);
+                return Content(JsonConvert.SerializeObject(new
+                {
+                    Status = statusCode,
+                    Message = message,
+                    Data = data
+                },settings));
             }
-            catch
+            catch (JsonException ex)
             {
-                return TypedResults.NotFound();
+                Console.WriteLine($"error json: {ex.Message}");
+                return Content(JsonConvert.SerializeObject(new
+                {
+                    Status = StatusCodes.Status500InternalServerError,
+                    Message = "See server logs",
+                    Data = (object)null!
+                },settings));
             }
-            Product? product = productDao.GetById(productId);
-            if (product is not null) return TypedResults.Ok(product);
-            return TypedResults.NotFound();
-        }
-        [HttpGet]
-        [Route("/brand/{brand}")]
-        public Results<NotFound, Ok<Product[]>> GetProductByBrand(string brand)
-        {
-            if (!string.IsNullOrEmpty(brand))
-            {
-                Product[] products = productDao.GetProductsByBrand(brand);
-                if (products is not null && products.Length != 0) return TypedResults.Ok(products);
-            }
-            return TypedResults.NotFound();
-        }
-        [HttpGet]
-        [Route("/product-images/{id}")]
-        public Results<NotFound, Ok<ProductImage[]>> GetProductImages(string id)
-        {
-            Guid productId;
-            try
-            {
-                productId = Guid.Parse(id);
-            }
-            catch
-            {
-                return TypedResults.NotFound();
-            }
-            Product? product = productDao.GetById(productId);
-            if (product is not null) return TypedResults.Ok(product.productImages.ToArray());
-            return TypedResults.NotFound();
-        }
-        [HttpDelete]
-        [Route("/delete-product/{id}")]
-        public IActionResult DeleteProduct(string id)
-        {
-            Guid productId;
-            try
-            {
-                productId = Guid.Parse(id);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
-            productDao.Delete(productId);
-            return Ok();
-        }
-        [HttpPut]
-        [Route("/restore-product/{id}")]
-        public IActionResult RestoreProduct(string id)
-        {
-            Guid productId;
-            try
-            {
-                productId = Guid.Parse(id);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
-            productDao.Restore(productId);
-            return Ok();
-        }
-        [HttpGet]
-        [Route("/product/props/{id}")]
-        public Results<NotFound, Ok<ProductProperty[]>> GetProdPropsByProductId(string id)
-        {
-            Guid productId;
-            try
-            {
-                productId = Guid.Parse(id);
-            }
-            catch
-            {
-                return TypedResults.NotFound();
-            }
-            var props = propsDao.GetAllProductPropsByProductId(productId);
-            if (props is not null) return TypedResults.Ok(props);
-            return TypedResults.NotFound();
         }
     }
 }
