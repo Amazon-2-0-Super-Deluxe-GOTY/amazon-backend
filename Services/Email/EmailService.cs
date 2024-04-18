@@ -23,22 +23,14 @@ namespace amazon_backend.Services.Email
 
 
 
-        public bool Send(string mailTemplate, object model)//njnj
+        public bool Send(string mailTemplate, object model)
         {
             String? template = null;
-        //    String[] filenames = new String[]
-        //{
-        //        mailTemplate,
-        //        mailTemplate+".html",
-        //        "Services/Email/"+mailTemplate,
-        //        "Services/Email/"+mailTemplate+".html"
-        //};
-            string relativePath = Path.Combine("wwwroot", "data", "index.html");
+           string relativePath = Path.Combine("wwwroot", "data", "index.html");
 
-            // Get the absolute path to the file based on the current working directory
             string absolutePath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
 
-            // Check if the file exists
+            
             bool fileExists = File.Exists(absolutePath);
 
             if (fileExists)
@@ -47,7 +39,7 @@ namespace amazon_backend.Services.Email
             }
             else
             {
-                // The file does not exist
+                
                 throw new ArgumentException($"Template'{fileExists}' not Exists" + $"{absolutePath}");
             }
             

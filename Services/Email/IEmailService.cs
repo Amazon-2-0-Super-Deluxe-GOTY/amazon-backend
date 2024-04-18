@@ -2,6 +2,6 @@
 {
     public interface IEmailService
     {
-        bool Send(string mailTemplate, object model);//nubbubuj
+        bool Send(string mailTemplate, object model);
     }
 }

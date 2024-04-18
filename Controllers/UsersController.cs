@@ -205,6 +205,37 @@ namespace amazon_backend.Controllers
         }
 
         #endregion
+
+
+        #region login
+
+
+        [HttpPost("login/{email}/{password}")]
+        public async Task<IActionResult> Login(string email, string password)
+        {
+            var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return BadRequest(new { message = "User not found" });
+            }
+
+            var hashedPassword = _kdfService.GetDerivedKey(password, user.PasswordSalt);
+            if (hashedPassword != user.PasswordHash)
+            {
+                return Unauthorized(new { message = "Invalid password" });
+            }
+
+          
+            return Ok(new
+            {
+                id = user.Id,
+                email = user.Email,
+                role = user.Role
+                
+            });
+        }
+        #endregion
+
     }
 
 
