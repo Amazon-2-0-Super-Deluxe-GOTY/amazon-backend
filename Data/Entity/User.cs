@@ -17,6 +17,9 @@ namespace amazon_backend.Data.Entity
         [Column(TypeName = "varchar(255)")]
         public string PasswordSalt { get; set; }
         [Required]
+        [Column(TypeName = "varchar(255)")]
+        public string PasswordHash { get; set; }
+        [Required]
         [Column(TypeName = "varchar(128)")]
         public string Role { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;

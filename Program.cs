@@ -1,6 +1,10 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
 using amazon_backend.Profiles;
+using amazon_backend.Services.Email;
+using amazon_backend.Services.Hash;
+using amazon_backend.Services.KDF;
+using amazon_backend.Services.Random;
 using Microsoft.EntityFrameworkCore;
 using MySql.Data.MySqlClient;
 
@@ -19,8 +23,12 @@ namespace amazon_backend
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddSingleton<IHashService, Md5HashService>();
+            builder.Services.AddSingleton<IKdfService, HashKdfService>();
+            builder.Services.AddSingleton<IRandomService, RandomService>();
+            builder.Services.AddSingleton<IEmailService, EmailService>();
 
-            
+
 
             // register db context
             // enabled entity framework
