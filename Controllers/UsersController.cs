@@ -9,6 +9,10 @@ using amazon_backend.Services.Random;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using amazon_backend.Services.JWTService;
+using AutoMapper.Execution;
+
 
 namespace amazon_backend.Controllers
 {
@@ -23,13 +27,14 @@ namespace amazon_backend.Controllers
         private readonly IEmailService _emailService;
         private readonly IRandomService _randomService;
         private readonly IServiceProvider _services;
-       
+        private readonly TokenService _tokenService;
         public UsersController(IUserDao userDao, IHashService hashService, DataContext dataContext, 
             IKdfService kdfService, 
             IEmailService emailService, 
             IRandomService randomService, 
             IServiceProvider services, 
-            IConfiguration configuration)
+            IConfiguration configuration,
+            TokenService tokenService)
         {
             _hashService = hashService;
             _dataContext = dataContext;
@@ -37,7 +42,7 @@ namespace amazon_backend.Controllers
             _emailService = emailService;
             _randomService = randomService;
             _services = services;
-            
+            _tokenService = tokenService;
             this.userDao = userDao;
         }
 
@@ -107,36 +112,33 @@ namespace amazon_backend.Controllers
         #region Registration
 
 
-        [HttpPost("registration/{email}/{password}/{repeat_password}")]
-        public async Task<IActionResult> Register(string email, string password, string repeat_password)
+        [HttpPost("registration/")]
+        public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
         {
             #region validation
-            if (password != repeat_password)
-            {
-                return BadRequest("Passwords not same");
-            }
+            
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var existingUser = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var existingUser = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == registerModel.Email);
             if (existingUser != null)
             {
                 return BadRequest("User is created");
             }
             #endregion
             String salt = _randomService.RandomString(16);
-            if (ValidatePassword(password) && ValidateEmail(email)) 
+            if (ValidatePassword(registerModel.Password) && ValidateEmail(registerModel.Email)) 
             {
             
                 User user = new()
                 {
                     Id = Guid.NewGuid(),
-                    Email = email,
-                    PasswordHash = _kdfService.GetDerivedKey(password, salt),
+                    Email = registerModel.Email,
+                    PasswordHash = _kdfService.GetDerivedKey(registerModel.Password, salt),
                     Role = "User",
-                    Password = password,
+                    Password = registerModel.Password,
                     PasswordSalt = salt,
                 };
 
@@ -210,32 +212,90 @@ namespace amazon_backend.Controllers
         #region login
 
 
-        [HttpPost("login/{email}/{password}")]
-        public async Task<IActionResult> Login(string email, string password)
+        [HttpPost("login/")]
+        public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
-            var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == loginModel.Email);
             if (user == null)
             {
                 return BadRequest(new { message = "User not found" });
             }
 
-            var hashedPassword = _kdfService.GetDerivedKey(password, user.PasswordSalt);
+            var hashedPassword = _kdfService.GetDerivedKey(loginModel.Password, user.PasswordSalt);
             if (hashedPassword != user.PasswordHash)
             {
                 return Unauthorized(new { message = "Invalid password" });
             }
 
-          
+            var tokenJournal = user.TokenJournals?.FirstOrDefault(tj => tj.IsActive);
+            var token = tokenJournal?.Token?._Token;
+
+            if (token == null)
+            {
+                var new_token = _tokenService.GenerateToken(user.Id, out tokenJournal);
+                _dataContext.Tokens.Add(new_token);
+                _dataContext.TokenJournals.Add(tokenJournal);
+                _dataContext.SaveChanges();
+                HttpContext.Session.SetString("userToken", new_token._Token);
+            }
+            else
+            {
+                HttpContext.Session.SetString("userToken", token);
+            }
+
+            if (user.Id != null)
+            {
+
+                HttpContext.Session.SetString("authUserId", user.Id.ToString());
+                Response.Cookies.Append("SessionId", HttpContext.Session.Id);
+                return RedirectToAction("MyProfile", "User", new { username = "id" + user.Id });
+            }
+           
             return Ok(new
             {
                 id = user.Id,
                 email = user.Email,
-                role = user.Role
-                
+                role = user.Role,
+                token = token
             });
         }
         #endregion
+        [HttpGet("/logout")]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                //HttpContext.Session.Remove("authUserId");
+                string? token = HttpContext.Session.GetString("userToken");
+                if (token == null)
+                {
+                    HttpContext.Session.Clear();
+                    foreach (var cookie in Request.Cookies.Keys)
+                    {
+                        Response.Cookies.Delete(cookie);
+                    }
+                    return RedirectToAction("Index", "Home");
+                }
+                var journal = await _dataContext.TokenJournals.Include(p => p.Token).FirstOrDefaultAsync(j => j.Token._Token == token && j.IsActive == true);
+                if (journal != null)
+                {
+                    journal.DeactivatedAt = DateTime.UtcNow;
+                    journal.IsActive = false;
+                    await _dataContext.SaveChangesAsync();
+                }
+                HttpContext.Session.Clear();
+                foreach (var cookie in Request.Cookies.Keys)
+                {
+                    Response.Cookies.Delete(cookie);
+                }
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
 
+        }
     }
 
 

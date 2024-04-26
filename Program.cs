@@ -1,8 +1,11 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
+using amazon_backend.Middleware;
+using amazon_backend.Options.Token;
 using amazon_backend.Profiles;
 using amazon_backend.Services.Email;
 using amazon_backend.Services.Hash;
+using amazon_backend.Services.JWTService;
 using amazon_backend.Services.KDF;
 using amazon_backend.Services.Random;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +19,7 @@ namespace amazon_backend
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            var jwt = builder.Configuration.GetSection("JwtBearer");
             // Add services to the container.
 
             builder.Services.AddControllers();
@@ -55,6 +58,24 @@ namespace amazon_backend
             builder.Services.AddScoped<IProductDao, ProductDao>();
             builder.Services.AddScoped<IProductPropsDao, ProductPropsDao>();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.Configure<TokenOptions>(jwt);
+
+            builder.Services.AddDistributedMemoryCache();
+
+            builder.Services.AddScoped<TokenService>();
+            builder.Services.AddAuthentication("MyCookieScheme")
+            .AddCookie("MyCookieScheme", options =>
+            {
+                options.LoginPath = "/login";
+                options.Cookie.Name = "SessionId";
+            });
+
+            builder.Services.AddSession(options =>
+            {
+                //options.IdleTimeout = TimeSpan.FromHours(3);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -68,6 +89,10 @@ namespace amazon_backend
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+           
+            app.UseSession();
+
+            app.UseSessionAuth();
 
 
             app.MapControllers();

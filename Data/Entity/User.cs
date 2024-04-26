@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-
+using Newtonsoft.Json;
 namespace amazon_backend.Data.Entity
 {
     public class User
@@ -27,5 +27,7 @@ namespace amazon_backend.Data.Entity
 
         public ClientProfile? ClientProfile { get; set; }
         public List<ProductRate>? ProductRates { get; set; }
+        [JsonIgnore]
+        public List<TokenJournal>? TokenJournals { get; set; } = new();
     }
 }
