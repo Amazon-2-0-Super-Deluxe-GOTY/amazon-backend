@@ -35,7 +35,7 @@ namespace amazon_backend
 
             // register db context
             // enabled entity framework
-            string? connectionString = builder.Configuration.GetConnectionString("MySQLLocal");
+            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
             if (connectionString == null)
             {
                 throw new Exception("No connection string in appsettings.json");
