@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240418230321_PasswordHash")]
+    partial class PasswordHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,30 +201,6 @@ namespace amazon_backend.Migrations
                         .IsUnique();
 
                     b.ToTable("ClientProfiles");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.EmailConfirmToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("Moment")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Used")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserEmail")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EmailConfirmTokens");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
@@ -411,63 +390,6 @@ namespace amazon_backend.Migrations
                         });
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
-                        .HasColumnName("token_id");
-
-                    b.Property<DateTime>("ExpirationDate")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("expiration_date");
-
-                    b.Property<string>("_Token")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("token");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("tokens", (string)null);
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)")
-                        .HasColumnName("token_journal_id");
-
-                    b.Property<DateTime>("ActivatedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("activated_at");
-
-                    b.Property<DateTime>("DeactivatedAt")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("deactivated_at");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("is_active");
-
-                    b.Property<Guid>("TokenId")
-                        .HasColumnType("char(36)")
-                        .HasColumnName("token_id");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("char(36)")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("token_journals", (string)null);
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -483,9 +405,6 @@ namespace amazon_backend.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("EmailCode")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -707,23 +626,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.Token", "Token")
-                        .WithMany("TokenJournals")
-                        .HasForeignKey("TokenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.User", "User")
-                        .WithMany("TokenJournals")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Token");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.User", "User")
@@ -774,18 +676,11 @@ namespace amazon_backend.Migrations
                     b.Navigation("productImages");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>
-                {
-                    b.Navigation("TokenJournals");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
                     b.Navigation("ClientProfile");
 
                     b.Navigation("ProductRates");
-
-                    b.Navigation("TokenJournals");
                 });
 #pragma warning restore 612, 618
         }
