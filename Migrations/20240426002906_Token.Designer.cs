@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240426002906_Token")]
+    partial class Token
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,17 +157,8 @@ namespace amazon_backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<uint>("CategoryId")
-                        .HasColumnType("int unsigned");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsFilter")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsRequired")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("char(36)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -207,30 +201,6 @@ namespace amazon_backend.Migrations
                         .IsUnique();
 
                     b.ToTable("ClientProfiles");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.EmailConfirmToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("Moment")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Used")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserEmail")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EmailConfirmTokens");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
@@ -492,9 +462,6 @@ namespace amazon_backend.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
-
-                    b.Property<string>("EmailCode")
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Password")
                         .IsRequired()
