@@ -28,11 +28,15 @@ namespace amazon_backend.Controllers
         }
         [HttpGet]
         [Route("products-by-category/{category}")]
-        public async Task<IActionResult> GetProductsByCategory(string category)
+        public async Task<IActionResult> GetProductsByCategory(string category, [FromQuery]int pageSize, [FromQuery]int pageIndex)
         {
-            if (string.IsNullOrEmpty(category))
+            if (string.IsNullOrEmpty(category.Trim()))
             {
                 return SendResponse(StatusCodes.Status400BadRequest, CATEGORY_NAME_REQUIRED, null);
+            }
+            if (pageSize == 0 || pageIndex == 0)
+            {
+                return SendResponse(StatusCodes.Status400BadRequest, "Pagination query parameters is missing", null);
             }
             Category? _category = await categoryDAO.GetByName(category);
             if (_category == null)
@@ -44,7 +48,8 @@ namespace amazon_backend.Controllers
 
             if (products != null)
             {
-                ProductCardProfile[] productCards = mapper.Map<ProductCardProfile[]>(products);
+                ProductCardProfile[] productCards = mapper.Map<ProductCardProfile[]>(products.Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize));
                 return SendResponse(StatusCodes.Status200OK, "Ok", productCards);
             }
             return SendResponse(StatusCodes.Status404NotFound, CATEGORY_NOT_FOUND, null);
