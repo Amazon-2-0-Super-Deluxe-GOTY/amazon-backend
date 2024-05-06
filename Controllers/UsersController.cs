@@ -28,13 +28,15 @@ namespace amazon_backend.Controllers
         private readonly IRandomService _randomService;
         private readonly IServiceProvider _services;
         private readonly TokenService _tokenService;
+        
         public UsersController(IUserDao userDao, IHashService hashService, DataContext dataContext, 
             IKdfService kdfService, 
             IEmailService emailService, 
             IRandomService randomService, 
             IServiceProvider services, 
             IConfiguration configuration,
-            TokenService tokenService)
+            TokenService tokenService,
+            IEmailService _emailService1)
         {
             _hashService = hashService;
             _dataContext = dataContext;
@@ -44,6 +46,7 @@ namespace amazon_backend.Controllers
             _services = services;
             _tokenService = tokenService;
             this.userDao = userDao;
+            
         }
 
         [HttpGet]
@@ -115,23 +118,24 @@ namespace amazon_backend.Controllers
         [HttpPost("registration/")]
         public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
         {
+            string confirmEmailCode = _randomService.ConfirmCode(6);
             #region validation
-            
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var existingUser = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == registerModel.Email);
-            if (existingUser != null)
-            {
-                return BadRequest("User is created");
-            }
+            //var existingUser = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == registerModel.Email);
+            //if (existingUser != null)
+            //{
+            //    return BadRequest("User is created");
+            //}
             #endregion
             String salt = _randomService.RandomString(16);
             if (ValidatePassword(registerModel.Password) && ValidateEmail(registerModel.Email)) 
             {
-            
+                
                 User user = new()
                 {
                     Id = Guid.NewGuid(),
@@ -140,7 +144,10 @@ namespace amazon_backend.Controllers
                     Role = "User",
                     Password = registerModel.Password,
                     PasswordSalt = salt,
+                    EmailCode = confirmEmailCode,
                 };
+               
+                _emailService.SendEmail(registerModel.Email, "test body", "test message");
 
                 await _dataContext.Users.AddAsync(user);
                 await _dataContext.SaveChangesAsync();
@@ -152,6 +159,25 @@ namespace amazon_backend.Controllers
                 return BadRequest("Password or email invalid");
             }
         }
+
+
+
+        private EmailConfirmToken _GenerateEmailConfirmToken(Data.Entity.User user)
+        {
+            Data.Entity.EmailConfirmToken emailConfirmToken = new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                UserEmail = user.Email,
+                Moment = DateTime.Now,
+                Used = 0
+            };
+            _dataContext.EmailConfirmTokens.Add(emailConfirmToken);
+            return emailConfirmToken;
+        }
+
+
+     
 
         public static bool ValidateEmail(string email)
         {

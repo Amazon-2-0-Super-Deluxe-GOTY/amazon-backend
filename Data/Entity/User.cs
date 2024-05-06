@@ -29,5 +29,6 @@ namespace amazon_backend.Data.Entity
         public List<ProductRate>? ProductRates { get; set; }
         [JsonIgnore]
         public List<TokenJournal>? TokenJournals { get; set; } = new();
+        public string? EmailCode { get; set; }
     }
 }

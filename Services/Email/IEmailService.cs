@@ -2,6 +2,7 @@
 {
     public interface IEmailService
     {
-        bool Send(string mailTemplate, object model);
+       
+        void SendEmail(string recipient, string subject, string message);
     }
 }
