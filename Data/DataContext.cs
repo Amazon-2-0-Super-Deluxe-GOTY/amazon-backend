@@ -26,8 +26,11 @@ namespace amazon_backend.Data
         public DbSet<Entity.Token> Tokens { get; set; }
         public DbSet<Entity.TokenJournal> TokenJournals { get; set; }
         public DbSet<Entity.EmailConfirmToken> EmailConfirmTokens { get; set; }
+
+        public bool CanConnect { get; set; }
         public DataContext(DbContextOptions options) : base(options)
         {
+            CanConnect = this.Database.CanConnect();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

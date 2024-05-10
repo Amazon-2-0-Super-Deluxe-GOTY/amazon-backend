@@ -1,4 +1,5 @@
-﻿using amazon_backend.Profiles.CategoryProfiles;
+﻿using amazon_backend.Models;
+using amazon_backend.Profiles.CategoryProfiles;
 
 namespace amazon_backend.Profiles.ProductProfiles
 {
@@ -17,5 +18,6 @@ namespace amazon_backend.Profiles.ProductProfiles
         public List<ProductImageProfile>? productImages { get; set; }
         public List<AboutProductProfile>? AboutProductItems { get; set; }
         public List<ProductColorProfile>? ProductColors { get; set; }
+        public List<RatingStat>? RatingStats { get; set; }
     }
 }

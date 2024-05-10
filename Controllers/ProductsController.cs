@@ -1,7 +1,8 @@
-﻿using amazon_backend.Data.Dao;
-using amazon_backend.Data.Entity;
+﻿using amazon_backend.CQRS.Queries.Request;
 using amazon_backend.Profiles.ProductProfiles;
-using AutoMapper;
+using amazon_backend.Services.FluentValidation;
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -11,73 +12,50 @@ namespace amazon_backend.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly IProductDao productDao;
-        private readonly IProductPropsDao propsDao;
-        private readonly ICategoryDAO categoryDAO;
-        private readonly IMapper mapper;
-        private const string GUID_PARSE = "Incorrect id";
-        private const string CATEGORY_NOT_FOUND = "Category not found";
-        private const string PRODUCT_NOT_FOUND = "Product not found";
-        private const string CATEGORY_NAME_REQUIRED = "Category name is required";
-        public ProductsController(IProductDao productDao, IProductPropsDao propsDao, ICategoryDAO categoryDAO, IMapper mapper)
+        private readonly IMediator mediator;
+        private readonly IValidator<GetProductsByCategoryQueryRequest> prodByCategoryValidator;
+        private readonly IValidator<GetProductByIdQueryRequest> productByIdValidator;
+        public ProductsController(IMediator mediator, IValidator<GetProductsByCategoryQueryRequest> validator, IValidator<GetProductByIdQueryRequest> productByIdValidator)
         {
-            this.productDao = productDao;
-            this.propsDao = propsDao;
-            this.categoryDAO = categoryDAO;
-            this.mapper = mapper;
+            this.mediator = mediator;
+            this.prodByCategoryValidator = validator;
+            this.productByIdValidator = productByIdValidator;
         }
         [HttpGet]
-        [Route("products-by-category/{category}")]
-        public async Task<IActionResult> GetProductsByCategory(string category, [FromQuery]int pageSize, [FromQuery]int pageIndex)
+        [Route("products-by-category")]
+        public async Task<IActionResult> GetProductsByCategory([FromQuery] GetProductsByCategoryQueryRequest request)
         {
-            if (string.IsNullOrEmpty(category.Trim()))
+            var validationErrors = prodByCategoryValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                return SendResponse(StatusCodes.Status400BadRequest, CATEGORY_NAME_REQUIRED, null);
+                return SendResponse(StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
-            if (pageSize == 0 || pageIndex == 0)
+            var response = await mediator.Send(request);
+            if (response.IsSuccess)
             {
-                return SendResponse(StatusCodes.Status400BadRequest, "Pagination query parameters is missing", null);
+                List<ProductCardProfile>? productCards = response.Data;
+                if (productCards != null)
+                {
+                    return SendResponse(StatusCodes.Status200OK, "Ok", productCards);
+                }
             }
-            Category? _category = await categoryDAO.GetByName(category);
-            if (_category == null)
-            {
-                return SendResponse(StatusCodes.Status404NotFound, CATEGORY_NOT_FOUND, null);
-            }
-
-            Product[]? products = await productDao.GetProductsByCategory(_category.Id);
-
-            if (products != null)
-            {
-                ProductCardProfile[] productCards = mapper.Map<ProductCardProfile[]>(products.Skip((pageIndex - 1) * pageSize)
-                .Take(pageSize));
-                return SendResponse(StatusCodes.Status200OK, "Ok", productCards);
-            }
-            return SendResponse(StatusCodes.Status404NotFound, CATEGORY_NOT_FOUND, null);
+            return SendResponse(StatusCodes.Status404NotFound, response.message, null);
         }
         [HttpGet]
-        [Route("product-by-id/{productId}")]
-        public async Task<IActionResult> GetProductById(string productId)
+        [Route("product-by-id")]
+        public async Task<IActionResult> GetProductById([FromQuery] GetProductByIdQueryRequest request)
         {
-            if (!Guid.TryParse(productId, out var id))
+            var validationErrors = productByIdValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                await Console.Out.WriteLineAsync(id.ToString());
-                return SendResponse(StatusCodes.Status400BadRequest, GUID_PARSE, null);
+                return SendResponse(StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
-            Product? product = await productDao.GetByIdAsync(id);
-            if (product != null)
+            var response = await mediator.Send(request);
+            if (response.IsSuccess)
             {
-                try
-                {
-                    ProductViewProfile productView = mapper.Map<ProductViewProfile>(product);
-                    return SendResponse(StatusCodes.Status200OK, "Ok", productView);
-                }
-                catch(AutoMapperMappingException ex)
-                {
-                    await Console.Out.WriteLineAsync($"Mapping error: {ex.Message}");
-                }
-                return SendResponse(StatusCodes.Status200OK, "Ok", product);
+                return SendResponse(StatusCodes.Status200OK, "Ok", response.Data);
             }
-            return SendResponse(StatusCodes.Status404NotFound, PRODUCT_NOT_FOUND, null);
+            return SendResponse(StatusCodes.Status404NotFound, response.message, null);
         }
 
         private IActionResult SendResponse(int statusCode, string message, object data, string contentType = "application/json")
@@ -96,7 +74,7 @@ namespace amazon_backend.Controllers
                     Status = statusCode,
                     Message = message,
                     Data = data
-                },settings));
+                }, settings));
             }
             catch (JsonException ex)
             {
@@ -106,7 +84,7 @@ namespace amazon_backend.Controllers
                     Status = StatusCodes.Status500InternalServerError,
                     Message = "See server logs",
                     Data = (object)null!
-                },settings));
+                }, settings));
             }
         }
     }

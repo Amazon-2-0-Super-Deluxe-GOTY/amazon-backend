@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using amazon_backend.Models;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace amazon_backend.Data.Entity
@@ -32,5 +33,7 @@ namespace amazon_backend.Data.Entity
         public List<Product>? Products { get; set; }
         public List<ProductColor>? ProductColors { get; set; }
         public List<ProductRate>? ProductRates { get; set; }
+        [NotMapped]
+        public List<RatingStat>? RatingStats { get; set;}
     }
 }
