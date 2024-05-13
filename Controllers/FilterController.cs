@@ -40,48 +40,7 @@ namespace amazon_backend.Controllers
             }
             return SendResponse(StatusCodes.Status200OK, "Ok", response.Data);
         }
-        //[HttpPost]
-        //public async Task<IActionResult> FilterProducts([FromBody] ProductFilterBody filterBody)
-        //{
-        //    if (filterBody != null)
-        //    {
-        //        var category = await categoryDao.GetByName(filterBody.categoryName);
-        //        if(category==null)
-        //        {
-        //            return SendResponse(404, CATEGORY_NOT_FOUND, null);
-        //        }
-        //        var products = await dataContext.Products.Include(p => p.pProps).Where(p => p.CategoryId == category.Id).ToListAsync();
-
-        //        if (filterBody.filterProperties != null && filterBody.filterProperties.Count != 0)
-        //        {
-        //            List<Product> resultProducts = new();
-        //            foreach(var fItem in filterBody.filterProperties)
-        //            {
-        //                foreach(var prod in products)
-        //                {
-        //                    if (prod.pProps != null)
-        //                    {
-        //                        foreach(var pp in prod.pProps)
-        //                        {
-        //                            if (pp.Key == fItem.Key && fItem.Value.Contains(pp.Value))
-        //                            {
-        //                                if (!resultProducts.Contains(prod))
-        //                                {
-        //                                    resultProducts.Add(prod);
-        //                                }
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //            List<ProductCardProfile> prodView = mapper.Map<List<ProductCardProfile>>(resultProducts
-        //                .Skip((filterBody.pageIndex - 1) * filterBody.pageSize)
-        //                .Take(filterBody.pageSize));
-        //            return SendResponse(200, "Ok", prodView);
-        //        }
-        //    }
-        //    return SendResponse(400, "Bad request", null);
-        //}
+       
         private IActionResult SendResponse(int statusCode, string message, object data, string contentType = "application/json")
         {
             HttpContext.Response.StatusCode = statusCode;

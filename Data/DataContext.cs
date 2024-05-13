@@ -21,7 +21,6 @@ namespace amazon_backend.Data
         public DbSet<ProductProperty> ProductProperties { get; set; }
         public DbSet<CategoryPropertyKey> CategoryPropertyKeys { get; set; }
         public DbSet<AboutProductItem> AboutProductItems { get; set; }
-        public DbSet<ProductColor> ProductColors { get; set; }
         public DbSet<ProductRate> ProductRates { get; set; }
         public DbSet<Entity.Token> Tokens { get; set; }
         public DbSet<Entity.TokenJournal> TokenJournals { get; set; }

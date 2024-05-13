@@ -89,7 +89,6 @@ namespace amazon_backend.Data.Dao
                     .Include(p => p.Category)
                     .Include(p => p.pProps)
                     .Include(p => p.AboutProductItems)
-                    .Include(p => p.ProductColors)
                     .Include(p => p.ProductRates)
                     .Where(p => p.Id == id)
                     .AsSplitQuery()

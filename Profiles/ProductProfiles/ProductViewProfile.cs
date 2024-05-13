@@ -17,7 +17,6 @@ namespace amazon_backend.Profiles.ProductProfiles
         public List<ProductPropProfile>? pProps { get; set; }
         public List<ProductImageProfile>? productImages { get; set; }
         public List<AboutProductProfile>? AboutProductItems { get; set; }
-        public List<ProductColorProfile>? ProductColors { get; set; }
         public List<RatingStat>? RatingStats { get; set; }
     }
 }
