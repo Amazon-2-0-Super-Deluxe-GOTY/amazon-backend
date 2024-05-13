@@ -5,6 +5,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace amazon_backend.Controllers
 {
@@ -65,7 +66,11 @@ namespace amazon_backend.Controllers
             var settings = new JsonSerializerSettings()
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                NullValueHandling = NullValueHandling.Ignore
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new DefaultContractResolver()
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                }
             };
             try
             {

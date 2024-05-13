@@ -12,6 +12,9 @@ namespace amazon_backend.Profiles.ProductProfiles
         public double Price { get; set; }
         public string? ImageUrl { get; set; }
         public double? DiscountPrice { get; set; }
+        public int? DiscountPercentage { get; set; }
+        public double? GeneralRate { get; set; }
+        public int? ReviewsQuantity { get; set; }
         public string Brand { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<ProductPropProfile>? pProps { get; set; }

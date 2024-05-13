@@ -7,6 +7,7 @@ namespace amazon_backend.Data.Entity
     public class Product
     {
         public Guid Id { get; set; }
+        public string? Slug { get; set; }
         public uint CategoryId { get; set; }
         [Comment("Main prodct reference")]
         public Guid? ProductId { get; set; }
