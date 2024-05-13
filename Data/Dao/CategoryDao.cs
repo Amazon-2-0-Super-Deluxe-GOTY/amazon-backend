@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data.Dao
 {
-    public interface ICategoryDAO : IDataAccessObject<Category, uint>
+    public interface ICategoryDao : IDataAccessObject<Category, uint>
     {
         Task<Category> GetByName(string name);
-        Task<FilterItemModel[]> GetFilterItems(uint categoryId);
+        Task<List<FilterItemModel>> GetFilterItems(uint categoryId);
         void Restore(uint id);
     }
 
-    public class CategoryDao : ICategoryDAO
+    public class CategoryDao : ICategoryDao
     {
         private readonly DataContext _context;
 
@@ -32,10 +32,13 @@ namespace amazon_backend.Data.Dao
 
         public async Task<Category> GetByName(string name)
         {
-            var category = await _context.Categories.Where(c => c.Name.Contains(name.ToLower())).FirstOrDefaultAsync();
-            if (category != null)
+            if (_context.CanConnect)
             {
-                return category;
+                var category = await _context.Categories.Where(c => c.Name.Contains(name.ToLower())).FirstOrDefaultAsync();
+                if (category != null)
+                {
+                    return category;
+                }
             }
             return null;
         }
@@ -72,13 +75,13 @@ namespace amazon_backend.Data.Dao
             }
         }
 
-        public async Task<FilterItemModel[]> GetFilterItems(uint categoryId)
+        public async Task<List<FilterItemModel>> GetFilterItems(uint categoryId)
         {
             CategoryPropertyKey[]? categoryProps = await _context
                  .CategoryPropertyKeys
                  .Where(cp => cp.CategoryId == categoryId)
                  .ToArrayAsync();
-            FilterItemModel[] filterItems = await _context.ProductProperties
+            var filterItems = await _context.ProductProperties
                 .Join(_context.CategoryPropertyKeys,
                 pprops => pprops.Key,
                 catprops => catprops.Name,
@@ -90,8 +93,8 @@ namespace amazon_backend.Data.Dao
                     Key = g.Key.Key,
                     Value = g.Key.Value,
                     Count = g.Count()
-                }).ToArrayAsync();
-            if (filterItems != null && filterItems.Length != 0)
+                }).ToListAsync();
+            if (filterItems != null && filterItems.Count != 0)
             {
                 return filterItems;
             }

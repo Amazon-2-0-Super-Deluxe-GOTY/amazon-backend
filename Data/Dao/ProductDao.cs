@@ -1,5 +1,7 @@
 ﻿using amazon_backend.Data.Entity;
+using amazon_backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace amazon_backend.Data.Dao
 {
@@ -9,6 +11,7 @@ namespace amazon_backend.Data.Dao
         Task<Product[]> GetProductsByCategory(uint categoryId);
         Task<Product[]> GetProductsByBrand(string brand);
         ProductImage[] GetProductImages(Guid productId);
+        Task<Product[]> GetProductsByCategoryLimit(uint categoryId, int pageSize, int pageIndex);
         void Restore(Guid id);
     }
     public class ProductDao : IProductDao
@@ -18,7 +21,11 @@ namespace amazon_backend.Data.Dao
         {
             _context = context;
         }
-
+        private bool DbIsConnect()
+        {
+            if (_context.Database.CanConnect()) return true;
+            return false;
+        }
         public void Add(Product product)
         {
             if (product != null)
@@ -75,15 +82,38 @@ namespace amazon_backend.Data.Dao
 
         public async Task<Product?> GetByIdAsync(Guid id)
         {
-            return await _context.Products
-                .Include(p => p.productImages)
-                .Include(p => p.Category)
-                .Include(p => p.pProps)
-                .Include(p => p.AboutProductItems)
-                .Include(p => p.ProductColors)
-                .Where(p => p.Id == id)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync();
+            if (_context.CanConnect)
+            {
+                var product = await _context.Products
+                    .Include(p => p.productImages)
+                    .Include(p => p.Category)
+                    .Include(p => p.pProps)
+                    .Include(p => p.AboutProductItems)
+                    .Include(p => p.ProductRates)
+                    .Where(p => p.Id == id)
+                    .AsSplitQuery()
+                    .FirstOrDefaultAsync();
+
+                if (product != null)
+                {
+                    if(product.ProductRates != null && product.ProductRates.Count != 0)
+                    {
+                        var totalRates = product.ProductRates.Count;
+
+                        product.RatingStats = product.ProductRates
+                            .GroupBy(pr => pr.Mark)
+                            .Select(group => new RatingStat
+                            {
+                                mark = group.Key,
+                                percent = (int)(group.Count() * 100.0 / totalRates)
+                            })
+                            .OrderByDescending(r => r.mark)
+                            .ToList();
+                    }
+                    return product;
+                }
+            }
+            return null;
         }
 
         public void Update(Product product)
@@ -107,16 +137,45 @@ namespace amazon_backend.Data.Dao
 
         public async Task<Product[]> GetProductsByCategory(uint categoryId)
         {
-            return await _context.Products
-                .Where(p => p.CategoryId == categoryId).ToArrayAsync();
+            if (DbIsConnect())
+            {
+                var products = await _context.Products
+                    .Where(p => p.CategoryId == categoryId).ToArrayAsync();
+                if (products != null) return products;
+            }
+            return null;
+        }
+        public async Task<Product[]> GetProductsByCategoryLimit(uint categoryId, int pageSize, int pageIndex)
+        {
+            if (DbIsConnect())
+            {
+                var products = await _context.Products
+                .Where(p => p.CategoryId == categoryId)
+                .OrderBy(p => p.Id)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToArrayAsync();
+                if (products != null)
+                {
+                    return products;
+                }
+            }
+            return null;
         }
 
         public ProductImage[] GetProductImages(Guid productId)
         {
-            Product? product = _context.Products.Find(productId);
-            if (product != null)
+            if (DbIsConnect())
             {
-                return product.productImages.ToArray();
+                Product? product = _context.Products.Include(p => p.productImages).Where(p => p.Id == productId).FirstOrDefault();
+                if (product != null)
+                {
+                    var images = product.productImages;
+                    if (images != null)
+                    {
+                        return images.ToArray();
+                    }
+                }
             }
             return null!;
         }

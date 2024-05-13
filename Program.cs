@@ -1,3 +1,4 @@
+using amazon_backend.CQRS.Handlers.QueryHandlers;
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
 using amazon_backend.Middleware;
@@ -9,7 +10,12 @@ using amazon_backend.Services.JWTService;
 using amazon_backend.Services.KDF;
 using amazon_backend.Services.Random;
 using Microsoft.EntityFrameworkCore;
-using MySql.Data.MySqlClient;
+using MediatR;
+using System.Reflection;
+using Microsoft.AspNetCore.Hosting;
+using FluentValidation;
+using amazon_backend.CQRS.Queries.Request;
+using System.Globalization;
 
 
 namespace amazon_backend
@@ -21,6 +27,7 @@ namespace amazon_backend
             var builder = WebApplication.CreateBuilder(args);
             var jwt = builder.Configuration.GetSection("JwtBearer");
             // Add services to the container.
+            ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en");
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -30,8 +37,9 @@ namespace amazon_backend
             builder.Services.AddSingleton<IKdfService, HashKdfService>();
             builder.Services.AddSingleton<IRandomService, RandomService>();
             builder.Services.AddSingleton<IEmailService, EmailService>();
-
-
+            builder.Services.AddScoped<IValidator<GetProductsByCategoryQueryRequest>, GetProductsByCategoryValidator>();
+            builder.Services.AddScoped<IValidator<GetProductByIdQueryRequest>, GetProductByIdValidator>();
+            builder.Services.AddScoped<IValidator<GetFilterItemsQueryRequest>, GetFilterItemsValidator>();
 
             // register db context
             // enabled entity framework
@@ -52,7 +60,7 @@ namespace amazon_backend
                 // log
             }
             // services that rely on DbContext
-            builder.Services.AddScoped<ICategoryDAO, CategoryDao>();
+            builder.Services.AddScoped<ICategoryDao, CategoryDao>();
             builder.Services.AddScoped<IUserDao, UserDao>();
             builder.Services.AddScoped<IClientProfileDao, ClientProfileDao>();
             builder.Services.AddScoped<IProductDao, ProductDao>();
@@ -76,6 +84,9 @@ namespace amazon_backend
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
+
+            builder.Services.AddTransient<GetProductsByIdQueryHandler>();
+            builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

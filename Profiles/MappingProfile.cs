@@ -15,7 +15,6 @@ namespace amazon_backend.Profiles
             CreateMap<Product, ProductViewProfile>();
             CreateMap<ProductProperty, ProductPropProfile>();
             CreateMap<AboutProductItem, AboutProductProfile>();
-            CreateMap<ProductColor,ProductColorProfile>();
         }
     }
 }
