@@ -16,6 +16,9 @@ using Microsoft.AspNetCore.Hosting;
 using FluentValidation;
 using amazon_backend.CQRS.Queries.Request;
 using System.Globalization;
+using amazon_backend.Services.Response;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
 
 
 namespace amazon_backend
@@ -37,13 +40,13 @@ namespace amazon_backend
             builder.Services.AddSingleton<IKdfService, HashKdfService>();
             builder.Services.AddSingleton<IRandomService, RandomService>();
             builder.Services.AddSingleton<IEmailService, EmailService>();
-            builder.Services.AddScoped<IValidator<GetProductsByCategoryQueryRequest>, GetProductsByCategoryValidator>();
+            builder.Services.AddScoped<IValidator<GetProductsQueryRequest>, GetProductsByCategoryValidator>();
             builder.Services.AddScoped<IValidator<GetProductByIdQueryRequest>, GetProductByIdValidator>();
             builder.Services.AddScoped<IValidator<GetFilterItemsQueryRequest>, GetFilterItemsValidator>();
 
             // register db context
             // enabled entity framework
-            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
+            string? connectionString = builder.Configuration.GetConnectionString("MySQLLocal");
             if (connectionString == null)
             {
                 throw new Exception("No connection string in appsettings.json");
@@ -84,8 +87,16 @@ namespace amazon_backend
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-
-            builder.Services.AddTransient<GetProductsByIdQueryHandler>();
+            var jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                ContractResolver = new DefaultContractResolver()
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                }
+            };
+            builder.Services.AddSingleton<RestResponseService>(sp => new RestResponseService(sp.GetRequiredService<ILogger<RestResponseService>>()) { jsonSerializerSettings = jsonSerializerSettings });
+            builder.Services.AddTransient<GetProductsQueryHandler>();
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
             var app = builder.Build();
 

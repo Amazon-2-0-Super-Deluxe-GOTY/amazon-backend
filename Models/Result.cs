@@ -3,17 +3,24 @@
     public class Result<T>
     {
         public string message { get; set; }
-        public bool IsSuccess { get; set; }
-        public T Data { get; set; }
+        public bool isSuccess { get; set; }
+        public int pagesCount { get; set; }
+        public T data { get; set; }
         public Result(string error)
         {
             message = error;
-            IsSuccess = false;
+            isSuccess = false;
         }
         public Result(T data)
         {
-            Data = data;
-            IsSuccess = true;
+            this.data = data;
+            isSuccess = true;
+        }
+        public Result(T data, int pagesCount)
+        {
+            this.data = data;
+            this.pagesCount = pagesCount;
+            isSuccess = true;
         }
     }
 }
