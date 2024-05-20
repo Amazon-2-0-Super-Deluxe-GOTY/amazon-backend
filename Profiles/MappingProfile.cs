@@ -15,24 +15,24 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ProductRates != null && src.ProductRates.Count != 0)
+                        if (src.Reviews != null && src.Reviews.Count != 0)
                         {
-                            return src.ProductRates.Sum(pr => pr.Mark) / src.ProductRates.Count;
+                            return src.Reviews.Sum(pr => pr.Mark) / src.Reviews.Count;
                         }
                         return 0;
                     });
                 })
-                .ForMember(dest => dest.ReviewsCount, opt =>
-                {
-                    opt.MapFrom((src, dest, destMember, context) =>
-                    {
-                        if (src.ProductRates != null && src.ProductRates.Count != 0)
-                        {
-                            return src.ProductRates.Count;
-                        }
-                        return 0;
-                    });
-                })
+                 .ForMember(dest => dest.ReviewsCount, opt =>
+                 {
+                     opt.MapFrom((src, dest, destMember, context) =>
+                     {
+                         if (src.Reviews != null && src.Reviews.Count != 0)
+                         {
+                             return src.Reviews.Count;
+                         }
+                         return 0;
+                     });
+                 })
                  .ForMember(dest => dest.DiscountPercentage, opt =>
                  {
                      opt.MapFrom((src, dest, destMember, context) =>
@@ -68,9 +68,9 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ProductRates != null && src.ProductRates.Count != 0)
+                        if (src.Reviews != null && src.Reviews.Count != 0)
                         {
-                            return src.ProductRates.Count;
+                            return src.Reviews.Count;
                         }
                         return 0;
                     });
@@ -79,9 +79,9 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ProductRates != null && src.ProductRates.Count != 0)
+                        if (src.Reviews != null && src.Reviews.Count != 0)
                         {
-                            return src.ProductRates.Sum(pr => pr.Mark) / src.ProductRates.Count;
+                            return src.Reviews.Sum(pr => pr.Mark) / src.Reviews.Count;
                         }
                         return 0;
                     });
@@ -90,10 +90,10 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ProductRates != null && src.ProductRates.Count != 0)
+                        if (src.Reviews != null && src.Reviews.Count != 0)
                         {
-                            var totalRates = src.ProductRates.Count;
-                            var rates = src.ProductRates
+                            var totalRates = src.Reviews.Count;
+                            var rates = src.Reviews
                                 .GroupBy(pr => pr.Mark)
                                 .Select(group => new RatingStat
                                 {

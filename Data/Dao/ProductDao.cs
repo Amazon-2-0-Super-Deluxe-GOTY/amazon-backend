@@ -89,7 +89,7 @@ namespace amazon_backend.Data.Dao
                     .Include(p => p.Category)
                     .Include(p => p.pProps)
                     .Include(p => p.AboutProductItems)
-                    .Include(p => p.ProductRates)
+                    .Include(p => p.Reviews)
                     .Where(p => p.Id == id)
                     .AsSplitQuery()
                     .FirstOrDefaultAsync();
@@ -126,7 +126,7 @@ namespace amazon_backend.Data.Dao
             if (DbIsConnect())
             {
                 var products = await _context.Products
-                    .Include(p=>p.ProductRates)
+                    .Include(p => p.Reviews)
                     .Where(p => p.CategoryId == categoryId).ToListAsync();
                 if (products != null) return products;
             }

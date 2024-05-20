@@ -32,6 +32,6 @@ namespace amazon_backend.Data.Entity
         public List<ProductProperty>? pProps { get; set; }
         public List<AboutProductItem>? AboutProductItems { get; set; }
         public List<Product>? Products { get; set; }
-        public List<ProductRate>? ProductRates { get; set; }
+        public List<Review>? Reviews { get; set; }
     }
 }

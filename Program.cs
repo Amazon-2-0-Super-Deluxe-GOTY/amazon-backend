@@ -68,6 +68,7 @@ namespace amazon_backend
             builder.Services.AddScoped<IClientProfileDao, ClientProfileDao>();
             builder.Services.AddScoped<IProductDao, ProductDao>();
             builder.Services.AddScoped<IProductPropsDao, ProductPropsDao>();
+            builder.Services.AddScoped<IReviewDao, ReviewDao>();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.Configure<TokenOptions>(jwt);
 
