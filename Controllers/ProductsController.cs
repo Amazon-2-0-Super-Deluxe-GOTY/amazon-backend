@@ -1,10 +1,10 @@
-﻿using amazon_backend.CQRS.Queries.Request;
+﻿using amazon_backend.CQRS.Queries.Request.ProductRequests;
 using amazon_backend.Profiles.ProductProfiles;
 using amazon_backend.Services.FluentValidation;
+using amazon_backend.Services.Response;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace amazon_backend.Controllers
 {
@@ -12,34 +12,37 @@ namespace amazon_backend.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
+        private readonly RestResponseService _responseService;
         private readonly IMediator mediator;
-        private readonly IValidator<GetProductsByCategoryQueryRequest> prodByCategoryValidator;
+        private readonly IValidator<GetProductsQueryRequest> prodByCategoryValidator;
         private readonly IValidator<GetProductByIdQueryRequest> productByIdValidator;
-        public ProductsController(IMediator mediator, IValidator<GetProductsByCategoryQueryRequest> validator, IValidator<GetProductByIdQueryRequest> productByIdValidator)
+        public ProductsController(IMediator mediator, IValidator<GetProductsQueryRequest> validator, IValidator<GetProductByIdQueryRequest> productByIdValidator, RestResponseService responseService)
         {
             this.mediator = mediator;
             this.prodByCategoryValidator = validator;
             this.productByIdValidator = productByIdValidator;
+            _responseService = responseService;
         }
         [HttpGet]
         [Route("products-by-category")]
-        public async Task<IActionResult> GetProductsByCategory([FromQuery] GetProductsByCategoryQueryRequest request)
+        public async Task<IActionResult> GetProductsByCategory([FromQuery] GetProductsQueryRequest request)
         {
             var validationErrors = prodByCategoryValidator.GetErrors(request);
             if (validationErrors != null)
             {
-                return SendResponse(StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await mediator.Send(request);
-            if (response.IsSuccess)
+            if (response.isSuccess)
             {
-                List<ProductCardProfile>? productCards = response.Data;
+                List<ProductCardProfile>? productCards = response.data;
                 if (productCards != null)
                 {
-                    return SendResponse(StatusCodes.Status200OK, "Ok", productCards);
+                    return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", productCards,
+                        new() { currentPage = request.pageIndex, pagesCount = response.pagesCount });
                 }
             }
-            return SendResponse(StatusCodes.Status404NotFound, response.message, null);
+            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
         }
         [HttpGet]
         [Route("product-by-id")]
@@ -48,44 +51,14 @@ namespace amazon_backend.Controllers
             var validationErrors = productByIdValidator.GetErrors(request);
             if (validationErrors != null)
             {
-                return SendResponse(StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await mediator.Send(request);
-            if (response.IsSuccess)
+            if (response.isSuccess)
             {
-                return SendResponse(StatusCodes.Status200OK, "Ok", response.Data);
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", response.data);
             }
-            return SendResponse(StatusCodes.Status404NotFound, response.message, null);
-        }
-
-        private IActionResult SendResponse(int statusCode, string message, object data, string contentType = "application/json")
-        {
-            HttpContext.Response.StatusCode = statusCode;
-            HttpContext.Response.ContentType = contentType;
-            var settings = new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                NullValueHandling = NullValueHandling.Ignore
-            };
-            try
-            {
-                return Content(JsonConvert.SerializeObject(new
-                {
-                    Status = statusCode,
-                    Message = message,
-                    Data = data
-                }, settings));
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"error json: {ex.Message}");
-                return Content(JsonConvert.SerializeObject(new
-                {
-                    Status = StatusCodes.Status500InternalServerError,
-                    Message = "See server logs",
-                    Data = (object)null!
-                }, settings));
-            }
+            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
         }
     }
 }

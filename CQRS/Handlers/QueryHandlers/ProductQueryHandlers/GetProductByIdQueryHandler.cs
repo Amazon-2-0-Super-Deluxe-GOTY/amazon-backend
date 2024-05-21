@@ -1,4 +1,4 @@
-﻿using amazon_backend.CQRS.Queries.Request;
+﻿using amazon_backend.CQRS.Queries.Request.ProductRequests;
 using amazon_backend.Data.Dao;
 using amazon_backend.Data.Entity;
 using amazon_backend.Models;
@@ -6,7 +6,7 @@ using amazon_backend.Profiles.ProductProfiles;
 using AutoMapper;
 using MediatR;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductQueryHandlers
 {
     public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQueryRequest, Result<ProductViewProfile>>
     {

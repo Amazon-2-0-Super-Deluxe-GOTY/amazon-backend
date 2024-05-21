@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240520204335_RefactorReviews")]
+    partial class RefactorReviews
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,21 +70,6 @@ namespace amazon_backend.Migrations
                         {
                             t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6");
                         });
-                });
-
-            modelBuilder.Entity("ReviewReviewTag", b =>
-                {
-                    b.Property<Guid>("ReviewTagsId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ReviewsId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("ReviewTagsId", "ReviewsId");
-
-                    b.HasIndex("ReviewsId");
-
-                    b.ToTable("ReviewReviewTag");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Dao.CartItemDao", b =>
@@ -421,30 +409,6 @@ namespace amazon_backend.Migrations
                     b.ToTable("ReviewImages");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ReviewTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ReviewTags");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>
                 {
                     b.Property<Guid>("Id")
@@ -609,21 +573,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ReviewReviewTag", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.ReviewTag", null)
-                        .WithMany()
-                        .HasForeignKey("ReviewTagsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Review", null)
-                        .WithMany()
-                        .HasForeignKey("ReviewsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Dao.CartItemDao", b =>

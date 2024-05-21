@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240520201959_RemoveProductRate")]
+    partial class RemoveProductRate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,53 +38,33 @@ namespace amazon_backend.Migrations
 
             modelBuilder.Entity("Review", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("Mark")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("char(36)");
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Text")
-                        .HasColumnType("varchar(255)");
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("_ProductId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("_UserId")
                         .HasColumnType("char(36)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("_ProductId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("_UserId");
 
-                    b.ToTable("Reviews", t =>
-                        {
-                            t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6");
-                        });
-                });
-
-            modelBuilder.Entity("ReviewReviewTag", b =>
-                {
-                    b.Property<Guid>("ReviewTagsId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ReviewsId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("ReviewTagsId", "ReviewsId");
-
-                    b.HasIndex("ReviewsId");
-
-                    b.ToTable("ReviewReviewTag");
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Dao.CartItemDao", b =>
@@ -395,56 +378,6 @@ namespace amazon_backend.Migrations
                     b.ToTable("ProductProperties");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ReviewImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DeleteDt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<Guid?>("ReviewId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewId");
-
-                    b.ToTable("ReviewImages");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.ReviewTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ReviewTags");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>
                 {
                     b.Property<Guid>("Id")
@@ -594,36 +527,21 @@ namespace amazon_backend.Migrations
 
             modelBuilder.Entity("Review", b =>
                 {
-                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.User", "User")
+                    b.HasOne("amazon_backend.Data.Entity.Product", "_Product")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("_ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ReviewReviewTag", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.ReviewTag", null)
+                    b.HasOne("amazon_backend.Data.Entity.User", "_User")
                         .WithMany()
-                        .HasForeignKey("ReviewTagsId")
+                        .HasForeignKey("_UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Review", null)
-                        .WithMany()
-                        .HasForeignKey("ReviewsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("_Product");
+
+                    b.Navigation("_User");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Dao.CartItemDao", b =>
@@ -726,15 +644,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ReviewImage", b =>
-                {
-                    b.HasOne("Review", "Review")
-                        .WithMany("ReviewImages")
-                        .HasForeignKey("ReviewId");
-
-                    b.Navigation("Review");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.Token", "Token")
@@ -782,11 +691,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("WishList");
                 });
 
-            modelBuilder.Entity("Review", b =>
-                {
-                    b.Navigation("ReviewImages");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.CategoryPropertyKey", b =>
                 {
                     b.Navigation("Categories");
@@ -797,8 +701,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("AboutProductItems");
 
                     b.Navigation("Products");
-
-                    b.Navigation("Reviews");
 
                     b.Navigation("pProps");
 

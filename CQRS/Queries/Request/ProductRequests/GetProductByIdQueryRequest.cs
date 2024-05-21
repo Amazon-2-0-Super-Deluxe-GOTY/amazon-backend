@@ -3,11 +3,11 @@ using amazon_backend.Profiles.ProductProfiles;
 using FluentValidation;
 using MediatR;
 
-namespace amazon_backend.CQRS.Queries.Request
+namespace amazon_backend.CQRS.Queries.Request.ProductRequests
 {
-    public class GetProductByIdQueryRequest:IRequest<Result<ProductViewProfile>>
+    public class GetProductByIdQueryRequest : IRequest<Result<ProductViewProfile>>
     {
-        public string productId { get; set;}
+        public string productId { get; set; }
     }
     public class GetProductByIdValidator : AbstractValidator<GetProductByIdQueryRequest>
     {

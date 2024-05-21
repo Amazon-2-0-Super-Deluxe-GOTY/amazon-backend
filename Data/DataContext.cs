@@ -13,6 +13,8 @@ namespace amazon_backend.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<ReviewTag> ReviewTags { get; set; }
+        public DbSet<ReviewImage> ReviewImages { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItemDao> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -21,7 +23,6 @@ namespace amazon_backend.Data
         public DbSet<ProductProperty> ProductProperties { get; set; }
         public DbSet<CategoryPropertyKey> CategoryPropertyKeys { get; set; }
         public DbSet<AboutProductItem> AboutProductItems { get; set; }
-        public DbSet<ProductRate> ProductRates { get; set; }
         public DbSet<Entity.Token> Tokens { get; set; }
         public DbSet<Entity.TokenJournal> TokenJournals { get; set; }
         public DbSet<Entity.EmailConfirmToken> EmailConfirmTokens { get; set; }
@@ -51,9 +52,7 @@ namespace amazon_backend.Data
                 .WithMany(p => p.pProps)
                 .HasForeignKey(pp => pp.ProductId)
                 .HasPrincipalKey(p => p.Id);
-            modelBuilder.Entity<ProductRate>()
-                .HasKey(pr => new {pr.UserId, pr.ProductId});
-            modelBuilder.Entity<ProductRate>()
+            modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
             modelBuilder.Entity<Entity.Token>(entity =>
             {

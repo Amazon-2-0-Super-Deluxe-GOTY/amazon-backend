@@ -8,7 +8,7 @@ namespace amazon_backend.Data.Dao
     public interface IProductDao : IDataAccessObject<Product, Guid>
     {
         Task<Product?> GetByIdAsync(Guid id);
-        Task<Product[]> GetProductsByCategory(uint categoryId);
+        Task<List<Product>> GetProductsByCategory(uint categoryId);
         Task<Product[]> GetProductsByBrand(string brand);
         ProductImage[] GetProductImages(Guid productId);
         Task<Product[]> GetProductsByCategoryLimit(uint categoryId, int pageSize, int pageIndex);
@@ -89,27 +89,13 @@ namespace amazon_backend.Data.Dao
                     .Include(p => p.Category)
                     .Include(p => p.pProps)
                     .Include(p => p.AboutProductItems)
-                    .Include(p => p.ProductRates)
+                    .Include(p => p.Reviews)
                     .Where(p => p.Id == id)
                     .AsSplitQuery()
                     .FirstOrDefaultAsync();
 
                 if (product != null)
                 {
-                    if(product.ProductRates != null && product.ProductRates.Count != 0)
-                    {
-                        var totalRates = product.ProductRates.Count;
-
-                        product.RatingStats = product.ProductRates
-                            .GroupBy(pr => pr.Mark)
-                            .Select(group => new RatingStat
-                            {
-                                mark = group.Key,
-                                percent = (int)(group.Count() * 100.0 / totalRates)
-                            })
-                            .OrderByDescending(r => r.mark)
-                            .ToList();
-                    }
                     return product;
                 }
             }
@@ -135,12 +121,13 @@ namespace amazon_backend.Data.Dao
             }
         }
 
-        public async Task<Product[]> GetProductsByCategory(uint categoryId)
+        public async Task<List<Product>> GetProductsByCategory(uint categoryId)
         {
             if (DbIsConnect())
             {
                 var products = await _context.Products
-                    .Where(p => p.CategoryId == categoryId).ToArrayAsync();
+                    .Include(p => p.Reviews)
+                    .Where(p => p.CategoryId == categoryId).ToListAsync();
                 if (products != null) return products;
             }
             return null;

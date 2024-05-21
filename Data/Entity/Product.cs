@@ -7,6 +7,7 @@ namespace amazon_backend.Data.Entity
     public class Product
     {
         public Guid Id { get; set; }
+        public string? Slug { get; set; }
         public uint CategoryId { get; set; }
         [Comment("Main prodct reference")]
         public Guid? ProductId { get; set; }
@@ -31,8 +32,6 @@ namespace amazon_backend.Data.Entity
         public List<ProductProperty>? pProps { get; set; }
         public List<AboutProductItem>? AboutProductItems { get; set; }
         public List<Product>? Products { get; set; }
-        public List<ProductRate>? ProductRates { get; set; }
-        [NotMapped]
-        public List<RatingStat>? RatingStats { get; set;}
+        public List<Review>? Reviews { get; set; }
     }
 }

@@ -34,11 +34,11 @@ namespace amazon_backend.Controllers
                 return SendResponse(StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await mediator.Send(request);
-            if (!response.IsSuccess)
+            if (!response.isSuccess)
             {
                 return SendResponse(StatusCodes.Status404NotFound, response.message, null);
             }
-            return SendResponse(StatusCodes.Status200OK, "Ok", response.Data);
+            return SendResponse(StatusCodes.Status200OK, "Ok", response.data);
         }
        
         private IActionResult SendResponse(int statusCode, string message, object data, string contentType = "application/json")

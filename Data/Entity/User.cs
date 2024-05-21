@@ -26,7 +26,7 @@ namespace amazon_backend.Data.Entity
         public DateTime? DeletedAt { get; set; }
 
         public ClientProfile? ClientProfile { get; set; }
-        public List<ProductRate>? ProductRates { get; set; }
+        //public List<ProductRate>? ProductRates { get; set; }
         [JsonIgnore]
         public List<TokenJournal>? TokenJournals { get; set; } = new();
         public string? EmailCode { get; set; }
