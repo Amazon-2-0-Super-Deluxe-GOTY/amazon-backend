@@ -15,10 +15,13 @@ namespace amazon_backend.Data.Entity
         public string Name { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? ShortDescription { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string? Code { get; set; }
         public double Price { get; set; }
+        public int? DiscountPercent { get; set; }
+        public int Quantity { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? ImageUrl { get; set; }
-        public double? DiscountPrice { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string Brand { get; set; }
         public DateTime CreatedAt { get; set; }

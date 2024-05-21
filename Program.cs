@@ -18,6 +18,8 @@ using Newtonsoft.Json;
 using amazon_backend.CQRS.Queries.Request.ProductRequests;
 using amazon_backend.CQRS.Queries.Request.ReviewsRequests;
 using amazon_backend.CQRS.Commands.ReviewRequests;
+using amazon_backend.CQRS.Queries.Request.ReviewTagRequests;
+using amazon_backend.CQRS.Commands.RewiewTagRequests;
 
 
 namespace amazon_backend
@@ -49,10 +51,14 @@ namespace amazon_backend
             builder.Services.AddScoped<IValidator<CreateReviewCommandRequest>, CreateReviewCommandValidator>();
             builder.Services.AddScoped<IValidator<DeleteReviewCommandRequest>, DeleteReviewCommandValidator>();
             builder.Services.AddScoped<IValidator<UpdateReviewCommandRequest>, UpdateReviewCommandValidator>();
+            builder.Services.AddScoped<IValidator<GetReviewTagByIdQueryRequest>, GetReviewTagByIdValidator>();
+            builder.Services.AddScoped<IValidator<CreateReviewTagCommandRequest>, CreateReviewTagValidator>();
+            builder.Services.AddScoped<IValidator<DeleteReviewTagCommandRequest>, DeleteReviewTagValidator>();
+            builder.Services.AddScoped<IValidator<UpdateReviewTagCommandRequest>, UpdateReviewTagValidator>();
             #endregion
             // register db context
             // enabled entity framework
-            string? connectionString = builder.Configuration.GetConnectionString("MySQLLocal");
+            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
             if (connectionString == null)
             {
                 throw new Exception("No connection string in appsettings.json");

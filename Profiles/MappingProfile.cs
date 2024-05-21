@@ -35,33 +35,33 @@ namespace amazon_backend.Profiles
                          return 0;
                      });
                  })
-                 .ForMember(dest => dest.DiscountPercentage, opt =>
+                 .ForMember(dest => dest.DiscountPrice, opt =>
                  {
                      opt.MapFrom((src, dest, destMember, context) =>
                      {
-                         if (src.DiscountPrice.HasValue && src.Price != 0)
+                         if (src.DiscountPercent.HasValue && src.Price > 0)
                          {
-                             return (src.Price - src.DiscountPrice.Value) / src.Price * 100;
+                             return src.Price * (1 - src.DiscountPercent.Value / 100.0);
                          }
                          else
                          {
-                             return 0;
+                             return src.Price;
                          }
                      });
                  });
             CreateMap<ProductImage, ProductImageProfile>();
             CreateMap<Product, ProductViewProfile>()
-                .ForMember(dest => dest.DiscountPercentage, opt =>
+                .ForMember(dest => dest.DiscountPrice, opt =>
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.DiscountPrice.HasValue && src.Price != 0)
+                        if (src.DiscountPercent.HasValue && src.Price > 0)
                         {
-                            return (src.Price - src.DiscountPrice.Value) / src.Price * 100;
+                            return src.Price * (1 - src.DiscountPercent.Value / 100.0);
                         }
                         else
                         {
-                            return 0;
+                            return src.Price;
                         }
                     });
                 })

@@ -101,7 +101,7 @@ namespace amazon_backend.Controllers
             }
             return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
         }
-        [HttpPut("newReview")]
+        [HttpPut]
         public async Task<IActionResult> UpdateReview([FromForm] UpdateReviewCommandRequest request)
         {
             var validationErrors = _reviewUpdateValidator.GetErrors(request);
