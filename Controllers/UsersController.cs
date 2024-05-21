@@ -66,22 +66,6 @@ namespace amazon_backend.Controllers
             return TypedResults.Ok(user);
         }
 
-        [HttpPost]
-        public User CreateUser()
-        {
-            User user = new User()
-            {
-                Id = Guid.NewGuid(),
-                Email = "example@example.com",
-                Password = "aabbcc",
-                PasswordSalt = "111",
-                Role = "client"
-            };
-
-            userDao.Add(user);
-            return user;
-        }
-
         [HttpPut]
         [Route("{id}")]
         public Results<NotFound, Ok<User>> UpdateUser(Guid id)
@@ -142,9 +126,9 @@ namespace amazon_backend.Controllers
                     Email = registerModel.Email,
                     PasswordHash = _kdfService.GetDerivedKey(registerModel.Password, salt),
                     Role = "User",
-                    Password = registerModel.Password,
                     PasswordSalt = salt,
                     EmailCode = confirmEmailCode,
+                   
                 };
                
                 _emailService.SendEmail(registerModel.Email, "test body", "test message");
@@ -170,7 +154,9 @@ namespace amazon_backend.Controllers
                 UserId = user.Id,
                 UserEmail = user.Email,
                 Moment = DateTime.Now,
-                Used = 0
+                Used = 0,
+               
+
             };
             _dataContext.EmailConfirmTokens.Add(emailConfirmToken);
             return emailConfirmToken;
@@ -274,7 +260,7 @@ namespace amazon_backend.Controllers
 
                 HttpContext.Session.SetString("authUserId", user.Id.ToString());
                 Response.Cookies.Append("SessionId", HttpContext.Session.Id);
-                return RedirectToAction("MyProfile", "User", new { username = "id" + user.Id });
+               
             }
            
             return Ok(new
@@ -282,16 +268,42 @@ namespace amazon_backend.Controllers
                 id = user.Id,
                 email = user.Email,
                 role = user.Role,
-                token = token
+                createdAt = user.CreatedAt,
+                emailCode = user.EmailCode,
+                productRates = user.ProductRates,
+                token = token,
+                Firsname = user.FirstName,
+                Lastname = user.LastName,
+                AvatarUrl = user.AvatarUrl, 
+                BirthDate = user.BirthDate,
+                PhoneNumber = user.PhoneNumber
+
+
             });
         }
         #endregion
+        [HttpGet("isAuthenticated/")]
+        public IActionResult IsAuthenticated()
+        {
+           
+               string? userId = HttpContext.Session.GetString("authUserId");
+               if (userId != null)
+               {
+                   return Ok(new
+                   {
+                       isAuthenticated = true,
+                   });
+               }
+          
+            return Ok(new { isAuthenticated = false });
+        }
+
         [HttpGet("/logout")]
         public async Task<IActionResult> Logout()
         {
             try
             {
-                //HttpContext.Session.Remove("authUserId");
+                HttpContext.Session.Remove("authUserId");
                 string? token = HttpContext.Session.GetString("userToken");
                 if (token == null)
                 {
@@ -300,7 +312,7 @@ namespace amazon_backend.Controllers
                     {
                         Response.Cookies.Delete(cookie);
                     }
-                    return RedirectToAction("Index", "Home");
+                    return Ok();
                 }
                 var journal = await _dataContext.TokenJournals.Include(p => p.Token).FirstOrDefaultAsync(j => j.Token._Token == token && j.IsActive == true);
                 if (journal != null)
@@ -314,7 +326,7 @@ namespace amazon_backend.Controllers
                 {
                     Response.Cookies.Delete(cookie);
                 }
-                return RedirectToAction("Index", "Home");
+                return Ok();
             }
             catch (Exception ex)
             {

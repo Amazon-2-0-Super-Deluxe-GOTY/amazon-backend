@@ -58,6 +58,13 @@ namespace amazon_backend.Controllers
             return SendResponse(StatusCodes.Status404NotFound, response.message, null);
         }
 
+
+        /*
+         Создание продукта из админки
+        Редактирование продукта из админки
+         
+         */
+
         private IActionResult SendResponse(int statusCode, string message, object data, string contentType = "application/json")
         {
             HttpContext.Response.StatusCode = statusCode;

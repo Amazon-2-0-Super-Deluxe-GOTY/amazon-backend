@@ -12,9 +12,6 @@ namespace amazon_backend.Data.Entity
         public string Email { get; set; }
         [Required]
         [Column(TypeName = "varchar(255)")]
-        public string Password { get; set; }
-        [Required]
-        [Column(TypeName = "varchar(255)")]
         public string PasswordSalt { get; set; }
         [Required]
         [Column(TypeName = "varchar(255)")]
@@ -30,5 +27,16 @@ namespace amazon_backend.Data.Entity
         [JsonIgnore]
         public List<TokenJournal>? TokenJournals { get; set; } = new();
         public string? EmailCode { get; set; }
+
+
+        [Column(TypeName = "varchar(255)")]
+        public string? FirstName { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string? LastName { get; set; }
+        [Column(TypeName = "varchar(2083)")]
+        public string? AvatarUrl { get; set; }
+        public DateTime? BirthDate { get; set; }
+        [Column(TypeName = "varchar(32)")]
+        public string? PhoneNumber { get; set; }
     }
 }
