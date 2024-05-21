@@ -3,6 +3,7 @@ using amazon_backend.Data.Entity;
 using AutoMapper;
 using amazon_backend.Profiles.CategoryProfiles;
 using amazon_backend.Models;
+using amazon_backend.Profiles.ReviewProfiles;
 
 namespace amazon_backend.Profiles
 {
@@ -10,6 +11,7 @@ namespace amazon_backend.Profiles
     {
         public MappingProfile()
         {
+            #region Product
             CreateMap<Product, ProductCardProfile>()
                 .ForMember(dest => dest.GeneralRate, opt =>
                 {
@@ -48,7 +50,6 @@ namespace amazon_backend.Profiles
                      });
                  });
             CreateMap<ProductImage, ProductImageProfile>();
-            CreateMap<Category, CategoryViewProfile>();
             CreateMap<Product, ProductViewProfile>()
                 .ForMember(dest => dest.DiscountPercentage, opt =>
                 {
@@ -109,6 +110,17 @@ namespace amazon_backend.Profiles
                 });
             CreateMap<ProductProperty, ProductPropProfile>();
             CreateMap<AboutProductItem, AboutProductProfile>();
+            #endregion
+
+            #region Category
+            CreateMap<Category, CategoryViewProfile>();
+            #endregion
+
+            #region Review
+            CreateMap<ReviewImage, ReviewImageProfile>();
+            CreateMap<ReviewTag, ReviewTagProfile>();
+            CreateMap<Review, ReviewProfile>();
+            #endregion
         }
     }
 }

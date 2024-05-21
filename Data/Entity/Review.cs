@@ -15,4 +15,5 @@ public class Review
     public User? User { get; set; }
     public Product? Product { get; set; }
     public List<ReviewImage>? ReviewImages { get; set; }
+    public List<ReviewTag>? ReviewTags { get; set; }
 }

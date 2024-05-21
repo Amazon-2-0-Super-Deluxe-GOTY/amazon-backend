@@ -1,4 +1,4 @@
-﻿using amazon_backend.CQRS.Queries.Request;
+﻿using amazon_backend.CQRS.Queries.Request.ProductRequests;
 using amazon_backend.Profiles.ProductProfiles;
 using amazon_backend.Services.FluentValidation;
 using amazon_backend.Services.Response;

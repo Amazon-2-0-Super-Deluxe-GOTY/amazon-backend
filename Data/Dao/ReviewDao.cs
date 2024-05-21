@@ -5,7 +5,7 @@ using amazon_backend.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-public interface IReviewDao:IDataAccessObject<Review,Guid>
+public interface IReviewDao : IDataAccessObject<Review, Guid>
 {
     public Task<bool> AddAsync(Review item);
     public Task<bool> DeleteAsync(Guid id);
@@ -18,12 +18,12 @@ public interface IReviewDao:IDataAccessObject<Review,Guid>
 public class ReviewDao : IReviewDao
 {
     private readonly DataContext _context;
-    private readonly Logger<ReviewDao> logger;
+    private readonly ILogger<ReviewDao> _logger;
 
-    public ReviewDao(DataContext context, Logger<ReviewDao> logger)
+    public ReviewDao(DataContext context, ILogger<ReviewDao> logger)
     {
         _context = context;
-        this.logger = logger;
+        _logger = logger;
     }
 
     public void Add(Review item)
@@ -35,9 +35,9 @@ public class ReviewDao : IReviewDao
                 _context.Reviews.Add(item);
                 _context.SaveChanges();
             }
-            catch(DbUpdateException ex)
+            catch (DbUpdateException ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
             }
         }
     }
@@ -54,7 +54,7 @@ public class ReviewDao : IReviewDao
             }
             catch (DbUpdateException ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
                 return false;
             }
         }
@@ -72,9 +72,9 @@ public class ReviewDao : IReviewDao
                 _context.SaveChanges();
             }
         }
-        catch(DbUpdateException ex)
+        catch (DbUpdateException ex)
         {
-            logger.LogError(ex.Message);
+            _logger.LogError(ex.Message);
         }
     }
 
@@ -93,7 +93,7 @@ public class ReviewDao : IReviewDao
         }
         catch (DbUpdateException ex)
         {
-            logger.LogError(ex.Message);
+            _logger.LogError(ex.Message);
             return false;
         }
     }
@@ -108,9 +108,9 @@ public class ReviewDao : IReviewDao
             }
             return null;
         }
-        catch(NotSupportedException ex)
+        catch (NotSupportedException ex)
         {
-            logger.LogError(ex.Message);
+            _logger.LogError(ex.Message);
             return null;
         }
     }
@@ -127,7 +127,7 @@ public class ReviewDao : IReviewDao
         }
         catch (NotSupportedException ex)
         {
-            logger.LogError(ex.Message);
+            _logger.LogError(ex.Message);
             return null;
         }
     }
@@ -145,7 +145,7 @@ public class ReviewDao : IReviewDao
         }
         catch (NotSupportedException ex)
         {
-            logger.LogError(ex.Message);
+            _logger.LogError(ex.Message);
             return null;
         }
     }
@@ -165,7 +165,7 @@ public class ReviewDao : IReviewDao
             }
             catch (DbUpdateException ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
             }
         }
     }
@@ -174,7 +174,13 @@ public class ReviewDao : IReviewDao
     {
         try
         {
-            Review? item = await _context.Reviews.FirstOrDefaultAsync(x => x.Id == id);
+            Review? item = await _context.Reviews
+                .Include(r => r.User)
+                .Include(r => r.ReviewImages)
+                .Include(r => r.ReviewTags)
+                .AsSplitQuery()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (item != null)
             {
                 return item;
@@ -183,7 +189,7 @@ public class ReviewDao : IReviewDao
         }
         catch (NotSupportedException ex)
         {
-            logger.LogError(ex.Message);
+            _logger.LogError(ex.Message);
             return null;
         }
     }
@@ -205,7 +211,7 @@ public class ReviewDao : IReviewDao
             }
             catch (DbUpdateException ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
                 return false;
             }
         }
