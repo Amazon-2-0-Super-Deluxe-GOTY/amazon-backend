@@ -117,7 +117,14 @@ namespace amazon_backend.Profiles
             #endregion
 
             #region Review
-            CreateMap<ReviewImage, ReviewImageProfile>();
+            CreateMap<ReviewImage, ReviewImageProfile>()
+                .ForMember(dest => dest.ImageUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        return Path.Combine("https://perry11.s3.eu-north-1.amazonaws.com/", src.ImageUrl);
+                    });
+                });
             CreateMap<ReviewTag, ReviewTagProfile>();
             CreateMap<Review, ReviewProfile>();
             #endregion

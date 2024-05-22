@@ -5,6 +5,7 @@ namespace amazon_backend.Data.Entity
     public class ReviewImage
     {
         public Guid Id { get; set; }
+        public Guid ReviewId { get; set; }
         [Column(TypeName ="varchar(255)")]
         public string ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; }

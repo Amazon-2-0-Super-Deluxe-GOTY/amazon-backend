@@ -20,6 +20,7 @@ using amazon_backend.CQRS.Queries.Request.ReviewsRequests;
 using amazon_backend.CQRS.Commands.ReviewRequests;
 using amazon_backend.CQRS.Queries.Request.ReviewTagRequests;
 using amazon_backend.CQRS.Commands.RewiewTagRequests;
+using amazon_backend.Services.AWSS3;
 
 
 namespace amazon_backend
@@ -41,7 +42,6 @@ namespace amazon_backend
             builder.Services.AddSingleton<IKdfService, HashKdfService>();
             builder.Services.AddSingleton<IRandomService, RandomService>();
             builder.Services.AddSingleton<IEmailService, EmailService>();
-
             #region Validators
             builder.Services.AddScoped<IValidator<GetProductsQueryRequest>, GetProductsByCategoryValidator>();
             builder.Services.AddScoped<IValidator<GetProductByIdQueryRequest>, GetProductByIdValidator>();
@@ -55,6 +55,7 @@ namespace amazon_backend
             builder.Services.AddScoped<IValidator<CreateReviewTagCommandRequest>, CreateReviewTagValidator>();
             builder.Services.AddScoped<IValidator<DeleteReviewTagCommandRequest>, DeleteReviewTagValidator>();
             builder.Services.AddScoped<IValidator<UpdateReviewTagCommandRequest>, UpdateReviewTagValidator>();
+            builder.Services.AddScoped<IValidator<DeleteReviewImageCommandRequest>, DeleteReviewImageValidator>();
             #endregion
             // register db context
             // enabled entity framework
@@ -72,7 +73,7 @@ namespace amazon_backend
             }
             catch(Exception ex)
             {
-                // log
+                throw new Exception("Can't connect to MySql Server");
             }
             // services that rely on DbContext
             #region DAO's
@@ -113,6 +114,8 @@ namespace amazon_backend
             };
             builder.Services.AddSingleton(sp => new RestResponseService(sp.GetRequiredService<ILogger<RestResponseService>>()) { jsonSerializerSettings = jsonSerializerSettings });
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+            builder.Services.AddS3Client(builder.Configuration);
+            builder.Services.AddSingleton<IS3Service, S3Service>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

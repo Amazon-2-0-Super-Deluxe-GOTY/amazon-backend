@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Threading;
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
 using amazon_backend.Data.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 public interface IReviewDao : IDataAccessObject<Review, Guid>
 {
     public Task<bool> AddAsync(Review item);
     public Task<bool> DeleteAsync(Guid id);
+    public Task<bool> DeleteReviewImageAsync(Guid imageId);
     public Task<List<Review>> GetAllAsync();
     public Task<Review?> GetByIdAsync(Guid id);
     public Task<bool> UpdateAsync(Review item);
@@ -216,5 +219,17 @@ public class ReviewDao : IReviewDao
             }
         }
         return false;
+    }
+
+    public async Task<bool> DeleteReviewImageAsync(Guid imageId)
+    {
+        ReviewImage? image = await _context.ReviewImages.FirstOrDefaultAsync(i => i.Id == imageId);
+        if (image == null)
+        {
+            return false;
+        }
+        _context.Remove(image);
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

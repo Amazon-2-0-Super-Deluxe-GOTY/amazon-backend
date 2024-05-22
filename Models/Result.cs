@@ -5,6 +5,7 @@
         public string message { get; set; }
         public bool isSuccess { get; set; }
         public int pagesCount { get; set; }
+        public int statusCode { get; set; }
         public T data { get; set; }
         public Result(string error)
         {

@@ -8,7 +8,7 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
     {
         //public string userToken { get; set; }
         public string reviewId { get; set; }
-        public int rating { get; set; }
+        public int? rating { get; set; }
         public string? text { get; set; }
         public List<IFormFile>? reviewImages { get; set; }
         public List<string>? reviewTagsIds { get; set; }
@@ -20,8 +20,8 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
             RuleFor(x => x.reviewId)
                 .Must(x => Guid.TryParse(x, out var result) == true)
                 .WithMessage("Incorrect {PropertyName} format");
-            RuleFor(x => x.rating).NotEmpty().GreaterThan(0).LessThan(6);
-            RuleFor(x => x.text).MaximumLength(250);
+            RuleFor(x => x.rating).GreaterThan(0).LessThan(6).When(x=>x.rating.HasValue);
+            RuleFor(x => x.text).MaximumLength(250).When(x=>!string.IsNullOrEmpty(x.text));
             RuleFor(x => x.reviewImages).Must(x => x.Count > 0 && x.Count <= 10)
                 .When(x => x.reviewImages != null && x.reviewImages.Count != 0)
                 .WithMessage("There should be a maximum of 10 images");
