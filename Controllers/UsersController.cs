@@ -280,22 +280,7 @@ namespace amazon_backend.Controllers
         }
         #endregion
 
-        [HttpGet("isAuthenticated/")]
-        public IActionResult IsAuthenticated()
-        {
-
-            string? userId = HttpContext.Session.GetString("userToken");
-            if (userId != null)
-            {
-                return Ok(new
-                {
-                    isAuthenticated = true,
-                    token = userId
-                });
-            }
-
-            return Ok(new { isAuthenticated = false });
-        }
+        
 
 
         [HttpGet("/logout")]

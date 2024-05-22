@@ -104,6 +104,36 @@ namespace amazon_backend.Services.JWTService
                 return null;
             }
         }
+
+        public object DecodeToken(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            if (handler.CanReadToken(token))
+            {
+                var jwtToken = handler.ReadJwtToken(token);
+
+                var claims = jwtToken.Claims.Select(claim => new
+                {
+                    claim.Type,
+                    claim.Value
+                });
+
+                var header = jwtToken.Header.Select(h => new
+                {
+                    h.Key,
+                    h.Value
+                });
+                var userIdClaim = claims?.FirstOrDefault(c => c.Type == "nameid")?.Value;
+
+                return new
+                {
+                    Claims = claims,
+                    id = userIdClaim
+                };
+            }
+
+            throw new ArgumentException("Invalid token");
+        }
     }
    
 }
