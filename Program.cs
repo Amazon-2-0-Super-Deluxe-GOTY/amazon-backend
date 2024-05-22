@@ -32,7 +32,7 @@ namespace amazon_backend
             var jwt = builder.Configuration.GetSection("JwtBearer");
             // Add services to the container.
             ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en");
-
+            builder.Services.AddScoped<CategoryDao>();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
