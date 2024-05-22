@@ -77,27 +77,27 @@ namespace amazon_backend.Data.Dao
 
         public async Task<List<FilterItemModel>> GetFilterItems(uint categoryId)
         {
-            CategoryPropertyKey[]? categoryProps = await _context
-                 .CategoryPropertyKeys
-                 .Where(cp => cp.CategoryId == categoryId)
-                 .ToArrayAsync();
-            var filterItems = await _context.ProductProperties
-                .Join(_context.CategoryPropertyKeys,
-                pprops => pprops.Key,
-                catprops => catprops.Name,
-                (pprops, catprops) => new { pprops, catprops })
-                .Where(x => x.catprops.CategoryId == categoryId && x.catprops.IsFilter)
-                .GroupBy(x => new { x.pprops.Key, x.pprops.Value })
-                .Select(g => new FilterItemModel
-                {
-                    Key = g.Key.Key,
-                    Value = g.Key.Value,
-                    Count = g.Count()
-                }).ToListAsync();
-            if (filterItems != null && filterItems.Count != 0)
-            {
-                return filterItems;
-            }
+            //CategoryPropertyKey[]? categoryProps = await _context
+            //     .CategoryPropertyKeys
+            //     .Where(cp => cp.CategoryId == categoryId)
+            //     .ToArrayAsync();
+            //var filterItems = await _context.ProductProperties
+            //    .Join(_context.CategoryPropertyKeys,
+            //    pprops => pprops.Key,
+            //    catprops => catprops.Name,
+            //    (pprops, catprops) => new { pprops, catprops })
+            //    .Where(x => x.catprops.CategoryId == categoryId && x.catprops.IsFilter)
+            //    .GroupBy(x => new { x.pprops.Key, x.pprops.Value })
+            //    .Select(g => new FilterItemModel
+            //    {
+            //        Key = g.Key.Key,
+            //        Value = g.Key.Value,
+            //        Count = g.Count()
+            //    }).ToListAsync();
+            //if (filterItems != null && filterItems.Count != 0)
+            //{
+            //    return filterItems;
+            //}
             return null;
         }
     }
