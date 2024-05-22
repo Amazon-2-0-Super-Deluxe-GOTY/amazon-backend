@@ -39,7 +39,6 @@ namespace amazon_backend.Middleware
                             //journal.IsActive = false;
                             context.Request.Method = "POST";
                             context.Request.Headers["X-Original-Method"] = "GET";
-                            context.Response.Redirect("/logout");
                             return;
                         }
                         context.Items.Add("authUser", authUser);
