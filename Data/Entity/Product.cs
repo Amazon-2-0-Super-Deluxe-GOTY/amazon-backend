@@ -29,10 +29,8 @@ namespace amazon_backend.Data.Entity
 
         // Navigation properties
         public Category? Category { get; set; }
-        [InverseProperty("Product")]
-        public List<ProductImage>? productImages { get; set; }
-        [InverseProperty("Product")]
-        public List<ProductProperty>? pProps { get; set; }
+        public List<ProductImage>? ProductImages { get; set; }
+        public List<ProductProperty>? ProductProperties { get; set; }
         public List<AboutProductItem>? AboutProductItems { get; set; }
         public List<Product>? Products { get; set; }
         public List<Review>? Reviews { get; set; }

@@ -23,23 +23,31 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductQueryHandlers
 
         public async Task<Result<List<ProductCardProfile>>> Handle(GetProductsQueryRequest request, CancellationToken cancellationToken)
         {
-            Category? _category = await _categoryDao.GetByName(request.category);
-            if (_category is null) return new("Category not found");
-
-
-            List<Product>? products = await _productDao
-                .GetProductsByCategory(_category.Id);
-
-            if (products != null)
+            await Console.Out.WriteLineAsync($"{request.pageSize}");
+            if (request.filters != null && request.filters.Count != 0)
             {
-                if (products.Count != 0)
+                foreach(var filter in request.filters)
                 {
-                    int pagesCount = (int)Math.Ceiling(products.Count / (double)request.pageSize);
-                    List<ProductCardProfile> productCards = mapper.Map<List<ProductCardProfile>>(products.Skip((request.pageIndex - 1) * request.pageSize)
-                .Take(request.pageSize));
-                    return new(productCards, pagesCount);
+                    await Console.Out.WriteLineAsync($"{filter.Key} {filter.Value}");
                 }
             }
+            //Category? _category = await _categoryDao.GetByName(request.category);
+            //if (_category is null) return new("Category not found");
+
+
+            //List<Product>? products = await _productDao
+            //    .GetProductsByCategory(_category.Id);
+
+            //if (products != null)
+            //{
+            //    if (products.Count != 0)
+            //    {
+            //        int pagesCount = (int)Math.Ceiling(products.Count / (double)request.pageSize);
+            //        List<ProductCardProfile> productCards = mapper.Map<List<ProductCardProfile>>(products.Skip((request.pageIndex - 1) * request.pageSize)
+            //    .Take(request.pageSize));
+            //        return new(productCards, pagesCount);
+            //    }
+            //}
             return new("Products not found");
         }
     }

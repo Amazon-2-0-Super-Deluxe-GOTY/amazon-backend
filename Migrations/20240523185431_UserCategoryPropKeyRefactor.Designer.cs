@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240523185431_UserCategoryPropKeyRefactor")]
+    partial class UserCategoryPropKeyRefactor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,36 +49,6 @@ namespace amazon_backend.Migrations
                     b.HasIndex("CategoryPropertyKeysId");
 
                     b.ToTable("CategoryCategoryPropertyKey");
-                });
-
-            modelBuilder.Entity("ProductProductImage", b =>
-                {
-                    b.Property<Guid>("ProductImagesId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ProductsId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("ProductImagesId", "ProductsId");
-
-                    b.HasIndex("ProductsId");
-
-                    b.ToTable("ProductProductImage");
-                });
-
-            modelBuilder.Entity("ProductProductProperty", b =>
-                {
-                    b.Property<Guid>("ProductPropertiesId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ProductsId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("ProductPropertiesId", "ProductsId");
-
-                    b.HasIndex("ProductsId");
-
-                    b.ToTable("ProductProductProperty");
                 });
 
             modelBuilder.Entity("Review", b =>
@@ -403,6 +376,8 @@ namespace amazon_backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId");
+
                     b.ToTable("ProductImages");
                 });
 
@@ -419,11 +394,16 @@ namespace amazon_backend.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("char(36)");
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ProductProperties");
                 });
@@ -651,36 +631,6 @@ namespace amazon_backend.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ProductProductImage", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.ProductImage", null)
-                        .WithMany()
-                        .HasForeignKey("ProductImagesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ProductProductProperty", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.ProductProperty", null)
-                        .WithMany()
-                        .HasForeignKey("ProductPropertiesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Review", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.Product", "Product")
@@ -780,6 +730,28 @@ namespace amazon_backend.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("amazon_backend.Data.Entity.ProductImage", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
+                        .WithMany("productImages")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.ProductProperty", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
+                        .WithMany("pProps")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("amazon_backend.Data.Entity.ReviewImage", b =>
                 {
                     b.HasOne("Review", "Review")
@@ -850,6 +822,10 @@ namespace amazon_backend.Migrations
                     b.Navigation("Products");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("pProps");
+
+                    b.Navigation("productImages");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>

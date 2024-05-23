@@ -4,7 +4,6 @@ namespace amazon_backend.Data.Dao
 {
     public interface IProductPropsDao:IDataAccessObject<ProductProperty, Guid>
     {
-        public ProductProperty[] GetAllProductPropsByProductId(Guid productId);
     }
     public class ProductPropsDao : IProductPropsDao
     {
@@ -40,13 +39,6 @@ namespace amazon_backend.Data.Dao
             {
                 return _context.ProductProperties.ToArray();
             }
-            return null;
-        }
-
-        public ProductProperty[] GetAllProductPropsByProductId(Guid productId)
-        {
-            var props = _context.ProductProperties.Where(pp => pp.ProductId == productId).ToArray();
-            if (props.Length != 0) return props;
             return null;
         }
 

@@ -40,18 +40,6 @@ namespace amazon_backend.Data
             modelBuilder.Entity<Category>()
                 .Property(b => b.IsDeleted)
                 .HasDefaultValue(false);
-
-            modelBuilder.Entity<ProductImage>()
-                .HasOne(pi => pi.Product)
-                .WithMany(p => p.productImages)
-                .HasForeignKey(pi => pi.ProductId)
-                .HasPrincipalKey(p => p.Id);
-
-            modelBuilder.Entity<ProductProperty>()
-                .HasOne(pp => pp.Product)
-                .WithMany(p => p.pProps)
-                .HasForeignKey(pp => pp.ProductId)
-                .HasPrincipalKey(p => p.Id);
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
             modelBuilder.Entity<Entity.Token>(entity =>

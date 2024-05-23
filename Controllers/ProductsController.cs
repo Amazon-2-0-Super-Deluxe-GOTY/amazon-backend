@@ -24,8 +24,7 @@ namespace amazon_backend.Controllers
             _responseService = responseService;
         }
         [HttpGet]
-        [Route("products-by-category")]
-        public async Task<IActionResult> GetProductsByCategory([FromQuery] GetProductsQueryRequest request)
+        public async Task<IActionResult> GetProducts([FromQuery] GetProductsQueryRequest request)
         {
             var validationErrors = prodByCategoryValidator.GetErrors(request);
             if (validationErrors != null)

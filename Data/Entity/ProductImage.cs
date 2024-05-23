@@ -8,9 +8,6 @@ namespace amazon_backend.Data.Entity
         public Guid Id { get; set; }
         public Guid ProductId { get; set; }
         public string ImageUrl { get; set; }
-
-        // Navigation properties
-        [ForeignKey("Id")]
-        public Product Product { get; set; }
+        public List<Product>? Products { get; set; }
     }
 }
