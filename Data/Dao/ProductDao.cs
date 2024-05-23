@@ -85,9 +85,9 @@ namespace amazon_backend.Data.Dao
             if (_context.CanConnect)
             {
                 var product = await _context.Products
-                    .Include(p => p.productImages)
+                    .Include(p => p.ProductImages)
                     .Include(p => p.Category)
-                    .Include(p => p.pProps)
+                    .Include(p => p.ProductProperties)
                     .Include(p => p.AboutProductItems)
                     .Include(p => p.Reviews)
                     .Where(p => p.Id == id)
@@ -154,10 +154,10 @@ namespace amazon_backend.Data.Dao
         {
             if (DbIsConnect())
             {
-                Product? product = _context.Products.Include(p => p.productImages).Where(p => p.Id == productId).FirstOrDefault();
+                Product? product = _context.Products.Include(p => p.ProductImages).Where(p => p.Id == productId).FirstOrDefault();
                 if (product != null)
                 {
-                    var images = product.productImages;
+                    var images = product.ProductImages;
                     if (images != null)
                     {
                         return images.ToArray();

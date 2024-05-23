@@ -21,12 +21,10 @@ namespace amazon_backend.Data.Entity
         public string Role { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? DeletedAt { get; set; }
-
-        //public List<ProductRate>? ProductRates { get; set; }
+        public List<Review>? Reviews { get; set; }
         [JsonIgnore]
         public List<TokenJournal>? TokenJournals { get; set; } = new();
         public string? EmailCode { get; set; }
-
         [Column(TypeName = "varchar(255)")]
         public string? FirstName { get; set; }
         [Column(TypeName = "varchar(255)")]
