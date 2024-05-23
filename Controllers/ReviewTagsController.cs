@@ -82,7 +82,7 @@ namespace amazon_backend.Controllers
             {
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok",null);
             }
-            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, null);
         }
         [HttpPut]
         public async Task<IActionResult> UpdateReviewTag([FromForm] UpdateReviewTagCommandRequest request)

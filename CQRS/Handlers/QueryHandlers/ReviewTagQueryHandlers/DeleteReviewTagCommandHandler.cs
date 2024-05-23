@@ -18,6 +18,33 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewTagQueryHandlers
         }
         public async Task<Result<Guid>> Handle(DeleteReviewTagCommandRequest request, CancellationToken cancellationToken)
         {
+            if (request.reviewId != null)
+            {
+                try
+                {
+                    Review? review = await _dataContext.Reviews.Include(r => r.ReviewTags).FirstOrDefaultAsync(r => r.Id == Guid.Parse(request.reviewId));
+                    if (review != null)
+                    {
+                        ReviewTag? rTag = await _dataContext.ReviewTags.FirstOrDefaultAsync(r => r.Id == Guid.Parse(request.reviewTagId));
+                        if (rTag != null)
+                        {
+                            if (review.ReviewTags != null)
+                            {
+                                review.ReviewTags.Remove(rTag);
+                                await _dataContext.SaveChangesAsync();
+                                return new(rTag.Id);
+                            }
+                        }
+                        return new("Review tag not found") { statusCode = 404 };
+                    }
+                    return new("Review not found") { statusCode = 404 };
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _logger.LogError(ex.Message);
+                    return new("See server logs") { statusCode = 500 };
+                }
+            }
             try
             {
                 ReviewTag? reviewTag = await _dataContext.ReviewTags.Include(rt => rt.Reviews).Where(rt => rt.Id == Guid.Parse(request.reviewTagId)).FirstOrDefaultAsync();
@@ -37,7 +64,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewTagQueryHandlers
             catch (OperationCanceledException ex)
             {
                 _logger.LogError(ex.Message);
-                return new("See server logs");
+                return new("See server logs") { statusCode=500};
             }
         }
     }

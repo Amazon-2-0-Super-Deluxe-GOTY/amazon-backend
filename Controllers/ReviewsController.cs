@@ -23,8 +23,9 @@ namespace amazon_backend.Controllers
         private readonly IValidator<CreateReviewCommandRequest> _reviewCreateValidator;
         private readonly IValidator<DeleteReviewCommandRequest> _reviewDeleteValidator;
         private readonly IValidator<UpdateReviewCommandRequest> _reviewUpdateValidator;
+        private readonly IValidator<DeleteReviewImageCommandRequest> _reviewImageDeleteValidator;
 
-        public ReviewsController(IMediator mediator, RestResponseService responseService, IValidator<GetReviewByIdQueryRequest> reviewByIdValidator, IValidator<GetReviewsQueryRequest> reviewsValidator, IValidator<CreateReviewCommandRequest> reviewCreateValidator, IValidator<DeleteReviewCommandRequest> reviewDeleteValidator, IValidator<UpdateReviewCommandRequest> reviewUpdateValidator)
+        public ReviewsController(IMediator mediator, RestResponseService responseService, IValidator<GetReviewByIdQueryRequest> reviewByIdValidator, IValidator<GetReviewsQueryRequest> reviewsValidator, IValidator<CreateReviewCommandRequest> reviewCreateValidator, IValidator<DeleteReviewCommandRequest> reviewDeleteValidator, IValidator<UpdateReviewCommandRequest> reviewUpdateValidator, IValidator<DeleteReviewImageCommandRequest> reviewImageDeleteValidator)
         {
             _mediator = mediator;
             _responseService = responseService;
@@ -33,6 +34,7 @@ namespace amazon_backend.Controllers
             _reviewCreateValidator = reviewCreateValidator;
             _reviewDeleteValidator = reviewDeleteValidator;
             _reviewUpdateValidator = reviewUpdateValidator;
+            _reviewImageDeleteValidator = reviewImageDeleteValidator;
         }
         [HttpGet]
         public async Task<IActionResult> GetReviews([FromQuery] GetReviewsQueryRequest request)
@@ -101,6 +103,21 @@ namespace amazon_backend.Controllers
             }
             return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
         }
+        [HttpDelete("reviewImage")]
+        public async Task<IActionResult> DeleteReview([FromQuery] DeleteReviewImageCommandRequest request)
+        {
+            var validationErrors = _reviewImageDeleteValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            if (response.isSuccess)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", null);
+            }
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, null);
+        }
         [HttpPut]
         public async Task<IActionResult> UpdateReview([FromForm] UpdateReviewCommandRequest request)
         {
@@ -114,7 +131,7 @@ namespace amazon_backend.Controllers
             {
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", null);
             }
-            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, null);
         }
     }
 }
