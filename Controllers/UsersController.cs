@@ -259,9 +259,9 @@ namespace amazon_backend.Controllers
 
                 HttpContext.Session.SetString("authUserId", user.Id.ToString());
                 Response.Cookies.Append("SessionId", HttpContext.Session.Id);
-                return RedirectToAction("MyProfile", "User", new { username = "id" + user.Id });
+               
             }
-           
+            string? userToken = HttpContext.Session.GetString("userToken");
             return Ok(new
             {
                 id = user.Id,
@@ -269,7 +269,7 @@ namespace amazon_backend.Controllers
                 role = user.Role,
                 createdAt = user.CreatedAt,
                 emailCode = user.EmailCode,
-                token = token,
+                token = userToken,
                 Firsname = user.FirstName,
                 Lastname = user.LastName,
                 AvatarUrl = user.AvatarUrl,
@@ -280,21 +280,7 @@ namespace amazon_backend.Controllers
         }
         #endregion
 
-        [HttpGet("isAuthenticated/")]
-        public IActionResult IsAuthenticated()
-        {
-
-            string? userId = HttpContext.Session.GetString("authUserId");
-            if (userId != null)
-            {
-                return Ok(new
-                {
-                    isAuthenticated = true,
-                });
-            }
-
-            return Ok(new { isAuthenticated = false });
-        }
+        
 
 
         [HttpGet("/logout")]

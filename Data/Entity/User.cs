@@ -22,7 +22,6 @@ namespace amazon_backend.Data.Entity
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? DeletedAt { get; set; }
 
-        public ClientProfile? ClientProfile { get; set; }
         //public List<ProductRate>? ProductRates { get; set; }
         [JsonIgnore]
         public List<TokenJournal>? TokenJournals { get; set; } = new();

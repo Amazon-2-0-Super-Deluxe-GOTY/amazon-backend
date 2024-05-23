@@ -20,5 +20,6 @@ namespace amazon_backend.Data.Entity
         public bool IsDeleted { get; set; }
         public bool IsVisible { get; set; }
         List<CategoryPropertyKey>? CategoryPropertyKeys { get; set; }
+        
     }
 }
