@@ -8,39 +8,71 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace amazon_backend.Services.Email
 {
-    public class EmailService : IEmailService
+    public class EmailService : IEmailService, IDisposable
     {
         private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailService> _logger;
-        private readonly IWebHostEnvironment _webHostEnvironment;
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger, IWebHostEnvironment webHostEnvironment)
+        private readonly SmtpClient _smtpClient;
+        private bool _disposed;
+        private readonly string? _fromEmail;
+        private readonly string? _fromPassword;
+
+        public EmailService(IConfiguration configuration)
         {
             _configuration = configuration;
-            _logger = logger;
-            _webHostEnvironment = webHostEnvironment;
+            _disposed = false;
+            #region create smtp client
+            string? host = _configuration["Smtp:Gmail:Host"];
+            if (host is null)
+                throw new MissingFieldException(":Missing configuration 'Smtp:Gmail:Host'");
+            _fromEmail = _configuration["Smtp:Gmail:Email"];
+            if (_fromEmail is null)
+                throw new MissingFieldException(":Missing configuration 'Smtp:Gmail:Email'");
+            _fromPassword = _configuration["Smtp:Gmail:Password"];
+            if (_fromPassword is null)
+                throw new MissingFieldException(":Missing configuration 'Smtp:Gmail:Password'");
+            int port; try
+            {
+                port = Convert.ToInt32(_configuration["Smtp:Gmail:Port"]);
+            }
+            catch
+            {
+                throw new MissingFieldException(":Missing or invalid configuration 'Smtp:Gmail:Port'");
+            }
+            bool ssl;
+            try
+            {
+                ssl = Convert.ToBoolean(_configuration["Smtp:Gmail:Ssl"]);
+            }
+            catch
+            {
+                throw new MissingFieldException(":Missing or invalid configuration 'Smtp:Gmail:Ssl'");
+            }
+            _smtpClient = new(host, port)
+            {
+                EnableSsl = ssl,
+                Credentials = new NetworkCredential(_fromEmail, _fromPassword)
+            };
+            #endregion
         }
-
-        public void SendEmail(string recipient, string subject, string message)
+        public async Task SendEmailAsync(string recipient, string subject, string message)
         {
-            string fromEmail = "testasp.201project@gmail.com";
-            string fromPassword = "fbknrqdoduuinxpa";
-
-            MailMessage mailMessage = new MailMessage();
-            mailMessage.From = new MailAddress(fromEmail);
+            MailMessage mailMessage = new MailMessage()
+            {
+                From = new MailAddress(_fromEmail!),
+                Subject = subject,
+                Body = message
+            };
             mailMessage.To.Add(recipient);
-            mailMessage.Subject = subject;
-            mailMessage.Body = message;
-
-            SmtpClient smtpClient = new SmtpClient("smtp.gmail.com");
-            smtpClient.Port = 587;
-            smtpClient.Credentials = new NetworkCredential(fromEmail, fromPassword);
-            smtpClient.EnableSsl = true;
-
-            smtpClient.Send(mailMessage);
+            await _smtpClient.SendMailAsync(mailMessage);
         }
-
-
-        
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _smtpClient.Dispose();
+                _disposed = true;
+            }
+        }
     }
 }
 

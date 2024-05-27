@@ -7,6 +7,10 @@
         public int pagesCount { get; set; }
         public int statusCode { get; set; }
         public T data { get; set; }
+        public Result()
+        {
+            
+        }
         public Result(string error)
         {
             message = error;

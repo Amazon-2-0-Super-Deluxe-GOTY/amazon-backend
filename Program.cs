@@ -1,6 +1,5 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
-using amazon_backend.Middleware;
 using amazon_backend.Options.Token;
 using amazon_backend.Profiles;
 using amazon_backend.Services.Email;
@@ -21,6 +20,11 @@ using amazon_backend.CQRS.Commands.ReviewRequests;
 using amazon_backend.CQRS.Queries.Request.ReviewTagRequests;
 using amazon_backend.CQRS.Commands.RewiewTagRequests;
 using amazon_backend.Services.AWSS3;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using amazon_backend.CQRS.Commands.UserRequests;
+using Microsoft.AspNetCore.Hosting;
 
 
 namespace amazon_backend
@@ -34,6 +38,7 @@ namespace amazon_backend
             // Add services to the container.
             ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en");
             builder.Services.AddScoped<CategoryDao>();
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -42,24 +47,11 @@ namespace amazon_backend
             builder.Services.AddSingleton<IKdfService, HashKdfService>();
             builder.Services.AddSingleton<IRandomService, RandomService>();
             builder.Services.AddSingleton<IEmailService, EmailService>();
-            #region Validators
-            builder.Services.AddScoped<IValidator<GetProductsQueryRequest>, GetProductsByCategoryValidator>();
-            builder.Services.AddScoped<IValidator<GetProductByIdQueryRequest>, GetProductByIdValidator>();
-            builder.Services.AddScoped<IValidator<GetFilterItemsQueryRequest>, GetFilterItemsValidator>();
-            builder.Services.AddScoped<IValidator<GetReviewByIdQueryRequest>, GetReviewByIdValidator>();
-            builder.Services.AddScoped<IValidator<GetReviewsQueryRequest>, GetReviewQueryValidator>();
-            builder.Services.AddScoped<IValidator<CreateReviewCommandRequest>, CreateReviewCommandValidator>();
-            builder.Services.AddScoped<IValidator<DeleteReviewCommandRequest>, DeleteReviewCommandValidator>();
-            builder.Services.AddScoped<IValidator<UpdateReviewCommandRequest>, UpdateReviewCommandValidator>();
-            builder.Services.AddScoped<IValidator<GetReviewTagByIdQueryRequest>, GetReviewTagByIdValidator>();
-            builder.Services.AddScoped<IValidator<CreateReviewTagCommandRequest>, CreateReviewTagValidator>();
-            builder.Services.AddScoped<IValidator<DeleteReviewTagCommandRequest>, DeleteReviewTagValidator>();
-            builder.Services.AddScoped<IValidator<UpdateReviewTagCommandRequest>, UpdateReviewTagValidator>();
-            builder.Services.AddScoped<IValidator<DeleteReviewImageCommandRequest>, DeleteReviewImageValidator>();
-            #endregion
+
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
             // register db context
             // enabled entity framework
-            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
+            string? connectionString = builder.Configuration.GetConnectionString("MySQLLocal");
             if (connectionString == null)
             {
                 throw new Exception("No connection string in appsettings.json");
@@ -71,7 +63,7 @@ namespace amazon_backend
                         UseMySQL(connectionString)
                     );
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception("Can't connect to MySql Server");
             }
@@ -79,7 +71,6 @@ namespace amazon_backend
             #region DAO's
             builder.Services.AddScoped<ICategoryDao, CategoryDao>();
             builder.Services.AddScoped<IUserDao, UserDao>();
-            builder.Services.AddScoped<IClientProfileDao, ClientProfileDao>();
             builder.Services.AddScoped<IProductDao, ProductDao>();
             builder.Services.AddScoped<IProductPropsDao, ProductPropsDao>();
             builder.Services.AddScoped<IReviewDao, ReviewDao>();
@@ -91,16 +82,33 @@ namespace amazon_backend
             builder.Services.AddDistributedMemoryCache();
 
             builder.Services.AddScoped<TokenService>();
-            builder.Services.AddAuthentication("MyCookieScheme")
-            .AddCookie("MyCookieScheme", options =>
+
+            var secretKey = jwt.GetValue<string>("SecretKey");
+            if (secretKey == null)
             {
-                options.LoginPath = "/login";
-                options.Cookie.Name = "SessionId";
+                throw new Exception("The secret key cannot be null or empty. Please provide a valid secret in the TokenOptions.");
+            }
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
             });
 
             builder.Services.AddSession(options =>
             {
-                //options.IdleTimeout = TimeSpan.FromHours(3);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
@@ -128,12 +136,10 @@ namespace amazon_backend
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
-           
+
             app.UseSession();
-
-            app.UseSessionAuth();
-
 
             app.MapControllers();
 

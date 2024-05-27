@@ -1,7 +1,6 @@
 ﻿using amazon_backend.CQRS.Queries.Request;
 using amazon_backend.Data.Dao;
 using amazon_backend.Data.Entity;
-using amazon_backend.Data.Model;
 using amazon_backend.Models;
 using MediatR;
 

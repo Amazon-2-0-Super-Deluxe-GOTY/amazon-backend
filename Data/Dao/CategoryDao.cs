@@ -1,5 +1,5 @@
 ﻿using amazon_backend.Data.Entity;
-using amazon_backend.Data.Model;
+using amazon_backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.Data.Dao

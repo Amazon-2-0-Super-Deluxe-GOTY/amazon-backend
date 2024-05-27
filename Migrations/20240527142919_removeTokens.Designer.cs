@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240527142919_removeTokens")]
+    partial class removeTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -236,22 +239,28 @@ namespace amazon_backend.Migrations
                     b.ToTable("CategoryPropertyKeys");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.JwtToken", b =>
+            modelBuilder.Entity("amazon_backend.Data.Entity.EmailConfirmToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("ExpirationDate")
+                    b.Property<DateTime>("Moment")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Token")
+                    b.Property<int>("Used")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserEmail")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
                     b.HasKey("Id");
 
-                    b.ToTable("JwtTokens");
+                    b.ToTable("EmailConfirmTokens");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
@@ -439,33 +448,6 @@ namespace amazon_backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ReviewTags");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("ActivatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("DeactivatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("TokenId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TokenJournals");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
@@ -724,23 +706,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("Review");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.JwtToken", "Token")
-                        .WithMany("TokenJournals")
-                        .HasForeignKey("TokenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.User", "User")
-                        .WithMany("TokenJournals")
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Token");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.User", "User")
@@ -776,11 +741,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("ReviewImages");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.JwtToken", b =>
-                {
-                    b.Navigation("TokenJournals");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
                 {
                     b.Navigation("AboutProductItems");
@@ -793,8 +753,6 @@ namespace amazon_backend.Migrations
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
                     b.Navigation("Reviews");
-
-                    b.Navigation("TokenJournals");
                 });
 #pragma warning restore 612, 618
         }
