@@ -9,7 +9,7 @@ using amazon_backend.Services.Random;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommandRequest, Result<string>>
     {

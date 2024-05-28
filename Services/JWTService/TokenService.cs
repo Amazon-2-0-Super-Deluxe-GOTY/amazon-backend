@@ -30,7 +30,7 @@ namespace amazon_backend.Services.JWTService
             _logger = logger;
         }
 
-        public async Task<JwtTokenProfile?> GetTokenByUserId(Guid userId)
+        public async Task<JwtTokenProfile?> GetTokenByUserId(Guid userId, bool staySignedIn = false)
         {
             User? user = await _dataContext
                 .Users
@@ -62,7 +62,7 @@ namespace amazon_backend.Services.JWTService
                 _dataContext.Remove(tokenJournal);
                 await _dataContext.SaveChangesAsync();
             }
-            var newToken = await GenerateToken(userId);
+            var newToken = await GenerateToken(userId, staySignedIn);
             return _mapper.Map<JwtTokenProfile>(newToken);
         }
 
@@ -91,7 +91,7 @@ namespace amazon_backend.Services.JWTService
             return false;
         }
 
-        private async Task<JwtToken> GenerateToken(Guid userId)
+        private async Task<JwtToken> GenerateToken(Guid userId, bool staySignedIn)
         {
             var claims = new ClaimsIdentity(new[]
             {
@@ -99,7 +99,7 @@ namespace amazon_backend.Services.JWTService
             });
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(_secretKey);
-            var exp = DateTime.UtcNow.AddHours(24);
+            var exp = staySignedIn ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(24);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = claims,
@@ -150,7 +150,7 @@ namespace amazon_backend.Services.JWTService
             }
         }
 
-        public async Task<Result<User>> DecodeTokenFromHeaders()
+        public async Task<Result<User>> DecodeTokenFromHeaders(bool checkAdminRole = false)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
@@ -161,13 +161,13 @@ namespace amazon_backend.Services.JWTService
             string? token = httpContext.Request.Headers["Authorization"];
             if (token != null)
             {
-                var result = await DecodeToken(token);
+                var result = await DecodeToken(token, checkAdminRole);
                 return result;
             }
             return new("Token required") { statusCode = 401 };
         }
 
-        public async Task<Result<User>> DecodeToken(string token)
+        private async Task<Result<User>> DecodeToken(string token, bool checkAdminRole)
         {
             if (string.IsNullOrEmpty(token))
             {
@@ -180,11 +180,11 @@ namespace amazon_backend.Services.JWTService
             }
             var _token = token.Substring(index + 1);
             JwtToken? jwtToken = await _dataContext.JwtTokens.AsNoTracking().FirstOrDefaultAsync(j => j.Token == _token);
-            if(jwtToken == null)
+            if (jwtToken == null)
             {
                 return new("Token rejected") { statusCode = 403 };
             }
-            TokenJournal? tj = await _dataContext.TokenJournals.Include(t=>t.User).AsNoTracking().FirstOrDefaultAsync(t => t.TokenId == jwtToken.Id);
+            TokenJournal? tj = await _dataContext.TokenJournals.Include(t => t.User).AsNoTracking().FirstOrDefaultAsync(t => t.TokenId == jwtToken.Id);
             if (tj == null)
             {
                 return new("Token rejected") { statusCode = 403 };
@@ -193,9 +193,13 @@ namespace amazon_backend.Services.JWTService
             {
                 return new("Token rejected") { statusCode = 403 };
             }
-            if(tj.User != null)
+            if (tj.User != null)
             {
                 if (tj.User.DeletedAt != null)
+                {
+                    return new("Forbidden") { statusCode = 403 };
+                }
+                if (checkAdminRole && tj.User.Role != "Admin")
                 {
                     return new("Forbidden") { statusCode = 403 };
                 }

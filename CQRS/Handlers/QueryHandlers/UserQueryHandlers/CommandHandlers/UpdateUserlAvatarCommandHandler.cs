@@ -6,7 +6,7 @@ using amazon_backend.Services.JWTService;
 using MediatR;
 using amazon_backend.Services.AWSS3;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class UpdateUserlAvatarCommandHandler : IRequestHandler<UpdateUserAvatarCommandRequest, Result<string>>
     {

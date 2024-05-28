@@ -8,7 +8,7 @@ using amazon_backend.Services.KDF;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class LoginUserCommandHandler : IRequestHandler<LoginUserCommandRequest, Result<JwtTokenProfile>>
     {
@@ -39,7 +39,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
             {
                 return new("Invalid email or password") { statusCode = 404 };
             }
-            var token = await _tokenService.GetTokenByUserId(user.Id);
+            var token = await _tokenService.GetTokenByUserId(user.Id, request.staySignedIn);
             if (token == null)
             {
                 return new("Auth rejected") { statusCode = 401 };
