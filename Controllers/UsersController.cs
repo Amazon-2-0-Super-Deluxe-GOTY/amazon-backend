@@ -90,7 +90,7 @@ namespace amazon_backend.Controllers
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
-        [HttpPost("changeEmailRequest")]
+        [HttpPut("changeEmailRequest")]
         [Authorize]
         public async Task<IActionResult> SendChangeEmailRequest([FromBody] ChangeEmailCommandRequest request)
         {
@@ -134,6 +134,14 @@ namespace amazon_backend.Controllers
         public async Task<IActionResult> RemoveUserAvatar()
         {
             var response = await _mediator.Send(new RemoveUserAvatarCommandQuery());
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> RemoveCurrentUser()
+        {
+            var response = await _mediator.Send(new RemoveCurrentUserCommandRequest());
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 

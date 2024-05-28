@@ -6,7 +6,7 @@ using amazon_backend.Services.JWTService;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class LogoutUserCommandHandler : IRequestHandler<LogoutUserCommandRequest, Result<string>>
     {

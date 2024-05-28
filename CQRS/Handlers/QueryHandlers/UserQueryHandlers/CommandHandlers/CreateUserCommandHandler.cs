@@ -10,7 +10,7 @@ using amazon_backend.Services.Random;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class CreateUserCommandHandler : IRequestHandler<CreateUserCommandRequest, Result<JwtTokenProfile>>
     {
@@ -35,8 +35,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
             var emailConfirm = _randomService.ConfirmCode(6);
             if (user != null)
             {
-                user.PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt);
-                user.PasswordSalt = passwordSalt;
+                var passwordHash = _kdfService.GetDerivedKey(request.password, passwordSalt);
+                if (passwordHash != user.PasswordHash)
+                {
+                    return new("Invalid email or password") { statusCode = 400 };
+                }
                 user.DeletedAt = null;
                 await _dataContext.SaveChangesAsync();
             }
@@ -53,12 +56,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
                     EmailCode = emailConfirm
                 };
 
+                await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
                 await _dataContext.Users.AddAsync(newUser);
                 await _dataContext.SaveChangesAsync();
             }
-
-            await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
-
             var loginRequest = new LoginUserCommandRequest()
             {
                 email = request.email,
@@ -71,7 +72,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
                 return new(result.data) { statusCode = 201, message = "Created" };
             }
 
-            return new(result.message) { statusCode=result.statusCode};
+            return new(result.message) { statusCode = result.statusCode };
         }
     }
 }

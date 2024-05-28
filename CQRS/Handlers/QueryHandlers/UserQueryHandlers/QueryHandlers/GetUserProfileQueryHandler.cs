@@ -5,7 +5,7 @@ using amazon_backend.Services.JWTService;
 using AutoMapper;
 using MediatR;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.QueryHandlers
 {
     public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQueryRequest, Result<ClientProfile>>
     {

@@ -2,13 +2,10 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Entity;
 using amazon_backend.Models;
-using amazon_backend.Profiles.UserProfiles;
 using amazon_backend.Services.JWTService;
-using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class ConfirmEmailCommandHandler : IRequestHandler<ConfirmEmailCommandRequest, Result<string>>
     {
@@ -19,7 +16,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
             _tokenService = tokenService;
             _dataContext = dataContext;
         }
-
         public async Task<Result<string>> Handle(ConfirmEmailCommandRequest request, CancellationToken cancellationToken)
         {
             var decodeResult = await _tokenService.DecodeTokenFromHeaders();

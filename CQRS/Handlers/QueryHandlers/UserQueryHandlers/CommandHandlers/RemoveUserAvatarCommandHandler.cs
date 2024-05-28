@@ -7,7 +7,7 @@ using amazon_backend.Services.JWTService;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class RemoveUserAvatarCommandHandler : IRequestHandler<RemoveUserAvatarCommandQuery, Result<string>>
     {
@@ -25,7 +25,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
             var decodeResult = await _tokenService.DecodeTokenFromHeaders();
             if (!decodeResult.isSuccess)
             {
-                return new() {  message = decodeResult.message, statusCode = decodeResult.statusCode };
+                return new() { message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
             User user = decodeResult.data;
             if (user.AvatarUrl != null)

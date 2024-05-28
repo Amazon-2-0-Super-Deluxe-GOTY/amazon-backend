@@ -7,7 +7,7 @@ using amazon_backend.Services.JWTService;
 using amazon_backend.Services.Random;
 using MediatR;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
     public class ChangeEmailCommandHandler : IRequestHandler<ChangeEmailCommandRequest, Result<string>>
     {
