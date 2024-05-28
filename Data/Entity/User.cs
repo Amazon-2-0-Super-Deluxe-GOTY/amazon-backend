@@ -10,6 +10,8 @@ namespace amazon_backend.Data.Entity
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string Email { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string? TempEmail { get; set; }
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string PasswordSalt { get; set; }

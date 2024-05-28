@@ -8,19 +8,17 @@ namespace amazon_backend.CQRS.Commands.UserRequests
 {
     public class UpdateUserAvatarCommandRequest : IRequest<Result<string>>
     {
-        public IFormFile? avatar { get; set; }
+        public IFormFile userAvatar { get; set; }
     }
     public class UpdateUserAvatarValidator : AbstractValidator<UpdateUserAvatarCommandRequest>
     {
         public UpdateUserAvatarValidator()
         {
-            RuleFor(x => x.avatar!.Length).LessThanOrEqualTo(5 * 1024 * 1024)
-                    .WithMessage("File size must be less than or equal to 5 MB")
-                    .When(x => x.avatar != null);
-            RuleFor(x => x.avatar!.ContentType).Must(contentType =>
+            RuleFor(x => x.userAvatar.Length).LessThanOrEqualTo(5 * 1024 * 1024)
+                    .WithMessage("File size must be less than or equal to 5 MB");
+            RuleFor(x => x.userAvatar.ContentType).Must(contentType =>
                 contentType == "image/jpeg" || contentType == "image/png")
-                .WithMessage("Only JPEG and PNG files are allowed")
-                .When(x => x.avatar != null);
+                .WithMessage("Only JPEG and PNG files are allowed");
         }
     }
 }

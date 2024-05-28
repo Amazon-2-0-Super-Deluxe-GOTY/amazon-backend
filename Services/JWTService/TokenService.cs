@@ -8,6 +8,7 @@ using amazon_backend.Data;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using amazon_backend.Profiles.JwtTokenProfiles;
+using amazon_backend.Models;
 namespace amazon_backend.Services.JWTService
 {
 
@@ -16,13 +17,17 @@ namespace amazon_backend.Services.JWTService
         private readonly string _secretKey;
         private readonly DataContext _dataContext;
         private readonly IMapper _mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<TokenService> _logger;
 
-        public TokenService(IOptions<Options.Token.TokenOptions> options, DataContext dataContext, IMapper mapper)
+        public TokenService(IOptions<Options.Token.TokenOptions> options, DataContext dataContext, IMapper mapper, IHttpContextAccessor httpContextAccessor, ILogger<TokenService> logger)
         {
             options.Value.Validate();
             _secretKey = options.Value.SecretKey;
             _dataContext = dataContext;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         public async Task<JwtTokenProfile?> GetTokenByUserId(Guid userId)
@@ -145,47 +150,58 @@ namespace amazon_backend.Services.JWTService
             }
         }
 
-        public async Task<Guid?> DecodeTokenFromHeaders(HttpContext httpContext)
+        public async Task<Result<User>> DecodeTokenFromHeaders()
         {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+            {
+                _logger.LogError("HttpContext not avaliable");
+                return new("See server log") { statusCode = 500 };
+            }
             string? token = httpContext.Request.Headers["Authorization"];
             if (token != null)
             {
-                Guid? userId = await DecodeToken(token);
-                if (userId != null)
-                {
-                    return userId;
-                }
+                var result = await DecodeToken(token);
+                return result;
             }
-            return null;
+            return new("Token required") { statusCode = 401 };
         }
 
-        public async Task<Guid?> DecodeToken(string token)
+        public async Task<Result<User>> DecodeToken(string token)
         {
             if (string.IsNullOrEmpty(token))
             {
-                return null;
+                return new("Token required") { statusCode = 401 };
             }
             var index = token.IndexOf(" ");
             if (index < 0)
             {
-                return null;
+                return new("Token required") { statusCode = 401 };
             }
             var _token = token.Substring(index + 1);
             JwtToken? jwtToken = await _dataContext.JwtTokens.AsNoTracking().FirstOrDefaultAsync(j => j.Token == _token);
             if(jwtToken == null)
             {
-                return null;
+                return new("Token rejected") { statusCode = 403 };
             }
-            TokenJournal? tj = await _dataContext.TokenJournals.AsNoTracking().FirstOrDefaultAsync(t => t.TokenId == jwtToken.Id);
+            TokenJournal? tj = await _dataContext.TokenJournals.Include(t=>t.User).AsNoTracking().FirstOrDefaultAsync(t => t.TokenId == jwtToken.Id);
             if (tj == null)
             {
-                return null;
+                return new("Token rejected") { statusCode = 403 };
             }
             if (tj.DeactivatedAt != null)
             {
-                return null;
+                return new("Token rejected") { statusCode = 403 };
             }
-            return tj.UserId;
+            if(tj.User != null)
+            {
+                if (tj.User.DeletedAt != null)
+                {
+                    return new("Forbidden") { statusCode = 403 };
+                }
+                return new(tj.User);
+            }
+            return new("Forbidden") { statusCode = 403 };
         }
 
     }

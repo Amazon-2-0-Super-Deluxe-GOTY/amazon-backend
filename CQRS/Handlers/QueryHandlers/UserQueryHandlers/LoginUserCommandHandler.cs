@@ -32,28 +32,19 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
                 .FirstOrDefaultAsync(u => u.Email == request.email && u.DeletedAt == null);
             if (user == null)
             {
-                return new("Forbidden") { statusCode = 403 };
+                return new("Invalid email or password") { statusCode = 404 };
             }
             var passwordHash = _kdfService.GetDerivedKey(request.password, user.PasswordSalt);
             if (user.PasswordHash != passwordHash)
             {
-                return new("Invalid email or password") { statusCode = 401 };
+                return new("Invalid email or password") { statusCode = 404 };
             }
             var token = await _tokenService.GetTokenByUserId(user.Id);
             if (token == null)
             {
                 return new("Auth rejected") { statusCode = 401 };
             }
-            /*
-            if (_httpContextAccessor.HttpContext != null)
-            {
-                var httpContext = _httpContextAccessor.HttpContext;
-                httpContext.Session.SetString("userToken", token.Token);
-                httpContext.Session.SetString("authUserId", user.Id.ToString());
-                httpContext.Response.Cookies.Append("SessionId", httpContext.Session.Id);
-            }
-            */
-            return new(token);
+            return new(token) { message = "Ok", statusCode = 200 };
         }
     }
 }

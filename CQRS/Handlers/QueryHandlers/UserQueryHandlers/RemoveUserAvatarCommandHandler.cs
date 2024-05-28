@@ -12,43 +12,34 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
     public class RemoveUserAvatarCommandHandler : IRequestHandler<RemoveUserAvatarCommandQuery, Result<string>>
     {
         private readonly DataContext _dataContext;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TokenService _tokenService;
         private readonly IS3Service _s3Service;
-        public RemoveUserAvatarCommandHandler(DataContext dataContext, IHttpContextAccessor httpContextAccessor, TokenService tokenService, IS3Service s3Service)
+        public RemoveUserAvatarCommandHandler(DataContext dataContext, TokenService tokenService, IS3Service s3Service)
         {
             _dataContext = dataContext;
-            _httpContextAccessor = httpContextAccessor;
             _tokenService = tokenService;
             _s3Service = s3Service;
         }
         public async Task<Result<string>> Handle(RemoveUserAvatarCommandQuery request, CancellationToken cancellationToken)
         {
-            if (_httpContextAccessor.HttpContext == null)
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            if (!decodeResult.isSuccess)
             {
-                return new("Token rejected") { statusCode = 401 };
+                return new() {  message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
-            Guid? userId = await _tokenService.DecodeTokenFromHeaders(_httpContextAccessor.HttpContext);
-            if (userId == null)
-            {
-                return new("Token rejected") { statusCode = 401 };
-            }
-            User? user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null);
-            if (user == null)
-            {
-                return new("Forbidden") { statusCode = 403 };
-            }
+            User user = decodeResult.data;
             if (user.AvatarUrl != null)
             {
                 var result = await _s3Service.DeleteFile(user.AvatarUrl);
                 if (result)
                 {
                     user.AvatarUrl = null;
+                    _dataContext.Update(user);
                     await _dataContext.SaveChangesAsync();
-                    return new() { isSuccess = true };
+                    return new() { message = "Ok", statusCode = 200 };
                 }
             }
-            return new("Already deleted") { statusCode = 400 };
+            return new("Bad request") { data = "Already deleted", statusCode = 400 };
         }
     }
 }

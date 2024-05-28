@@ -4,7 +4,6 @@ using amazon_backend.Data;
 using amazon_backend.Models;
 using amazon_backend.Services.JWTService;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using amazon_backend.Services.AWSS3;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
@@ -12,42 +11,33 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
     public class UpdateUserlAvatarCommandHandler : IRequestHandler<UpdateUserAvatarCommandRequest, Result<string>>
     {
         private readonly DataContext _dataContext;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TokenService _tokenService;
         private readonly IS3Service _s3Service;
-        public UpdateUserlAvatarCommandHandler(DataContext dataContext, IHttpContextAccessor httpContextAccessor, TokenService tokenService, IS3Service s3Service)
+        public UpdateUserlAvatarCommandHandler(DataContext dataContext, TokenService tokenService, IS3Service s3Service)
         {
             _dataContext = dataContext;
-            _httpContextAccessor = httpContextAccessor;
             _tokenService = tokenService;
             _s3Service = s3Service;
         }
         public async Task<Result<string>> Handle(UpdateUserAvatarCommandRequest request, CancellationToken cancellationToken)
         {
-            if (_httpContextAccessor.HttpContext == null)
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            if (!decodeResult.isSuccess)
             {
-                return new("Token rejected") { statusCode = 401 };
+                return new() { isSuccess = decodeResult.isSuccess, message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
-            Guid? userId = await _tokenService.DecodeTokenFromHeaders(_httpContextAccessor.HttpContext);
-            if (userId == null)
-            {
-                return new("Token rejected") { statusCode = 401 };
-            }
-            User? user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null);
-            if (user == null)
-            {
-                return new("Forbidden") { statusCode = 403 };
-            }
+            User user = decodeResult.data;
             if (user.AvatarUrl != null)
             {
                 await _s3Service.DeleteFile(user.AvatarUrl);
             }
-            string? newAvatar = await _s3Service.UploadFile(request.avatar!, "users");
+            string? newAvatar = await _s3Service.UploadFile(request.userAvatar, "users");
             if (newAvatar != null)
             {
-                user.AvatarUrl=newAvatar;
+                user.AvatarUrl = newAvatar;
+                _dataContext.Update(user);
                 await _dataContext.SaveChangesAsync();
-                return new() { isSuccess = true };
+                return new() { message = "Ok", statusCode = 200 };
             }
             return new("See server logs") { statusCode = 500 };
         }

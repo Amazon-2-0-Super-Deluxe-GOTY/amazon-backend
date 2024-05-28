@@ -14,44 +14,44 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
     {
         private readonly DataContext _dataContext;
         private readonly TokenService _tokenService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        public ConfirmEmailCommandHandler(IHttpContextAccessor httpContextAccessor, TokenService tokenService, DataContext dataContext)
+        public ConfirmEmailCommandHandler(TokenService tokenService, DataContext dataContext)
         {
-            _httpContextAccessor = httpContextAccessor;
             _tokenService = tokenService;
             _dataContext = dataContext;
         }
 
         public async Task<Result<string>> Handle(ConfirmEmailCommandRequest request, CancellationToken cancellationToken)
         {
-            if (_httpContextAccessor.HttpContext == null)
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            if (!decodeResult.isSuccess)
             {
-                return new("Token rejected") { statusCode = 401 };
+                return new() { message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
-            Guid? userId = await _tokenService.DecodeTokenFromHeaders(_httpContextAccessor.HttpContext);
-            if (userId == null)
+            User user = decodeResult.data;
+            if (user.EmailCode == null)
             {
-                return new("Token rejected") { statusCode = 401 };
+                return new("Bad request") { data = "Email already confirmed", statusCode = 400 };
             }
-            User? user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null);
-            if (user != null)
+            if (user.EmailCode == request.emailCode)
             {
-                if (user.EmailCode == null)
-                {
-                    return new("Email already confirmed") { statusCode = 400 };
-                }
-                if (user.EmailCode == request.emailCode)
+                if (user.TempEmail != null)
                 {
                     user.EmailCode = null;
+                    user.Email = user.TempEmail;
+                    user.TempEmail = null;
+                    _dataContext.Update(user);
                     await _dataContext.SaveChangesAsync();
-                    return new() { isSuccess = true, data = "Email successfully confirmed" };
+                    return new() { message = "Ok", data = "Email successfully updated", statusCode = 200 };
                 }
-                else
-                {
-                    return new("Invalid email code") { statusCode = 400 };
-                }
+                user.EmailCode = null;
+                _dataContext.Update(user);
+                await _dataContext.SaveChangesAsync();
+                return new() { message = "Ok", data = "Email successfully confirmed", statusCode = 200 };
             }
-            return new("Forbidden") { statusCode = 403 };
+            else
+            {
+                return new("Bad Request") { message = "Invalid email code", statusCode = 400 };
+            }
         }
     }
 }

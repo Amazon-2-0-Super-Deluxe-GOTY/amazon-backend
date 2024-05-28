@@ -30,27 +30,34 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
         }
         public async Task<Result<JwtTokenProfile>> Handle(CreateUserCommandRequest request, CancellationToken cancellationToken)
         {
-            User? user = await _dataContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == request.email);
-            if(user != null)
-            {
-                return new("Email already used") { statusCode = 400 };
-            }
+            User? user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.email && u.DeletedAt != null);
             var passwordSalt = _randomService.RandomString(16);
             var emailConfirm = _randomService.ConfirmCode(6);
-            user = new()
+            if (user != null)
             {
-                Id = Guid.NewGuid(),
-                Email = request.email,
-                PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt),
-                PasswordSalt = passwordSalt,
-                CreatedAt = DateTime.Now,
-                Role = "User",
-                EmailCode = emailConfirm
-            };
-            await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
+                user.PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt);
+                user.PasswordSalt = passwordSalt;
+                user.DeletedAt = null;
+                await _dataContext.SaveChangesAsync();
+            }
+            else
+            {
+                User newUser = new()
+                {
+                    Id = Guid.NewGuid(),
+                    Email = request.email,
+                    PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt),
+                    PasswordSalt = passwordSalt,
+                    CreatedAt = DateTime.Now,
+                    Role = "User",
+                    EmailCode = emailConfirm
+                };
 
-            await _dataContext.Users.AddAsync(user);
-            await _dataContext.SaveChangesAsync();
+                await _dataContext.Users.AddAsync(newUser);
+                await _dataContext.SaveChangesAsync();
+            }
+
+            await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
 
             var loginRequest = new LoginUserCommandRequest()
             {
@@ -58,10 +65,12 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers
                 password = request.password
             };
             var result = await _mediator.Send(loginRequest);
+
             if (result.isSuccess)
             {
-                return new(result.data);
+                return new(result.data) { statusCode = 201, message = "Created" };
             }
+
             return new(result.message) { statusCode=result.statusCode};
         }
     }

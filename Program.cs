@@ -9,22 +9,14 @@ using amazon_backend.Services.KDF;
 using amazon_backend.Services.Random;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
-using amazon_backend.CQRS.Queries.Request;
 using System.Globalization;
 using amazon_backend.Services.Response;
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
-using amazon_backend.CQRS.Queries.Request.ProductRequests;
-using amazon_backend.CQRS.Queries.Request.ReviewsRequests;
-using amazon_backend.CQRS.Commands.ReviewRequests;
-using amazon_backend.CQRS.Queries.Request.ReviewTagRequests;
-using amazon_backend.CQRS.Commands.RewiewTagRequests;
 using amazon_backend.Services.AWSS3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using amazon_backend.CQRS.Commands.UserRequests;
-using Microsoft.AspNetCore.Hosting;
 
 
 namespace amazon_backend
@@ -37,7 +29,6 @@ namespace amazon_backend
             var jwt = builder.Configuration.GetSection("JwtBearer");
             // Add services to the container.
             ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en");
-            builder.Services.AddScoped<CategoryDao>();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
