@@ -8,8 +8,8 @@ namespace amazon_backend.Services.AWSS3
     public class S3Service : IS3Service
     {
         private readonly IAmazonS3 _s3client;
-        private S3Settings _settings;
-        private ILogger<S3Service> _logger;
+        private readonly S3Settings _settings;
+        private readonly ILogger<S3Service> _logger;
         public S3Service(IAmazonS3 s3client, S3Settings settings, ILogger<S3Service> logger)
         {
             _s3client = s3client;

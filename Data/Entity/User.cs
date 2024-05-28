@@ -10,6 +10,8 @@ namespace amazon_backend.Data.Entity
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string Email { get; set; }
+        [Column(TypeName = "varchar(255)")]
+        public string? TempEmail { get; set; }
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string PasswordSalt { get; set; }
@@ -22,8 +24,7 @@ namespace amazon_backend.Data.Entity
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? DeletedAt { get; set; }
         public List<Review>? Reviews { get; set; }
-        [JsonIgnore]
-        public List<TokenJournal>? TokenJournals { get; set; } = new();
+        public List<TokenJournal>? TokenJournals { get; set; }
         public string? EmailCode { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? FirstName { get; set; }

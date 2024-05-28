@@ -1,5 +1,4 @@
-﻿using amazon_backend.Data.Model;
-using amazon_backend.Models;
+﻿using amazon_backend.Models;
 using FluentValidation;
 using MediatR;
 

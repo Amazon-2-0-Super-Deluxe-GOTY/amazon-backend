@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240527115127_RemoveClientProfile")]
+    partial class RemoveClientProfile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -236,22 +239,28 @@ namespace amazon_backend.Migrations
                     b.ToTable("CategoryPropertyKeys");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.JwtToken", b =>
+            modelBuilder.Entity("amazon_backend.Data.Entity.EmailConfirmToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
-                    b.Property<DateTime>("ExpirationDate")
+                    b.Property<DateTime>("Moment")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Token")
+                    b.Property<int>("Used")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserEmail")
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
                     b.HasKey("Id");
 
-                    b.ToTable("JwtTokens");
+                    b.ToTable("EmailConfirmTokens");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
@@ -441,23 +450,53 @@ namespace amazon_backend.Migrations
                     b.ToTable("ReviewTags");
                 });
 
+            modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("token_id");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expiration_date");
+
+                    b.Property<string>("_Token")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tokens", (string)null);
+                });
+
             modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("char(36)")
+                        .HasColumnName("token_journal_id");
 
                     b.Property<DateTime>("ActivatedAt")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("activated_at");
 
-                    b.Property<DateTime?>("DeactivatedAt")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTime>("DeactivatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("deactivated_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
 
                     b.Property<Guid>("TokenId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("char(36)")
+                        .HasColumnName("token_id");
 
                     b.Property<Guid?>("UserId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("char(36)")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
@@ -465,7 +504,7 @@ namespace amazon_backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TokenJournals");
+                    b.ToTable("token_journals", (string)null);
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
@@ -513,9 +552,6 @@ namespace amazon_backend.Migrations
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("varchar(128)");
-
-                    b.Property<string>("TempEmail")
-                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
@@ -729,7 +765,7 @@ namespace amazon_backend.Migrations
 
             modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
                 {
-                    b.HasOne("amazon_backend.Data.Entity.JwtToken", "Token")
+                    b.HasOne("amazon_backend.Data.Entity.Token", "Token")
                         .WithMany("TokenJournals")
                         .HasForeignKey("TokenId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -779,11 +815,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("ReviewImages");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.JwtToken", b =>
-                {
-                    b.Navigation("TokenJournals");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
                 {
                     b.Navigation("AboutProductItems");
@@ -791,6 +822,11 @@ namespace amazon_backend.Migrations
                     b.Navigation("Products");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.Token", b =>
+                {
+                    b.Navigation("TokenJournals");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>

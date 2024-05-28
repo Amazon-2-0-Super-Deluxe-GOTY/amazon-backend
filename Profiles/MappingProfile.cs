@@ -4,6 +4,8 @@ using AutoMapper;
 using amazon_backend.Profiles.CategoryProfiles;
 using amazon_backend.Models;
 using amazon_backend.Profiles.ReviewProfiles;
+using amazon_backend.Profiles.UserProfiles;
+using amazon_backend.Profiles.JwtTokenProfiles;
 
 namespace amazon_backend.Profiles
 {
@@ -11,6 +13,25 @@ namespace amazon_backend.Profiles
     {
         public MappingProfile()
         {
+            #region JwtToken
+            CreateMap<JwtToken, JwtTokenProfile>();
+            #endregion
+
+            #region User
+            CreateMap<User, ClientProfile>()
+                .ForMember(dest => dest.AvatarUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.AvatarUrl != null)
+                        {
+                            return Path.Combine("https://perry11.s3.eu-north-1.amazonaws.com/", src.AvatarUrl);
+                        }
+                        return null;
+                    });
+                });
+            #endregion
+
             #region Product
             CreateMap<Product, ProductCardProfile>()
                 .ForMember(dest => dest.GeneralRate, opt =>

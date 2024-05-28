@@ -9,7 +9,6 @@ namespace amazon_backend.Data
         // Entities:public DbSet<Entity.Class> classes{get;set;}
         public DbSet<Category> Categories { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<ClientProfile> ClientProfiles { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Review> Reviews { get; set; }
@@ -23,9 +22,8 @@ namespace amazon_backend.Data
         public DbSet<ProductProperty> ProductProperties { get; set; }
         public DbSet<CategoryPropertyKey> CategoryPropertyKeys { get; set; }
         public DbSet<AboutProductItem> AboutProductItems { get; set; }
-        public DbSet<Entity.Token> Tokens { get; set; }
-        public DbSet<Entity.TokenJournal> TokenJournals { get; set; }
-        public DbSet<Entity.EmailConfirmToken> EmailConfirmTokens { get; set; }
+        public DbSet<JwtToken> JwtTokens { get; set; }
+        public DbSet<TokenJournal> TokenJournals { get; set; }
 
         public bool CanConnect { get; set; }
         public DataContext(DbContextOptions options) : base(options)
@@ -42,29 +40,6 @@ namespace amazon_backend.Data
                 .HasDefaultValue(false);
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
-            modelBuilder.Entity<Entity.Token>(entity =>
-            {
-                entity.ToTable("tokens");
-
-                entity.Property(t => t._Token)
-                    .IsRequired();
-
-                entity.Property(t => t.ExpirationDate)
-                    .IsRequired();
-            });
-            modelBuilder.Entity<Entity.TokenJournal>(entity =>
-            {
-                entity.ToTable("token_journals");
-                entity.HasKey(ut => ut.Id);
-
-                entity.HasOne(ut => ut.User)
-                    .WithMany(u => u.TokenJournals)
-                    .HasForeignKey(ut => ut.UserId);
-
-                entity.HasOne(ut => ut.Token)
-                    .WithMany(t => t.TokenJournals)
-                    .HasForeignKey(ut => ut.TokenId);
-            });
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace amazon_backend.Data.Model
+﻿namespace amazon_backend.Models
 {
     public class FilterItemModel
     {

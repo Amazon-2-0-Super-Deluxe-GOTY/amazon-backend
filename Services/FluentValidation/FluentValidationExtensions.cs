@@ -18,5 +18,18 @@ namespace amazon_backend.Services.FluentValidation
             }
             return null;
         }
+        public static async Task<List<object>> GetErrorsAsync<T>(this IValidator<T> validator, T instance)
+        {
+            var res = await validator.ValidateAsync(instance);
+            if (!res.IsValid)
+            {
+                return res.Errors.Select(e => new
+                {
+                    propertyName = e.PropertyName,
+                    errorMessage = e.ErrorMessage
+                }).ToList<object>();
+            }
+            return null;
+        }
     }
 }
