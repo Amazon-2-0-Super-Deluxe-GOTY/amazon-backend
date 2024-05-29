@@ -4,9 +4,8 @@ using MediatR;
 
 namespace amazon_backend.CQRS.Commands.ReviewRequests
 {
-    public class DeleteReviewCommandRequest:IRequest<Result<Guid>>
+    public class DeleteReviewCommandRequest:IRequest<Result<string>>
     {
-        //public string userToken { get; set; }
         public string reviewId { get; set; }
     }
     public class DeleteReviewCommandValidator:AbstractValidator<DeleteReviewCommandRequest>

@@ -22,9 +22,10 @@ namespace amazon_backend.Controllers
         private readonly IValidator<UpdateUserCommandRequest> _updateUserlValidator;
         private readonly IValidator<UpdateUserAvatarCommandRequest> _updateUserlAvatarValidator;
         private readonly IValidator<ChangeEmailCommandRequest> _changeEmailValidator;
+        private readonly IValidator<SendNewCodeCommandRequest> _sendNewEmailCodeValidator;
         private readonly IMediator _mediator;
 
-        public UsersController(RestResponseService responseService, IValidator<LoginUserCommandRequest> loginUserValidator, IMediator mediator, IValidator<CreateUserCommandRequest> createUserValidator, IValidator<ConfirmEmailCommandRequest> confirmEmailValidator, IValidator<UpdateUserCommandRequest> updateUserlValidator, IValidator<UpdateUserAvatarCommandRequest> updateUserlAvatarValidator, IValidator<ChangeEmailCommandRequest> changeEmailValidator)
+        public UsersController(RestResponseService responseService, IValidator<LoginUserCommandRequest> loginUserValidator, IMediator mediator, IValidator<CreateUserCommandRequest> createUserValidator, IValidator<ConfirmEmailCommandRequest> confirmEmailValidator, IValidator<UpdateUserCommandRequest> updateUserlValidator, IValidator<UpdateUserAvatarCommandRequest> updateUserlAvatarValidator, IValidator<ChangeEmailCommandRequest> changeEmailValidator, IValidator<SendNewCodeCommandRequest> sendNewEmailCodeValidator)
         {
             _responseService = responseService;
             _loginUserValidator = loginUserValidator;
@@ -34,7 +35,9 @@ namespace amazon_backend.Controllers
             _updateUserlValidator = updateUserlValidator;
             _updateUserlAvatarValidator = updateUserlAvatarValidator;
             _changeEmailValidator = changeEmailValidator;
+            _sendNewEmailCodeValidator = sendNewEmailCodeValidator;
         }
+
         [HttpGet("profile")]
         [Authorize]
         public async Task<IActionResult> GetUserProfile()
@@ -46,13 +49,15 @@ namespace amazon_backend.Controllers
             }
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
-        [HttpGet("logout")]
+
+        [HttpPost("logout")]
         [Authorize]
         public async Task<IActionResult> Logout()
         {
             var response = await _mediator.Send(new LogoutUserCommandRequest());
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
         [HttpPost]
         public async Task<IActionResult> CreateNewUser([FromBody] CreateUserCommandRequest request)
         {
@@ -82,6 +87,19 @@ namespace amazon_backend.Controllers
         public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailCommandRequest request)
         {
             var validationErrors = _confirmEmailValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpPost("sendNewEmailCode")]
+        [Authorize]
+        public async Task<IActionResult> SendNewEmailCode([FromBody] SendNewCodeCommandRequest request)
+        {
+            var validationErrors = await _sendNewEmailCodeValidator.GetErrorsAsync(request);
             if (validationErrors != null)
             {
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);

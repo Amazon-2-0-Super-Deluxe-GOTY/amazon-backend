@@ -8,10 +8,11 @@ namespace amazon_backend.Services.Response
     public class RestResponseService
     {
         private readonly ILogger<RestResponseService> _logger;
-        public JsonSerializerSettings jsonSerializerSettings { get; set; }
-        public RestResponseService(ILogger<RestResponseService> logger)
+        private readonly JsonSerializerSettings _jsonSerializerSettings;
+        public RestResponseService(ILogger<RestResponseService> logger, JsonSerializerSettings jsonSerializerSettings)
         {
             _logger = logger;
+            _jsonSerializerSettings = jsonSerializerSettings;
         }
         public string contentType { get; set; } = "application/json";
         public IActionResult SendResponse(HttpContext context,int statusCode,string message, object data,Count count=null)
@@ -71,11 +72,11 @@ namespace amazon_backend.Services.Response
         }
         private string SerializeObject(object data)
         {
-            if (jsonSerializerSettings is null)
+            if (_jsonSerializerSettings is null)
             {
                 throw new SerializerSettingsException("Serializer settings not specified");
             }
-            return JsonConvert.SerializeObject(data, jsonSerializerSettings);
+            return JsonConvert.SerializeObject(data, _jsonSerializerSettings);
         }
 
     }

@@ -4,108 +4,107 @@ using amazon_backend.Data;
 using amazon_backend.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using amazon_backend.Services.AWSS3;
-using Amazon.S3;
+using amazon_backend.Profiles.ReviewProfiles;
+using AutoMapper;
+using amazon_backend.Services.JWTService;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
 {
-    public class UpdateReviewCommandHandler:IRequestHandler<UpdateReviewCommandRequest, Result<Guid>>
+    public class UpdateReviewCommandHandler : IRequestHandler<UpdateReviewCommandRequest, Result<ReviewProfile>>
     {
-        private readonly IReviewDao _reviewDao;
+        private readonly IMapper _mapper;
         private readonly DataContext _dataContext;
-        private readonly IS3Service _s3Service;
-        private readonly ILogger<UpdateReviewCommandHandler> _logger;
-        public UpdateReviewCommandHandler(IReviewDao reviewDao, DataContext dataContext, IS3Service s3Service, ILogger<UpdateReviewCommandHandler> logger)
+        private readonly TokenService _tokenService;
+
+        public UpdateReviewCommandHandler(DataContext dataContext, IMapper mapper, TokenService tokenService)
         {
-            _reviewDao = reviewDao;
             _dataContext = dataContext;
-            _s3Service = s3Service;
-            _logger = logger;
+            _mapper = mapper;
+            _tokenService = tokenService;
         }
-        public async Task<Result<Guid>> Handle(UpdateReviewCommandRequest request, CancellationToken cancellationToken)
+
+        public async Task<Result<ReviewProfile>> Handle(UpdateReviewCommandRequest request, CancellationToken cancellationToken)
         {
-            if(request.text==null&&!request.rating.HasValue&&(request.reviewTagsIds==null|| request.reviewTagsIds.Count == 0)
-                && (request.reviewImages == null || request.reviewImages.Count == 0))
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            if (!decodeResult.isSuccess)
+            {
+                return new() { isSuccess = decodeResult.isSuccess, message = decodeResult.message, statusCode = decodeResult.statusCode };
+            }
+            User user = decodeResult.data;
+
+            if (request.text == null && !request.rating.HasValue && (request.reviewTagsIds == null || request.reviewTagsIds.Count == 0)
+                && (request.reviewImagesIds == null || request.reviewImagesIds.Count == 0))
             {
                 return new("No parameters for update") { statusCode = 400 };
             }
-            try
+
+            Review? review = await _dataContext.Reviews
+                .Include(r => r.ReviewTags)
+                .Include(r => r.ReviewImages)
+                .AsSplitQuery()
+                .Where(r => r.Id == Guid.Parse(request.reviewId)).FirstOrDefaultAsync();
+            if (review != null && review.UserId == user.Id)
             {
-                Review? review = await _dataContext.Reviews
-                    .Include(r => r.ReviewTags)
-                    .Include(r => r.ReviewImages)
-                    .AsSplitQuery()
-                    .Where(r => r.Id == Guid.Parse(request.reviewId)).FirstOrDefaultAsync();
-                if (review != null)
+                if (!string.IsNullOrEmpty(request.text))
                 {
-                    if (!string.IsNullOrEmpty(request.text))
-                    {
-                        review.Text = request.text;
-                    }
-                    if (request.rating.HasValue)
-                    {
-                        review.Mark = (int)request.rating;
-                    }
-                    if (request.reviewImages != null && request.reviewImages.Count != 0)
-                    {
-                        if (review.ReviewImages != null && review.ReviewImages.Count != 0)
-                        {
-                            foreach (var image in review.ReviewImages)
-                            {
-                                var result = await _reviewDao.DeleteReviewImageAsync(image.Id);
-                                if (result)
-                                {
-                                    await _s3Service.DeleteFile(image.ImageUrl);
-                                }
-                            }
-                        }
-                        var imagesPaths = await _s3Service.UploadFilesFromRange(request.reviewImages, "reviews");
-                        if (imagesPaths != null)
-                        {
-                            foreach (var imagePath in imagesPaths)
-                            {
-                                ReviewImage reviewImage = new();
-                                reviewImage.Id = Guid.NewGuid();
-                                reviewImage.ReviewId = review.Id;
-                                reviewImage.ImageUrl = imagePath;
-                                reviewImage.CreatedAt = DateTime.Now;
-                                await _dataContext.AddAsync(reviewImage);
-                                await _dataContext.SaveChangesAsync();
-                            }
-                        }
-                    }
-                    if (request.reviewTagsIds != null && request.reviewTagsIds.Count != 0)
-                    {
-                        if (review.ReviewTags != null && review.ReviewTags.Count != 0)
-                        {
-                            review.ReviewTags.Clear();
-                        }
-                        review.ReviewTags = new List<ReviewTag>();
-                        foreach (var rTag in request.reviewTagsIds)
-                        {
-                            ReviewTag? tag = await _dataContext.ReviewTags.Where(t => t.Id == Guid.Parse(rTag)).FirstOrDefaultAsync();
-                            if (tag != null)
-                            {
-                                if (!review.ReviewTags.Contains(tag))
-                                {
-                                    review.ReviewTags.Add(tag);
-                                }
-                            }
-                        }
-                    }
-                    await _dataContext.SaveChangesAsync();
-                    return new(review.Id) { statusCode = 200 };
+                    review.Text = request.text;
                 }
+                if (request.rating.HasValue)
+                {
+                    review.Mark = (int)request.rating;
+                }
+                if (request.reviewImagesIds != null && request.reviewImagesIds.Count != 0)
+                {
+                    if (review.ReviewImages == null)
+                    {
+                        review.ReviewImages = new List<ReviewImage>();
+                    }
+                    if (review.ReviewImages.Count == 10)
+                    {
+                        return new("Maximum 10 images") { statusCode = 400 };
+                    }
+                    var canAddCount = (10 - review.ReviewImages.Count());
+                    if (canAddCount > 0)
+                    {
+                        var count = 0;
+                        foreach (var rImage in request.reviewImagesIds)
+                        {
+                            ReviewImage? image = await _dataContext.ReviewImages.Where(t => t.Id == Guid.Parse(rImage)).FirstOrDefaultAsync();
+                            if (image != null)
+                            {
+                                if (!review.ReviewImages.Contains(image))
+                                {
+                                    review.ReviewImages.Add(image);
+                                }
+                            }
+                            count++;
+                            if (canAddCount == count) break;
+                        }
+                    }
+                }
+                if (request.reviewTagsIds != null && request.reviewTagsIds.Count != 0)
+                {
+                    if (review.ReviewTags == null)
+                    {
+                        review.ReviewTags = new List<ReviewTag>();
+                    }
+                    foreach (var rTag in request.reviewTagsIds)
+                    {
+                        ReviewTag? tag = await _dataContext.ReviewTags.Where(t => t.Id == Guid.Parse(rTag)).FirstOrDefaultAsync();
+                        if (tag != null)
+                        {
+                            if (!review.ReviewTags.Contains(tag))
+                            {
+                                review.ReviewTags.Add(tag);
+                            }
+                        }
+                    }
+                }
+                await _dataContext.SaveChangesAsync();
+                return new(_mapper.Map<ReviewProfile>(review)) { statusCode = 200 };
             }
-            catch(AmazonS3Exception ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-            catch(DbUpdateException ex)
-            {
-                _logger.LogError(ex.Message);
-            }
-            return new("See server logs") { statusCode = 500 };
+
+            return new("Review not found") { statusCode = 404 };
         }
     }
 }

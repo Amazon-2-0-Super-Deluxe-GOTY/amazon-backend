@@ -22,9 +22,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
         public async Task<Result<List<ReviewProfile>>> Handle(GetReviewsQueryRequest request, CancellationToken cancellationToken)
         {
             var query = _dataContext.Reviews
-                .Where(q=>q.DeletedAt==null)
-                .Include(r=>r.ReviewTags)
-                .Include(r=>r.ReviewImages)
+                .Where(q => q.DeletedAt == null)
+                .Include(r => r.ReviewTags)
+                .Include(r => r.ReviewImages)
+                .Include(r => r.User)
+                .AsSplitQuery()
                 .AsQueryable();
             if (!string.IsNullOrEmpty(request.userId) && !string.IsNullOrEmpty(request.productId))
             {
@@ -56,9 +58,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             int pagesCount = (int)Math.Ceiling(query.Count() / (double)request.pageSize);
             if (reviewsProfiles != null && reviewsProfiles.Count != 0)
             {
-                return new(reviewsProfiles, pagesCount);
+                return new(reviewsProfiles, pagesCount) { statusCode = 200 };
             }
-            return new("Reviews not found");
+            return new("Reviews not found") { statusCode = 404 };
         }
     }
 }

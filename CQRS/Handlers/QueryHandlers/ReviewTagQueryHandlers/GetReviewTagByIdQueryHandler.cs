@@ -27,9 +27,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewTagQueryHandlers
                 .FirstOrDefaultAsync();
             if (reviewTag != null)
             {
-                return new(_mapper.Map<ReviewTagProfile>(reviewTag));
+                return new(_mapper.Map<ReviewTagProfile>(reviewTag)) { statusCode = 200, message = "Ok" };
             }
-            return new("Review tag not found");
+            return new("Review tag not found") { statusCode = 404 };
         }
     }
 }

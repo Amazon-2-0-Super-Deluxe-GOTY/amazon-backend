@@ -111,7 +111,7 @@ namespace amazon_backend
                     NamingStrategy = new CamelCaseNamingStrategy()
                 }
             };
-            builder.Services.AddSingleton(sp => new RestResponseService(sp.GetRequiredService<ILogger<RestResponseService>>()) { jsonSerializerSettings = jsonSerializerSettings });
+            builder.Services.AddSingleton(sp => new RestResponseService(sp.GetRequiredService<ILogger<RestResponseService>>(), jsonSerializerSettings));
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
             builder.Services.AddS3Client(builder.Configuration);
             builder.Services.AddSingleton<IS3Service, S3Service>();
