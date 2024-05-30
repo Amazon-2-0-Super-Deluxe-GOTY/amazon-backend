@@ -3,6 +3,7 @@ using System.Threading;
 using amazon_backend.Data;
 using amazon_backend.Data.Dao;
 using amazon_backend.Data.Entity;
+using amazon_backend.Services.AWSS3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Asn1.Ocsp;
@@ -22,11 +23,13 @@ public class ReviewDao : IReviewDao
 {
     private readonly DataContext _context;
     private readonly ILogger<ReviewDao> _logger;
+    private readonly IS3Service _s3Service;
 
-    public ReviewDao(DataContext context, ILogger<ReviewDao> logger)
+    public ReviewDao(DataContext context, ILogger<ReviewDao> logger, IS3Service s3Service)
     {
         _context = context;
         _logger = logger;
+        _s3Service = s3Service;
     }
 
     public void Add(Review item)
@@ -85,10 +88,28 @@ public class ReviewDao : IReviewDao
     {
         try
         {
-            Review? item = await _context.Reviews.FirstOrDefaultAsync(x => x.Id == id);
+            Review? item = await _context.Reviews.AsSplitQuery()
+                .Include(r => r.ReviewTags)
+                .Include(r => r.ReviewImages)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (item != null)
             {
-                item.DeletedAt = DateTime.Now;
+                if (item.ReviewImages != null && item.ReviewImages.Count != 0)
+                {
+                    foreach (var image in item.ReviewImages)
+                    {
+                        var deleteResult = await _s3Service.DeleteFile(image.ImageUrl);
+                        if (deleteResult)
+                        {
+                            _context.Remove(image);
+                        }
+                    }
+                }
+                if (item.ReviewTags != null && item.ReviewTags.Count != 0)
+                {
+                    item.ReviewTags.Clear();
+                }
+                _context.Remove(item);
                 await _context.SaveChangesAsync();
                 return true;
             }

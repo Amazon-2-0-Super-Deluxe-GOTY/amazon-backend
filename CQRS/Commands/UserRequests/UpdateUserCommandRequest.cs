@@ -1,10 +1,11 @@
 ﻿using amazon_backend.Models;
+using amazon_backend.Profiles.UserProfiles;
 using FluentValidation;
 using MediatR;
 
 namespace amazon_backend.CQRS.Commands.UserRequests
 {
-    public class UpdateUserCommandRequest : IRequest<Result<string>>
+    public class UpdateUserCommandRequest : IRequest<Result<ClientProfile>>
     {
         public string? firstName { get; set; }
         public string? lastName { get; set; }

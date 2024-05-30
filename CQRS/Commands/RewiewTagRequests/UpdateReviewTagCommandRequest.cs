@@ -1,10 +1,11 @@
 ﻿using amazon_backend.Models;
+using amazon_backend.Profiles.ReviewProfiles;
 using FluentValidation;
 using MediatR;
 
 namespace amazon_backend.CQRS.Commands.RewiewTagRequests
 {
-    public class UpdateReviewTagCommandRequest:IRequest<Result<Guid>>
+    public class UpdateReviewTagCommandRequest:IRequest<Result<ReviewTagProfile>>
     {
         public string reviewTagId { get; set; }
         public string name { get; set; }

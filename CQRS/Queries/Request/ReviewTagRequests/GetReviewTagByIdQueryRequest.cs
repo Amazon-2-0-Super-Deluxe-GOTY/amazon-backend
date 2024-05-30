@@ -7,7 +7,6 @@ namespace amazon_backend.CQRS.Queries.Request.ReviewTagRequests
 {
     public class GetReviewTagByIdQueryRequest:IRequest<Result<ReviewTagProfile>>
     {
-        //public string userToken { get; set; }
         public string reviewTagId { get; set; }
     }
     public class GetReviewTagByIdValidator : AbstractValidator<GetReviewTagByIdQueryRequest>

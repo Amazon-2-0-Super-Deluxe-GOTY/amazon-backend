@@ -5,6 +5,7 @@ using amazon_backend.Services.FluentValidation;
 using amazon_backend.Services.Response;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +21,9 @@ namespace amazon_backend.Controllers
         private readonly IValidator<CreateReviewTagCommandRequest> _createReviewTagValidator;
         private readonly IValidator<DeleteReviewTagCommandRequest> _deleteReviewTagValidator;
         private readonly IValidator<UpdateReviewTagCommandRequest> _updateReviewTagValidator;
-        public ReviewTagsController(RestResponseService responseService, IMediator mediator, IValidator<GetReviewTagByIdQueryRequest> reviewTagByIdValidator, IValidator<CreateReviewTagCommandRequest> createReviewTagValidator, IValidator<DeleteReviewTagCommandRequest> deleteReviewTagValidator, IValidator<UpdateReviewTagCommandRequest> updateReviewTagValidator)
+        private readonly IValidator<DeleteReviewTagFromReviewCommandRequest> _deleteReviewTagFromReviewValidator;
+
+        public ReviewTagsController(RestResponseService responseService, IMediator mediator, IValidator<GetReviewTagByIdQueryRequest> reviewTagByIdValidator, IValidator<CreateReviewTagCommandRequest> createReviewTagValidator, IValidator<DeleteReviewTagCommandRequest> deleteReviewTagValidator, IValidator<UpdateReviewTagCommandRequest> updateReviewTagValidator, IValidator<DeleteReviewTagFromReviewCommandRequest> deleteReviewTagFromReviewValidator)
         {
             _responseService = responseService;
             _mediator = mediator;
@@ -28,18 +31,17 @@ namespace amazon_backend.Controllers
             _createReviewTagValidator = createReviewTagValidator;
             _deleteReviewTagValidator = deleteReviewTagValidator;
             _updateReviewTagValidator = updateReviewTagValidator;
+            _deleteReviewTagFromReviewValidator = deleteReviewTagFromReviewValidator;
         }
+
         [HttpGet]
-        public async Task<IActionResult> GetReviewTags([FromQuery] GetReviewTagsQueryRequest request)
+        public async Task<IActionResult> GetReviewTags()
         {
-            var response = await _mediator.Send(request);
-            if (response.isSuccess)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", response.data);
-            }
-            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
+            var response = await _mediator.Send(new GetReviewTagsQueryRequest());
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
-        [HttpGet("ById")]
+
+        [HttpGet("byId")]
         public async Task<IActionResult> GetReviewTagById([FromQuery] GetReviewTagByIdQueryRequest request)
         {
             var validationErrors = _reviewTagByIdValidator.GetErrors(request);
@@ -48,14 +50,12 @@ namespace amazon_backend.Controllers
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await _mediator.Send(request);
-            if (response.isSuccess)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", response.data);
-            }
-            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
         [HttpPost]
-        public async Task<IActionResult> CreateNewReviewTag([FromForm] CreateReviewTagCommandRequest request)
+        [Authorize]
+        public async Task<IActionResult> CreateNewReviewTag([FromBody] CreateReviewTagCommandRequest request)
         {
             var validationErrors = _createReviewTagValidator.GetErrors(request);
             if (validationErrors != null)
@@ -63,29 +63,12 @@ namespace amazon_backend.Controllers
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await _mediator.Send(request);
-            if (response.isSuccess)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", response.data);
-            }
-            return _responseService.SendResponse(HttpContext, StatusCodes.Status500InternalServerError, response.message, null);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
-        [HttpDelete]
-        public async Task<IActionResult> DeleteReviewTag([FromQuery] DeleteReviewTagCommandRequest request)
-        {
-            var validationErrors = _deleteReviewTagValidator.GetErrors(request);
-            if (validationErrors != null)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
-            }
-            var response = await _mediator.Send(request);
-            if (response.isSuccess)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok",null);
-            }
-            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, null);
-        }
+
         [HttpPut]
-        public async Task<IActionResult> UpdateReviewTag([FromForm] UpdateReviewTagCommandRequest request)
+        [Authorize]
+        public async Task<IActionResult> UpdateReviewTag([FromBody] UpdateReviewTagCommandRequest request)
         {
             var validationErrors = _updateReviewTagValidator.GetErrors(request);
             if (validationErrors != null)
@@ -93,11 +76,34 @@ namespace amazon_backend.Controllers
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await _mediator.Send(request);
-            if (response.isSuccess)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status200OK, "Ok", response.data);
-            }
-            return _responseService.SendResponse(HttpContext, StatusCodes.Status404NotFound, response.message, null);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> DeleteReviewTag([FromBody] DeleteReviewTagCommandRequest request)
+        {
+            var validationErrors = _deleteReviewTagValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpDelete("fromReview")]
+        [Authorize]
+        public async Task<IActionResult> DeleteReviewTagFromReview([FromBody] DeleteReviewTagFromReviewCommandRequest request)
+        {
+            var validationErrors = _deleteReviewTagFromReviewValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
     }
 }

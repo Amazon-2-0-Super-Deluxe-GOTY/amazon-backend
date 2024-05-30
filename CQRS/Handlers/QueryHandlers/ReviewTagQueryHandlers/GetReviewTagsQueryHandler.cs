@@ -23,9 +23,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewTagQueryHandlers
             List<ReviewTag>? reviewTags = await _dataContext.ReviewTags.AsNoTracking().ToListAsync();
             if (reviewTags != null && reviewTags.Count != 0)
             {
-                return new(_mapper.Map<List<ReviewTagProfile>>(reviewTags));
+                return new(_mapper.Map<List<ReviewTagProfile>>(reviewTags)) { message = "Ok", statusCode = 200 };
             }
-            return new("Not found");
+            return new("Not found") { statusCode = 404 };
         }
     }
 }

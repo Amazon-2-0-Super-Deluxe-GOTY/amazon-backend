@@ -21,10 +21,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             Review? review = await _reviewDao.GetByIdAsync(Guid.Parse(request.reviewId));
             if (review != null)
             {
-                var reviewView = _mapper.Map<ReviewProfile>(review);
-                return new(reviewView);
+                return new(_mapper.Map<ReviewProfile>(review)) { statusCode = 200, message = "Ok" };
             }
-            return new("Review not found");
+            return new("Review not found") { statusCode = 404 };
         }
     }
 }

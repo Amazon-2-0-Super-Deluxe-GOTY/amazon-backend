@@ -24,6 +24,7 @@ namespace amazon_backend.Data.Entity
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? DeletedAt { get; set; }
         public List<Review>? Reviews { get; set; }
+        public List<ReviewImage>? ReviewImages { get; set; }
         public List<TokenJournal>? TokenJournals { get; set; }
         public string? EmailCode { get; set; }
         [Column(TypeName = "varchar(255)")]
@@ -35,6 +36,5 @@ namespace amazon_backend.Data.Entity
         public DateTime? BirthDate { get; set; }
         [Column(TypeName = "varchar(32)")]
         public string? PhoneNumber { get; set; }
-
     }
 }
