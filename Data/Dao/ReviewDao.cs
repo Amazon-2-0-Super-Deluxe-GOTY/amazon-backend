@@ -202,6 +202,7 @@ public class ReviewDao : IReviewDao
                 .Include(r => r.User)
                 .Include(r => r.ReviewImages)
                 .Include(r => r.ReviewTags)
+                .Include(r => r.ReviewLikes)
                 .AsSplitQuery()
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);

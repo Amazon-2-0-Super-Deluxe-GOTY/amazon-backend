@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240602172032_AddTitleForReview")]
+    partial class AddTitleForReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -424,27 +427,6 @@ namespace amazon_backend.Migrations
                     b.ToTable("ReviewImages");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ReviewLike", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ReviewId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ReviewLikes");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.ReviewTag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -770,25 +752,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.ReviewLike", b =>
-                {
-                    b.HasOne("Review", "Review")
-                        .WithMany("ReviewLikes")
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.User", "User")
-                        .WithMany("ReviewLikes")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.TokenJournal", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.JwtToken", "Token")
@@ -836,11 +799,6 @@ namespace amazon_backend.Migrations
                     b.Navigation("WishList");
                 });
 
-            modelBuilder.Entity("Review", b =>
-                {
-                    b.Navigation("ReviewLikes");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.JwtToken", b =>
                 {
                     b.Navigation("TokenJournals");
@@ -858,8 +816,6 @@ namespace amazon_backend.Migrations
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
                     b.Navigation("ReviewImages");
-
-                    b.Navigation("ReviewLikes");
 
                     b.Navigation("Reviews");
 

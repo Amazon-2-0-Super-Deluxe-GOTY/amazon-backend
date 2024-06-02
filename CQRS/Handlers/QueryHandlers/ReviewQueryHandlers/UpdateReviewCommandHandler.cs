@@ -32,7 +32,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             }
             User user = decodeResult.data;
 
-            if (request.text == null && !request.rating.HasValue && (request.reviewTagsIds == null || request.reviewTagsIds.Count == 0)
+            if (request.text == null && request.title == null && !request.rating.HasValue && (request.reviewTagsIds == null || request.reviewTagsIds.Count == 0)
                 && (request.reviewImagesIds == null || request.reviewImagesIds.Count == 0))
             {
                 return new("No parameters for update") { statusCode = 400 };
@@ -48,6 +48,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                 if (!string.IsNullOrEmpty(request.text))
                 {
                     review.Text = request.text;
+                }
+                if (!string.IsNullOrEmpty(request.title))
+                {
+                    review.Title = request.title;
                 }
                 if (request.rating.HasValue)
                 {

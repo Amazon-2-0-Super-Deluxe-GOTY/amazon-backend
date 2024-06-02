@@ -1,11 +1,9 @@
 ﻿using amazon_backend.CQRS.Queries.Request.ReviewsRequests;
 using amazon_backend.Data;
-using amazon_backend.Data.Entity;
 using amazon_backend.Models;
 using amazon_backend.Profiles.ReviewProfiles;
 using AutoMapper;
 using MediatR;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
@@ -26,6 +24,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                 .Include(r => r.ReviewTags)
                 .Include(r => r.ReviewImages)
                 .Include(r => r.User)
+                .Include(r => r.ReviewLikes)
                 .AsSplitQuery()
                 .AsQueryable();
             if (!string.IsNullOrEmpty(request.userId) && !string.IsNullOrEmpty(request.productId))
@@ -36,10 +35,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             else if (!string.IsNullOrEmpty(request.productId))
             {
                 query = query.Where(r => r.ProductId == Guid.Parse(request.productId));
-            }
-            else if (!string.IsNullOrEmpty(request.userId))
-            {
-                query = query.Where(r => r.UserId == Guid.Parse(request.userId));
             }
             if (request.rating.HasValue)
             {
@@ -54,10 +49,20 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                 .Skip(request.pageSize * (request.pageIndex - 1))
                 .Take(request.pageSize)
                 .ToListAsync(cancellationToken);
-            var reviewsProfiles = _mapper.Map<List<ReviewProfile>>(reviews);
-            int pagesCount = (int)Math.Ceiling(query.Count() / (double)request.pageSize);
-            if (reviewsProfiles != null && reviewsProfiles.Count != 0)
+            
+            if (reviews != null && reviews.Count != 0)
             {
+                var reviewsProfiles = _mapper.Map<List<ReviewProfile>>(reviews);
+                if (request.userId != null) {
+                    var userId = Guid.Parse(request.userId);
+                    foreach (var item in reviewsProfiles)
+                    {
+                        item.CurrentUserLiked = reviews
+                            .FirstOrDefault(r => r.Id == item.Id)?
+                            .ReviewLikes.Any(like => like.UserId == userId) ?? false;
+                    }
+                }
+                int pagesCount = (int)Math.Ceiling(query.Count() / (double)request.pageSize);
                 return new(reviewsProfiles, pagesCount) { statusCode = 200 };
             }
             return new("Reviews not found") { statusCode = 404 };

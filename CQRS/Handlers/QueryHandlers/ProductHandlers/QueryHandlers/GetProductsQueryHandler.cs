@@ -31,6 +31,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
             try
             {
                 var productsQuery = _dataContext.Products
+                    .Include(p => p.Reviews)
                     .Include(p => p.ProductProperties)
                     .AsQueryable();
 

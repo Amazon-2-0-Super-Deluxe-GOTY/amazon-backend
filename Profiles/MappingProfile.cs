@@ -2,7 +2,6 @@
 using amazon_backend.Data.Entity;
 using AutoMapper;
 using amazon_backend.Profiles.CategoryProfiles;
-using amazon_backend.Models;
 using amazon_backend.Profiles.ReviewProfiles;
 using amazon_backend.Profiles.UserProfiles;
 using amazon_backend.Profiles.JwtTokenProfiles;
@@ -15,6 +14,7 @@ namespace amazon_backend.Profiles
         public MappingProfile()
         {
             bucketUrl = "https://perry11.s3.eu-north-1.amazonaws.com/";
+
             #region JwtToken
             CreateMap<JwtToken, JwtTokenProfile>();
             #endregion
@@ -95,13 +95,24 @@ namespace amazon_backend.Profiles
 
             #region Product
             CreateMap<Product, ProductCardProfile>()
+                .ForMember(dest => dest.ImageUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.ImageUrl != null)
+                        {
+                            return Path.Combine(bucketUrl, src.ImageUrl);
+                        }
+                        return null;
+                    });
+                })
                 .ForMember(dest => dest.GeneralRate, opt =>
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
                         if (src.Reviews != null && src.Reviews.Count != 0)
                         {
-                            return src.Reviews.Sum(pr => pr.Mark) / src.Reviews.Count;
+                            return Math.Round(src.Reviews.Average(r => r.Mark), 1);
                         }
                         return 0;
                     });
@@ -171,30 +182,9 @@ namespace amazon_backend.Profiles
                     {
                         if (src.Reviews != null && src.Reviews.Count != 0)
                         {
-                            return src.Reviews.Sum(pr => pr.Mark) / src.Reviews.Count;
+                            return Math.Round(src.Reviews.Average(r => r.Mark), 1);
                         }
                         return 0;
-                    });
-                })
-                .ForMember(dest => dest.RatingStats, opt =>
-                {
-                    opt.MapFrom((src, dest, destMember, context) =>
-                    {
-                        if (src.Reviews != null && src.Reviews.Count != 0)
-                        {
-                            var totalRates = src.Reviews.Count;
-                            var rates = src.Reviews
-                                .GroupBy(pr => pr.Mark)
-                                .Select(group => new RatingStat
-                                {
-                                    mark = group.Key,
-                                    percent = (int)(group.Count() * 100.0 / totalRates)
-                                })
-                                .OrderByDescending(r => r.mark)
-                                .ToList();
-                            return rates;
-                        }
-                        return null;
                     });
                 });
             CreateMap<ProductProperty, ProductPropProfile>();
@@ -216,7 +206,18 @@ namespace amazon_backend.Profiles
                     });
                 });
             CreateMap<ReviewTag, ReviewTagProfile>();
-            CreateMap<Review, ReviewProfile>();
+            CreateMap<Review, ReviewProfile>()
+                .ForMember(dest => dest.Likes, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.ReviewLikes != null & src.ReviewLikes.Count != 0)
+                        {
+                            return src.ReviewLikes.Count;
+                        }
+                        return 0;
+                    });
+                });
             #endregion
         }
     }
