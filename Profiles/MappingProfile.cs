@@ -151,6 +151,17 @@ namespace amazon_backend.Profiles
                  });
              });
             CreateMap<Product, ProductViewProfile>()
+                .ForMember(dest => dest.ImageUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.ImageUrl != null)
+                        {
+                            return Path.Combine(bucketUrl, src.ImageUrl);
+                        }
+                        return null;
+                    });
+                })
                 .ForMember(dest => dest.DiscountPrice, opt =>
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
