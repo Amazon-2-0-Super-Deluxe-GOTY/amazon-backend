@@ -222,7 +222,7 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ReviewLikes != null & src.ReviewLikes.Count != 0)
+                        if (src.ReviewLikes != null && src.ReviewLikes.Count != 0)
                         {
                             return src.ReviewLikes.Count;
                         }
