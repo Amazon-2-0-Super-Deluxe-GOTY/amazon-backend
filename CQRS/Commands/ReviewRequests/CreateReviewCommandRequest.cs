@@ -10,6 +10,7 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
     {
         public string productId { get; set; }
         public int rating { get; set; }
+        public string? title { get; set; }
         public string? text { get; set; }
         public List<string>? reviewImagesIds { get; set; }
         public List<string>? reviewTagsIds { get; set; }
@@ -23,6 +24,8 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
                 .WithMessage("Incorrect {PropertyName} format");
 
             RuleFor(x => x.rating).NotEmpty().GreaterThan(0).LessThan(6);
+
+            RuleFor(x => x.title).MaximumLength(250);
 
             RuleFor(x => x.text).MaximumLength(250);
 

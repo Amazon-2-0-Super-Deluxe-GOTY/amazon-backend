@@ -45,6 +45,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 ProductId = Guid.Parse(request.productId),
+                Title = request.title,
                 Text = request.text,
                 CreatedAt = DateTime.Now,
                 Mark = request.rating,

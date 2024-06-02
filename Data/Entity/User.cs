@@ -26,6 +26,7 @@ namespace amazon_backend.Data.Entity
         public List<Review>? Reviews { get; set; }
         public List<ReviewImage>? ReviewImages { get; set; }
         public List<TokenJournal>? TokenJournals { get; set; }
+        public List<ReviewLike>? ReviewLikes { get; set; }
         public string? EmailCode { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? FirstName { get; set; }

@@ -21,7 +21,14 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             Review? review = await _reviewDao.GetByIdAsync(Guid.Parse(request.reviewId));
             if (review != null)
             {
-                return new(_mapper.Map<ReviewProfile>(review)) { statusCode = 200, message = "Ok" };
+                var reviewProfile = _mapper.Map<ReviewProfile>(review);
+                if (request.userId != null)
+                {
+                    var userId = Guid.Parse(request.userId);
+                    reviewProfile.CurrentUserLiked = review?
+                            .ReviewLikes.Any(like => like.UserId == userId) ?? false;
+                }
+                return new(reviewProfile) { statusCode = 200, message = "Ok" };
             }
             return new("Review not found") { statusCode = 404 };
         }

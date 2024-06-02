@@ -7,9 +7,9 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
 {
     public class UpdateReviewCommandRequest : IRequest<Result<ReviewProfile>>
     {
-        //public string userToken { get; set; }
         public string reviewId { get; set; }
         public int? rating { get; set; }
+        public string? title { get; set; }
         public string? text { get; set; }
         public List<string>? reviewImagesIds { get; set; }
         public List<string>? reviewTagsIds { get; set; }
@@ -33,6 +33,8 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
                 images.RuleFor(x => x).Must(id => Guid.TryParse(id, out var result) == true)
                 .WithMessage("Incorrect {PropertyName} format"); ;
             });
+
+            RuleFor(x => x.title).MaximumLength(250).When(x => !string.IsNullOrEmpty(x.title));
 
             RuleFor(x => x.text).MaximumLength(250).When(x=>!string.IsNullOrEmpty(x.text));
 

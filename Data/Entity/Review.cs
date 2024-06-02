@@ -9,6 +9,8 @@ public class Review
     public Guid ProductId { get; set; }
     public int Mark { get; set; }
     [Column(TypeName = "varchar(255)")]
+    public string? Title { get; set; }
+    [Column(TypeName = "varchar(255)")]
     public string? Text { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
@@ -16,4 +18,5 @@ public class Review
     public Product? Product { get; set; }
     public List<ReviewImage>? ReviewImages { get; set; }
     public List<ReviewTag>? ReviewTags { get; set; }
+    public List<ReviewLike>? ReviewLikes { get; set; }
 }

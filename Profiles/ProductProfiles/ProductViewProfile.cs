@@ -7,6 +7,7 @@ namespace amazon_backend.Profiles.ProductProfiles
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public string Slug { get; set; }
         public CategoryProductProfile Category { get; set; }
         public string? Code { get; set; }
         public int Quantity { get; set; }
@@ -20,6 +21,5 @@ namespace amazon_backend.Profiles.ProductProfiles
         public List<ProductImageProfile>? ProductImages { get; set; }
         public List<ProductPropProfile>? ProductProperties { get; set; }
         public List<AboutProductProfile>? AboutProductItems { get; set; }
-        public List<RatingStat>? RatingStats { get; set; }
     }
 }

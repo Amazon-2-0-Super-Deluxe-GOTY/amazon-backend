@@ -20,8 +20,10 @@ namespace amazon_backend.Controllers
         private readonly IValidator<CreateReviewCommandRequest> _reviewCreateValidator;
         private readonly IValidator<DeleteReviewCommandRequest> _reviewDeleteValidator;
         private readonly IValidator<UpdateReviewCommandRequest> _reviewUpdateValidator;
+        private readonly IValidator<GetReviewsStatsQueryRequest> _reviewStatsValidator;
+        private readonly IValidator<LikeReviewCommandRequest> _likeReviewValidator;
 
-        public ReviewsController(IMediator mediator, RestResponseService responseService, IValidator<GetReviewByIdQueryRequest> reviewByIdValidator, IValidator<GetReviewsQueryRequest> reviewsValidator, IValidator<CreateReviewCommandRequest> reviewCreateValidator, IValidator<DeleteReviewCommandRequest> reviewDeleteValidator, IValidator<UpdateReviewCommandRequest> reviewUpdateValidator)
+        public ReviewsController(IMediator mediator, RestResponseService responseService, IValidator<GetReviewByIdQueryRequest> reviewByIdValidator, IValidator<GetReviewsQueryRequest> reviewsValidator, IValidator<CreateReviewCommandRequest> reviewCreateValidator, IValidator<DeleteReviewCommandRequest> reviewDeleteValidator, IValidator<UpdateReviewCommandRequest> reviewUpdateValidator, IValidator<GetReviewsStatsQueryRequest> reviewStatsValidator, IValidator<LikeReviewCommandRequest> likeReviewValidator)
         {
             _mediator = mediator;
             _responseService = responseService;
@@ -30,6 +32,8 @@ namespace amazon_backend.Controllers
             _reviewCreateValidator = reviewCreateValidator;
             _reviewDeleteValidator = reviewDeleteValidator;
             _reviewUpdateValidator = reviewUpdateValidator;
+            _reviewStatsValidator = reviewStatsValidator;
+            _likeReviewValidator = likeReviewValidator;
         }
         [HttpGet]
         public async Task<IActionResult> GetReviews([FromQuery] GetReviewsQueryRequest request)
@@ -60,6 +64,18 @@ namespace amazon_backend.Controllers
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetRatingStats([FromQuery] GetReviewsStatsQueryRequest request)
+        {
+            var validationErrors = _reviewStatsValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+        
         [HttpPost("newReview")]
         [Authorize]
         public async Task<IActionResult> CreateNewReview([FromBody] CreateReviewCommandRequest request)
@@ -78,6 +94,19 @@ namespace amazon_backend.Controllers
         public async Task<IActionResult> UpdateReview([FromBody] UpdateReviewCommandRequest request)
         {
             var validationErrors = _reviewUpdateValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpPut("like")]
+        [Authorize]
+        public async Task<IActionResult> LikeReview([FromBody] LikeReviewCommandRequest request)
+        {
+            var validationErrors = _likeReviewValidator.GetErrors(request);
             if (validationErrors != null)
             {
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
