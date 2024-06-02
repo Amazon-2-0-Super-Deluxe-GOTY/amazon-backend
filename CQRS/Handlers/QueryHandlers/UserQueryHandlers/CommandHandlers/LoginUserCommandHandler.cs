@@ -5,6 +5,7 @@ using amazon_backend.Models;
 using amazon_backend.Profiles.JwtTokenProfiles;
 using amazon_backend.Services.JWTService;
 using amazon_backend.Services.KDF;
+using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,13 +17,15 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
         private readonly TokenService _tokenService;
         private readonly IKdfService _kdfService;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMapper _mapper;
 
-        public LoginUserCommandHandler(DataContext dataContext, TokenService tokenService, IKdfService kdfService, IHttpContextAccessor httpContext)
+        public LoginUserCommandHandler(DataContext dataContext, TokenService tokenService, IKdfService kdfService, IHttpContextAccessor httpContext, IMapper mapper)
         {
             _dataContext = dataContext;
             _tokenService = tokenService;
             _kdfService = kdfService;
             _httpContextAccessor = httpContext;
+            _mapper = mapper;
         }
 
         public async Task<Result<JwtTokenProfile>> Handle(LoginUserCommandRequest request, CancellationToken cancellationToken)
@@ -44,7 +47,17 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
             {
                 return new("Auth rejected") { statusCode = 401 };
             }
-            return new(token) { message = "Ok", statusCode = 200 };
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null)
+            {
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Expires = token.ExpirationDate
+                };
+                httpContext.Response.Cookies.Append("jwt", token.Token, cookieOptions);
+            }
+            return new(_mapper.Map<JwtTokenProfile>(token)) { message = "Ok", statusCode = 200 };
         }
     }
 }

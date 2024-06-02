@@ -6,7 +6,6 @@ using amazon_backend.Models;
 using amazon_backend.Profiles.ReviewProfiles;
 using amazon_backend.Profiles.UserProfiles;
 using amazon_backend.Profiles.JwtTokenProfiles;
-using static System.Net.WebRequestMethods;
 
 namespace amazon_backend.Profiles
 {
@@ -128,11 +127,18 @@ namespace amazon_backend.Profiles
                          }
                          else
                          {
-                             return src.Price;
+                             return 0;
                          }
                      });
                  });
-            CreateMap<ProductImage, ProductImageProfile>();
+            CreateMap<ProductImage, ProductImageProfile>()
+            .ForMember(dest => dest.ImageUrl, opt =>
+             {
+                 opt.MapFrom((src, dest, destMember, context) =>
+                 {
+                     return Path.Combine(bucketUrl, src.ImageUrl);
+                 });
+             });
             CreateMap<Product, ProductViewProfile>()
                 .ForMember(dest => dest.DiscountPrice, opt =>
                 {
@@ -144,7 +150,7 @@ namespace amazon_backend.Profiles
                         }
                         else
                         {
-                            return src.Price;
+                            return 0;
                         }
                     });
                 })
@@ -197,6 +203,7 @@ namespace amazon_backend.Profiles
 
             #region Category
             CreateMap<Category, CategoryViewProfile>();
+            CreateMap<Category, CategoryProductProfile>();
             #endregion
 
             #region Review

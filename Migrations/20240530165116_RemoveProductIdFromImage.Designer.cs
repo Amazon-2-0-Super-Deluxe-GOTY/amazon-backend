@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240530165116_RemoveProductIdFromImage")]
+    partial class RemoveProductIdFromImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -315,6 +318,10 @@ namespace amazon_backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
                     b.Property<uint>("CategoryId")
                         .HasColumnType("int unsigned");
 
@@ -341,10 +348,14 @@ namespace amazon_backend.Migrations
                         .HasColumnType("double");
 
                     b.Property<Guid?>("ProductId")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("char(36)")
+                        .HasComment("Main prodct reference");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<string>("ShortDescription")
+                        .HasColumnType("varchar(255)");
 
                     b.Property<string>("Slug")
                         .HasColumnType("longtext");

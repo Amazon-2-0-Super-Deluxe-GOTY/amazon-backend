@@ -4,7 +4,6 @@ using amazon_backend.Data.Entity;
 using amazon_backend.Models;
 using amazon_backend.Profiles.JwtTokenProfiles;
 using amazon_backend.Services.Email;
-using amazon_backend.Services.JWTService;
 using amazon_backend.Services.KDF;
 using amazon_backend.Services.Random;
 using MediatR;
@@ -30,36 +29,22 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
         }
         public async Task<Result<JwtTokenProfile>> Handle(CreateUserCommandRequest request, CancellationToken cancellationToken)
         {
-            User? user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.email && u.DeletedAt != null);
             var passwordSalt = _randomService.RandomString(16);
             var emailConfirm = _randomService.ConfirmCode(6);
-            if (user != null)
+            User newUser = new()
             {
-                var passwordHash = _kdfService.GetDerivedKey(request.password, passwordSalt);
-                if (passwordHash != user.PasswordHash)
-                {
-                    return new("Invalid email or password") { statusCode = 400 };
-                }
-                user.DeletedAt = null;
-                await _dataContext.SaveChangesAsync();
-            }
-            else
-            {
-                User newUser = new()
-                {
-                    Id = Guid.NewGuid(),
-                    Email = request.email,
-                    PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt),
-                    PasswordSalt = passwordSalt,
-                    CreatedAt = DateTime.Now,
-                    Role = "User",
-                    EmailCode = emailConfirm
-                };
+                Id = Guid.NewGuid(),
+                Email = request.email,
+                PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt),
+                PasswordSalt = passwordSalt,
+                CreatedAt = DateTime.Now,
+                Role = "User",
+                EmailCode = emailConfirm
+            };
 
-                await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
-                await _dataContext.Users.AddAsync(newUser);
-                await _dataContext.SaveChangesAsync();
-            }
+            await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
+            await _dataContext.Users.AddAsync(newUser);
+            await _dataContext.SaveChangesAsync();
             var loginRequest = new LoginUserCommandRequest()
             {
                 email = request.email,

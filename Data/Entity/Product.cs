@@ -9,12 +9,9 @@ namespace amazon_backend.Data.Entity
         public Guid Id { get; set; }
         public string? Slug { get; set; }
         public uint CategoryId { get; set; }
-        [Comment("Main prodct reference")]
         public Guid? ProductId { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string Name { get; set; }
-        [Column(TypeName = "varchar(255)")]
-        public string? ShortDescription { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? Code { get; set; }
         public double Price { get; set; }
@@ -22,8 +19,6 @@ namespace amazon_backend.Data.Entity
         public int Quantity { get; set; }
         [Column(TypeName = "varchar(255)")]
         public string? ImageUrl { get; set; }
-        [Column(TypeName = "varchar(255)")]
-        public string Brand { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
 
