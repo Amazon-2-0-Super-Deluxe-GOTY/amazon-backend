@@ -2,17 +2,17 @@
 using FluentValidation;
 using MediatR;
 
-namespace amazon_backend.CQRS.Queries.Request
+namespace amazon_backend.CQRS.Queries.Request.ProductRequests
 {
-    public class GetFilterItemsQueryRequest:IRequest<Result<List<FilterItemModel>>>
+    public class GetFilterItemsQueryRequest : IRequest<Result<object>>
     {
-        public string categoryName { get; set; }
+        public int categoryId { get; set; }
     }
     public class GetFilterItemsValidator : AbstractValidator<GetFilterItemsQueryRequest>
     {
         public GetFilterItemsValidator()
         {
-            RuleFor(x => x.categoryName).NotNull().NotEmpty();
+            RuleFor(x => x.categoryId).GreaterThan(0).NotEmpty();
         }
     }
 }

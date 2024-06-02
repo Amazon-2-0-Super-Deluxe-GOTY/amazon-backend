@@ -15,8 +15,9 @@ namespace amazon_backend.Services.Email
         private bool _disposed;
         private readonly string? _fromEmail;
         private readonly string? _fromPassword;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _configuration = configuration;
             _disposed = false;
@@ -52,9 +53,10 @@ namespace amazon_backend.Services.Email
                 EnableSsl = ssl,
                 Credentials = new NetworkCredential(_fromEmail, _fromPassword)
             };
+            _logger = logger;
             #endregion
         }
-        public async Task SendEmailAsync(string recipient, string subject, string message)
+        public async Task<bool> SendEmailAsync(string recipient, string subject, string message)
         {
             MailMessage mailMessage = new MailMessage()
             {
@@ -63,7 +65,16 @@ namespace amazon_backend.Services.Email
                 Body = message
             };
             mailMessage.To.Add(recipient);
-            await _smtpClient.SendMailAsync(mailMessage);
+            try
+            {
+                await _smtpClient.SendMailAsync(mailMessage);
+            }
+            catch(SmtpException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            return true;
         }
         public void Dispose()
         {

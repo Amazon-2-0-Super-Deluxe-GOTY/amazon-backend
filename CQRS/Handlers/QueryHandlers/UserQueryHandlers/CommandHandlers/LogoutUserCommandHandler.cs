@@ -1,6 +1,7 @@
 ﻿using amazon_backend.CQRS.Commands.UserRequests;
 using amazon_backend.Data;
 using amazon_backend.Data.Entity;
+using amazon_backend.Migrations;
 using amazon_backend.Models;
 using amazon_backend.Services.JWTService;
 using MediatR;
@@ -12,10 +13,12 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
     {
         private readonly DataContext _dataContext;
         private readonly TokenService _tokenService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         public LogoutUserCommandHandler(DataContext dataContext, TokenService tokenService, IHttpContextAccessor httpContextAccessor)
         {
             _dataContext = dataContext;
             _tokenService = tokenService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<Result<string>> Handle(LogoutUserCommandRequest request, CancellationToken cancellationToken)
         {
@@ -32,6 +35,15 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
             }
             tokenJournal.DeactivatedAt = DateTime.Now;
             await _dataContext.SaveChangesAsync();
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null)
+            {
+                var cookieOptions = new CookieOptions
+                {
+                    Expires = DateTime.Now.AddDays(-1)
+                };
+                httpContext.Response.Cookies.Append("jwt", string.Empty, cookieOptions);
+            }
             return new() { message = "Ok", statusCode = 200 };
         }
     }

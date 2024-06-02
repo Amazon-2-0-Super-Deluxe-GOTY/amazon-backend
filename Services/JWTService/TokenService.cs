@@ -16,21 +16,19 @@ namespace amazon_backend.Services.JWTService
     {
         private readonly string _secretKey;
         private readonly DataContext _dataContext;
-        private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<TokenService> _logger;
 
-        public TokenService(IOptions<Options.Token.TokenOptions> options, DataContext dataContext, IMapper mapper, IHttpContextAccessor httpContextAccessor, ILogger<TokenService> logger)
+        public TokenService(IOptions<Options.Token.TokenOptions> options, DataContext dataContext, IHttpContextAccessor httpContextAccessor, ILogger<TokenService> logger)
         {
             options.Value.Validate();
             _secretKey = options.Value.SecretKey;
             _dataContext = dataContext;
-            _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
-        public async Task<JwtTokenProfile?> GetTokenByUserId(Guid userId, bool staySignedIn = false)
+        public async Task<JwtToken?> GetTokenByUserId(Guid userId, bool staySignedIn = false)
         {
             User? user = await _dataContext
                 .Users
@@ -54,7 +52,7 @@ namespace amazon_backend.Services.JWTService
                     var result = ValidateToken(token);
                     if (result != null)
                     {
-                        return _mapper.Map<JwtTokenProfile>(tokenJournal.Token);
+                        return tokenJournal.Token;
                     }
                     _dataContext.JwtTokens.Remove(tokenJournal.Token);
                     await _dataContext.SaveChangesAsync();
@@ -63,7 +61,7 @@ namespace amazon_backend.Services.JWTService
                 await _dataContext.SaveChangesAsync();
             }
             var newToken = await GenerateToken(userId, staySignedIn);
-            return _mapper.Map<JwtTokenProfile>(newToken);
+            return newToken;
         }
 
         private async Task<bool> DeleteTokensIfExpired(Guid userId)

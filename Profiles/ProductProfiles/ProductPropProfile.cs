@@ -6,6 +6,5 @@ namespace amazon_backend.Profiles.ProductProfiles
     {
         public string Key { get; set; }
         public string Value { get; set; }
-        public bool IsOption { get; set; }
     }
 }

@@ -9,7 +9,6 @@ namespace amazon_backend.Data.Dao
     {
         Task<Product?> GetByIdAsync(Guid id);
         Task<List<Product>> GetProductsByCategory(uint categoryId);
-        Task<Product[]> GetProductsByBrand(string brand);
         ProductImage[] GetProductImages(Guid productId);
         Task<Product[]> GetProductsByCategoryLimit(uint categoryId, int pageSize, int pageIndex);
         void Restore(Guid id);
@@ -55,24 +54,6 @@ namespace amazon_backend.Data.Dao
                 return _context.Products.ToArray();
             }
             else return null!;
-        }
-
-        public async Task<Product[]> GetProductsByBrand(string brand)
-        {
-            if (!string.IsNullOrEmpty(brand))
-            {
-                try
-                {
-                    return await _context.Products
-                        .Where(p => p.Brand.Contains(brand)).ToArrayAsync();
-                }
-                catch (ArgumentNullException ex)
-                {
-                    // TODO: ProductDao logger
-                    return null!;
-                }
-            }
-            return null!;
         }
 
         public Product? GetById(Guid id)
