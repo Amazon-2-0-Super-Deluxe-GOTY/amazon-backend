@@ -34,6 +34,8 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
             User newUser = new()
             {
                 Id = Guid.NewGuid(),
+                FirstName = "New",
+                LastName = "User",
                 Email = request.email,
                 PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt),
                 PasswordSalt = passwordSalt,
