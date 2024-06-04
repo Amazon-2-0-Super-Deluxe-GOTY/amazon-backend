@@ -100,13 +100,13 @@ namespace amazon_backend.Profiles
 
             #region Product
             CreateMap<Product, ProductCardProfile>()
-                .ForMember(dest => dest.ImageUrl, opt =>
+                .ForMember(dest => dest.ProductImages, opt =>
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ImageUrl != null)
+                        if (src.ProductImages != null&&src.ProductImages.Count!=0)
                         {
-                            return Path.Combine(bucketUrl, src.ImageUrl);
+                            return src.ProductImages;
                         }
                         return null;
                     });
@@ -148,17 +148,6 @@ namespace amazon_backend.Profiles
                      });
                  });
             CreateMap<Product, ProductViewProfile>()
-                .ForMember(dest => dest.ImageUrl, opt =>
-                {
-                    opt.MapFrom((src, dest, destMember, context) =>
-                    {
-                        if (src.ImageUrl != null)
-                        {
-                            return Path.Combine(bucketUrl, src.ImageUrl);
-                        }
-                        return null;
-                    });
-                })
                 .ForMember(dest => dest.DiscountPrice, opt =>
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
@@ -198,6 +187,14 @@ namespace amazon_backend.Profiles
             #endregion
 
             #region ProductImage
+            CreateMap<ProductImage, ProductImageCardProfile>()
+           .ForMember(dest => dest.ImageUrl, opt =>
+           {
+               opt.MapFrom((src, dest, destMember, context) =>
+               {
+                   return Path.Combine(bucketUrl, src.ImageUrl);
+               });
+           });
             CreateMap<ProductImage, ProductImageProfile>()
             .ForMember(dest => dest.ImageUrl, opt =>
             {

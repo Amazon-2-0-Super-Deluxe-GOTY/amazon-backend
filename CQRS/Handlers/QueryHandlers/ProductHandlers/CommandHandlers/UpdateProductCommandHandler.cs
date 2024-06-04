@@ -221,10 +221,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                                 if (canAddCount == count) break;
                             }
                         }
-                        if (product.ProductImages.Count != 0)
-                        {
-                            product.ImageUrl = product.ProductImages[0].ImageUrl;
-                        }
                     }
                 }
                 _dataContext.Update(product);

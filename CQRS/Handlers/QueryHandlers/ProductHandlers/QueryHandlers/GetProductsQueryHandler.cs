@@ -32,6 +32,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
             {
                 var productsQuery = _dataContext.Products
                     .Include(p => p.Reviews)
+                    .Include(p => p.ProductImages)
                     .Include(p => p.ProductProperties)
                     .AsQueryable();
 
@@ -43,6 +44,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                 if (request.discount.HasValue)
                 {
                     productsQuery = productsQuery.Where(p => p.DiscountPercent != 0);
+                }
+
+                if (request.searchQuery != null)
+                {
+                    productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(request.searchQuery));
                 }
 
                 if (request.price != null)

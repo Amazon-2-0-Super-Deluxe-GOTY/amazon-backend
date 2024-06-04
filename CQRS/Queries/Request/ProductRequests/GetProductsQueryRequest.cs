@@ -9,6 +9,7 @@ namespace amazon_backend.CQRS.Queries.Request.ProductRequests
     {
         public int pageSize { get; set; }
         public int pageIndex { get; set; }
+        public string? searchQuery { get; set; }
         public bool? discount { get; set; }
         public int? categoryId { get; set; }
         public string? rating { get; set; }

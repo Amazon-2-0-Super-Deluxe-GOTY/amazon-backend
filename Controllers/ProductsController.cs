@@ -18,12 +18,13 @@ namespace amazon_backend.Controllers
         private readonly IMediator _mediator;
         private readonly IValidator<GetProductsQueryRequest> _prodByCategoryValidator;
         private readonly IValidator<GetProductByIdQueryRequest> _productByIdValidator;
+        private readonly IValidator<GetProductBySlugQueryRequest> _productBySlugValidator;
         private readonly IValidator<GetFilterItemsQueryRequest> _filterItemsValidator;
         private readonly IValidator<CreateProductCommandRequest> _createProductValidator;
         private readonly IValidator<UpdateProductCommandRequest> _updateProductValidator;
         private readonly IValidator<DeleteProductCommandRequest> _deleteProductValidator;
 
-        public ProductsController(IMediator mediator, IValidator<GetProductsQueryRequest> validator, IValidator<GetProductByIdQueryRequest> productByIdValidator, RestResponseService responseService, IValidator<GetFilterItemsQueryRequest> filterItemsValidator, IValidator<CreateProductCommandRequest> createProductValidator, IValidator<UpdateProductCommandRequest> updateProductValidator, IValidator<DeleteProductCommandRequest> deleteProductValidator)
+        public ProductsController(IMediator mediator, IValidator<GetProductsQueryRequest> validator, IValidator<GetProductByIdQueryRequest> productByIdValidator, RestResponseService responseService, IValidator<GetFilterItemsQueryRequest> filterItemsValidator, IValidator<CreateProductCommandRequest> createProductValidator, IValidator<UpdateProductCommandRequest> updateProductValidator, IValidator<DeleteProductCommandRequest> deleteProductValidator, IValidator<GetProductBySlugQueryRequest> productBySlugValidator)
         {
             _mediator = mediator;
             _prodByCategoryValidator = validator;
@@ -33,6 +34,7 @@ namespace amazon_backend.Controllers
             _createProductValidator = createProductValidator;
             _updateProductValidator = updateProductValidator;
             _deleteProductValidator = deleteProductValidator;
+            _productBySlugValidator = productBySlugValidator;
         }
 
         [HttpGet]
@@ -57,6 +59,19 @@ namespace amazon_backend.Controllers
         public async Task<IActionResult> GetProductById([FromQuery] GetProductByIdQueryRequest request)
         {
             var validationErrors = _productByIdValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpGet]
+        [Route("bySlug")]
+        public async Task<IActionResult> GetProductBySlug([FromQuery] GetProductBySlugQueryRequest request)
+        {
+            var validationErrors = _productBySlugValidator.GetErrors(request);
             if (validationErrors != null)
             {
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);

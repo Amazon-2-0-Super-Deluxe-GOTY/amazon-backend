@@ -17,8 +17,6 @@ namespace amazon_backend.Data.Entity
         public double Price { get; set; }
         public int? DiscountPercent { get; set; }
         public int Quantity { get; set; }
-        [Column(TypeName = "varchar(255)")]
-        public string? ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
 

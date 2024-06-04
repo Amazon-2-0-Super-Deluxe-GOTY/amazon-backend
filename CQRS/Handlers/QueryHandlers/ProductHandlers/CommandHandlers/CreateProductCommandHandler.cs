@@ -80,10 +80,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                         newProduct.ProductImages.Add(image);
                     }
                 }
-                if (newProduct.ProductImages.Count != 0)
-                {
-                    newProduct.ImageUrl = newProduct.ProductImages[0].ImageUrl;
-                }
                 newProduct.ProductProperties = new();
                 foreach (var item in request.productDetails)
                 {
