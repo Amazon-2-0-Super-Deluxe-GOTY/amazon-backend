@@ -32,12 +32,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
     <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Slugify.Core" Version="4.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="CQRS\Handlers\QueryHandlers\ProductImageHandlers\" />
   </ItemGroup>
 
 </Project>

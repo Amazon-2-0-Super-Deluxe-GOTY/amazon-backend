@@ -2,7 +2,7 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Entity;
 using amazon_backend.Models;
-using amazon_backend.Profiles.ReviewProfiles;
+using amazon_backend.Profiles.ReviewTagProfiles;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

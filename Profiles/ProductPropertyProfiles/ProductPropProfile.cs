@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace amazon_backend.Profiles.ProductProfiles
+namespace amazon_backend.Profiles.ProductPropertyProfiles
 {
     public class ProductPropProfile
     {

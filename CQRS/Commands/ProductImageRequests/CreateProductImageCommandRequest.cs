@@ -1,5 +1,5 @@
 ﻿using amazon_backend.Models;
-using amazon_backend.Profiles.ProductProfiles;
+using amazon_backend.Profiles.ProductImageProfiles;
 using FluentValidation;
 using MediatR;
 

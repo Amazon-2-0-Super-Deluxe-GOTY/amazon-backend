@@ -1,4 +1,4 @@
-﻿namespace amazon_backend.Profiles.ProductProfiles
+﻿namespace amazon_backend.Profiles.ReviewProfiles
 {
     public class RatingStat
     {

@@ -2,7 +2,7 @@
 using amazon_backend.Data;
 using amazon_backend.Data.Entity;
 using amazon_backend.Models;
-using amazon_backend.Profiles.ReviewProfiles;
+using amazon_backend.Profiles.ReviewImageProfiles;
 using amazon_backend.Services.AWSS3;
 using amazon_backend.Services.JWTService;
 using AutoMapper;

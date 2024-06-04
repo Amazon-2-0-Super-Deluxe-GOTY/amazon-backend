@@ -1,5 +1,5 @@
 ﻿using amazon_backend.Models;
-using amazon_backend.Profiles.ReviewProfiles;
+using amazon_backend.Profiles.ReviewTagProfiles;
 using MediatR;
 
 namespace amazon_backend.CQRS.Queries.Request.ReviewTagRequests

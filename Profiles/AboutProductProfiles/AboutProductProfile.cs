@@ -1,4 +1,4 @@
-﻿namespace amazon_backend.Profiles.ProductProfiles
+﻿namespace amazon_backend.Profiles.AboutProductProfiles
 {
     public class AboutProductProfile
     {
