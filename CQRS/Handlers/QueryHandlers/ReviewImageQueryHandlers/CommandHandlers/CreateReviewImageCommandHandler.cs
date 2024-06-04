@@ -10,7 +10,7 @@ using MediatR;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewImageQueryHandlers.CommandHandlers
 {
-    public class CreateReviewImageCommandHandler : IRequestHandler<CreateReviewImageCommandRequest, Result<ReviewImageProfile>>
+    public class CreateReviewImageCommandHandler : IRequestHandler<CreateReviewImageCommandRequest, Result<List<ReviewImageProfile>>>
     {
         private readonly DataContext _dataContext;
         private readonly TokenService _tokenService;
@@ -25,7 +25,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewImageQueryHandlers.Co
             _mapper = mapper;
         }
 
-        public async Task<Result<ReviewImageProfile>> Handle(CreateReviewImageCommandRequest request, CancellationToken cancellationToken)
+        public async Task<Result<List<ReviewImageProfile>>> Handle(CreateReviewImageCommandRequest request, CancellationToken cancellationToken)
         {
             var decodeResult = await _tokenService.DecodeTokenFromHeaders();
             if (!decodeResult.isSuccess)
@@ -33,23 +33,27 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewImageQueryHandlers.Co
                 return new() { message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
             User user = decodeResult.data;
-            var reviewSlug = await _s3Service.UploadFile(request.reviewImage, "reviews");
-            if (reviewSlug == null)
+            List<ReviewImage> results = new();
+            foreach (var item in request.reviewImages)
             {
-                return new("Upload failed") { statusCode = 500 };
+                var reviewSlug = await _s3Service.UploadFile(item, "reviews");
+                if (reviewSlug == null)
+                {
+                    return new("Upload failed") { statusCode = 500 };
+                }
+                ReviewImage reviewImage = new()
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    ImageUrl = reviewSlug,
+                    CreatedAt = DateTime.Now
+                };
+                await _dataContext.AddAsync(reviewImage);
+                await _dataContext.SaveChangesAsync();
+                results.Add(reviewImage);
             }
-            ReviewImage reviewImage = new()
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                ImageUrl = reviewSlug,
-                CreatedAt = DateTime.Now
-            };
 
-            await _dataContext.AddAsync(reviewImage);
-            await _dataContext.SaveChangesAsync();
-
-            return new(_mapper.Map<ReviewImageProfile>(reviewImage)) { statusCode = 201, message = "Created" };
+            return new(_mapper.Map<List<ReviewImageProfile>>(results)) { statusCode = 201, message = "Created" };
         }
     }
 }

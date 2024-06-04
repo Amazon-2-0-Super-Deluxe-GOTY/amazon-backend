@@ -10,7 +10,7 @@ using MediatR;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewImageQueryHandlers.CommandHandlers
 {
-    public class CreateProductImageCommandHandler : IRequestHandler<CreateProductImageCommandRequest, Result<ProductImageProfile>>
+    public class CreateProductImageCommandHandler : IRequestHandler<CreateProductImageCommandRequest, Result<List<ProductImageProfile>>>
     {
         private readonly DataContext _dataContext;
         private readonly TokenService _tokenService;
@@ -25,29 +25,33 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewImageQueryHandlers.Co
             _mapper = mapper;
         }
 
-        public async Task<Result<ProductImageProfile>> Handle(CreateProductImageCommandRequest request, CancellationToken cancellationToken)
+        public async Task<Result<List<ProductImageProfile>>> Handle(CreateProductImageCommandRequest request, CancellationToken cancellationToken)
         {
             var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return new() { message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
-
-            var reviewSlug = await _s3Service.UploadFile(request.productImage, "products");
-            if (reviewSlug == null)
+            List<ProductImage> results = new();
+            foreach (var item in request.productImages)
             {
-                return new("Upload failed") { statusCode = 500 };
+                var reviewSlug = await _s3Service.UploadFile(item, "products");
+                if (reviewSlug == null)
+                {
+                    return new("Upload failed") { statusCode = 500 };
+                }
+                ProductImage productImage = new()
+                {
+                    Id = Guid.NewGuid(),
+                    ImageUrl = reviewSlug,
+                };
+
+                await _dataContext.AddAsync(productImage);
+                await _dataContext.SaveChangesAsync();
+                results.Add(productImage);
             }
-            ProductImage productImage = new()
-            {
-                Id = Guid.NewGuid(),
-                ImageUrl = reviewSlug,
-            };
 
-            await _dataContext.AddAsync(productImage);
-            await _dataContext.SaveChangesAsync();
-
-            return new(_mapper.Map<ProductImageProfile>(productImage)) { statusCode = 201, message = "Created" };
+            return new(_mapper.Map<List<ProductImageProfile>>(results)) { statusCode = 201, message = "Created" };
         }
     }
 }
