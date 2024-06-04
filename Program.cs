@@ -17,6 +17,7 @@ using amazon_backend.Services.AWSS3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Slugify;
 
 
 namespace amazon_backend
@@ -38,6 +39,7 @@ namespace amazon_backend
             builder.Services.AddSingleton<IKdfService, HashKdfService>();
             builder.Services.AddSingleton<IRandomService, RandomService>();
             builder.Services.AddSingleton<IEmailService, EmailService>();
+            builder.Services.AddSingleton<ISlugHelper, SlugHelper>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
             // register db context

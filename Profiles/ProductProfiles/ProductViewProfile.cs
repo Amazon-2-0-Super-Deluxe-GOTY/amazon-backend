@@ -1,5 +1,8 @@
 ﻿using amazon_backend.Data.Entity;
+using amazon_backend.Profiles.AboutProductProfiles;
 using amazon_backend.Profiles.CategoryProfiles;
+using amazon_backend.Profiles.ProductImageProfiles;
+using amazon_backend.Profiles.ProductPropertyProfiles;
 
 namespace amazon_backend.Profiles.ProductProfiles
 {

@@ -5,6 +5,11 @@ using amazon_backend.Profiles.CategoryProfiles;
 using amazon_backend.Profiles.ReviewProfiles;
 using amazon_backend.Profiles.UserProfiles;
 using amazon_backend.Profiles.JwtTokenProfiles;
+using amazon_backend.Profiles.AboutProductProfiles;
+using amazon_backend.Profiles.ProductImageProfiles;
+using amazon_backend.Profiles.ProductPropertyProfiles;
+using amazon_backend.Profiles.ReviewTagProfiles;
+using amazon_backend.Profiles.ReviewImageProfiles;
 
 namespace amazon_backend.Profiles
 {
@@ -142,14 +147,6 @@ namespace amazon_backend.Profiles
                          }
                      });
                  });
-            CreateMap<ProductImage, ProductImageProfile>()
-            .ForMember(dest => dest.ImageUrl, opt =>
-             {
-                 opt.MapFrom((src, dest, destMember, context) =>
-                 {
-                     return Path.Combine(bucketUrl, src.ImageUrl);
-                 });
-             });
             CreateMap<Product, ProductViewProfile>()
                 .ForMember(dest => dest.ImageUrl, opt =>
                 {
@@ -198,8 +195,55 @@ namespace amazon_backend.Profiles
                         return 0;
                     });
                 });
+            #endregion
+
+            #region ProductImage
+            CreateMap<ProductImage, ProductImageProfile>()
+            .ForMember(dest => dest.ImageUrl, opt =>
+            {
+                opt.MapFrom((src, dest, destMember, context) =>
+                {
+                    return Path.Combine(bucketUrl, src.ImageUrl);
+                });
+            });
+            #endregion
+
+            #region ProductProperty
             CreateMap<ProductProperty, ProductPropProfile>();
+            CreateMap<ProductProperty, ProductPropFormProfile>()
+                .ForMember(dest => dest.name, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        return src.Key;
+                    });
+                })
+                .ForMember(dest => dest.text, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        return src.Value;
+                    });
+                });
+            #endregion
+
+            #region AboutProductItem
             CreateMap<AboutProductItem, AboutProductProfile>();
+            CreateMap<AboutProductItem, AboutProductFormProfile>()
+                .ForMember(dest => dest.name, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        return src.Title;
+                    });
+                })
+                .ForMember(dest => dest.text, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        return src.Text;
+                    });
+                });
             #endregion
 
             #region Category
@@ -208,15 +252,6 @@ namespace amazon_backend.Profiles
             #endregion
 
             #region Review
-            CreateMap<ReviewImage, ReviewImageProfile>()
-                .ForMember(dest => dest.ImageUrl, opt =>
-                {
-                    opt.MapFrom((src, dest, destMember, context) =>
-                    {
-                        return Path.Combine(bucketUrl, src.ImageUrl);
-                    });
-                });
-            CreateMap<ReviewTag, ReviewTagProfile>();
             CreateMap<Review, ReviewProfile>()
                 .ForMember(dest => dest.Likes, opt =>
                 {
@@ -230,6 +265,22 @@ namespace amazon_backend.Profiles
                     });
                 });
             #endregion
+
+            #region ReviewTag
+            CreateMap<ReviewTag, ReviewTagProfile>();
+            #endregion
+
+            #region ReviewImage
+            CreateMap<ReviewImage, ReviewImageProfile>()
+                .ForMember(dest => dest.ImageUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        return Path.Combine(bucketUrl, src.ImageUrl);
+                    });
+                });
+            #endregion
+
         }
     }
 }

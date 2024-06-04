@@ -1,4 +1,6 @@
-﻿using amazon_backend.Profiles.UserProfiles;
+﻿using amazon_backend.Profiles.ReviewImageProfiles;
+using amazon_backend.Profiles.ReviewTagProfiles;
+using amazon_backend.Profiles.UserProfiles;
 
 namespace amazon_backend.Profiles.ReviewProfiles
 {

@@ -1,4 +1,4 @@
-﻿namespace amazon_backend.Profiles.ReviewProfiles
+﻿namespace amazon_backend.Profiles.ReviewTagProfiles
 {
     public class ReviewTagProfile
     {
