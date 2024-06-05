@@ -1,21 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace amazon_backend.Data.Entity
+namespace amazon_backend.Data.Model
 {
-    public class CategoryPropertyKey
+    public class CategoryPropertyKeyProfile
     {
         public Guid Id { get; set; }
 
-        [Column(TypeName = "varchar(255)")]
+        [Required]
         public string Name { get; set; }
         public bool IsFilter { get; set; }
         public bool IsRequired { get; set; }
-        public bool IsDeleted { get; set; }
-        public List<Category>? Categories { get; set; }
-        public Category Category { get; set; }
         [Required]
         public string NameCategory { get; set; }
+        public bool IsDeleted { get; set; }
         public uint CategoryId { get; set; }
     }
 }
