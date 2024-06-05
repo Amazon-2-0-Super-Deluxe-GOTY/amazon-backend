@@ -41,6 +41,11 @@ namespace amazon_backend.Data
                 .HasDefaultValue(false);
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
+            modelBuilder.Entity<Category>()
+                .HasMany(c => c.CategoryPropertyKeys)
+                .WithOne(cp => cp.Category)
+                .HasForeignKey(cp => cp.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
