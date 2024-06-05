@@ -112,12 +112,7 @@ namespace amazon_backend.Controllers
             {
                 return BadRequest("Category with the same name already exists");
             }
-            string imageUrl = null;
-            if (!string.IsNullOrEmpty(categoryModel.Image))
-            {
-                // Загрузка изображения на Amazon S3
-                imageUrl = await _amazonS3Service.UploadImage(categoryModel.Image);
-            }
+            
             var category = new Category
             {
                 Name = categoryModel.Name,
