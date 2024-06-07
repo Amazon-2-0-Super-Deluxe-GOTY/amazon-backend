@@ -71,7 +71,6 @@ namespace amazon_backend
             #endregion 
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
-            builder.Services.Configure<TokenOptions>(jwt);
 
             builder.Services.AddDistributedMemoryCache();
 
