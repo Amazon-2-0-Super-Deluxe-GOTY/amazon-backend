@@ -27,7 +27,11 @@ namespace amazon_backend
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var jwt = builder.Configuration.GetSection("JwtBearer");
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+            var jwt = configuration.GetSection("JwtBearer");
             // Add services to the container.
             ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en");
             builder.Services.AddScoped<CategoryDao>();
@@ -46,7 +50,7 @@ namespace amazon_backend
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
             // register db context
             // enabled entity framework
-            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
+            string? connectionString = configuration.GetConnectionString("MySQL");
             if (connectionString == null)
             {
                 throw new Exception("No connection string in appsettings.json");
@@ -78,7 +82,7 @@ namespace amazon_backend
 
             builder.Services.AddScoped<TokenService>();
 
-            var secretKey = builder.Configuration.GetConnectionString("JwtBearer_SecretKey");
+            var secretKey = jwt.GetValue<string>("SecretKey");
             if (secretKey == null)
             {
                 throw new Exception("The secret key cannot be null or empty. Please provide a valid secret in the TokenOptions.");
@@ -117,7 +121,7 @@ namespace amazon_backend
             };
             builder.Services.AddSingleton(sp => new RestResponseService(sp.GetRequiredService<ILogger<RestResponseService>>(), jsonSerializerSettings));
             builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
-            builder.Services.AddS3Client(builder.Configuration);
+            builder.Services.AddS3Client(configuration);
             builder.Services.AddSingleton<IS3Service, S3Service>();
             var app = builder.Build();
 
