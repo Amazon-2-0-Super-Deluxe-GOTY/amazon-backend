@@ -28,4 +28,4 @@ RUN dotnet publish "./amazon-backend.csproj" -c $BUILD_CONFIGURATION -o /app/pub
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT [dotnet ef database update && dotnet amazon-backend.dll"]
+ENTRYPOINT ["dotnet ef database update && dotnet amazon-backend.dll"]
