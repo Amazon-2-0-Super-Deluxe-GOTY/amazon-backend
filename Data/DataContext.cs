@@ -30,6 +30,7 @@ namespace amazon_backend.Data
         public DataContext(DbContextOptions options) : base(options)
         {
             CanConnect = this.Database.CanConnect();
+            this.Database.Migrate();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
