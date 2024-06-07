@@ -27,7 +27,6 @@ namespace amazon_backend
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var jwt = builder.Configuration.GetSection("JwtBearer");
             // Add services to the container.
             ValidatorOptions.Global.LanguageManager.Culture = new CultureInfo("en");
             builder.Services.AddScoped<CategoryDao>();
@@ -78,7 +77,7 @@ namespace amazon_backend
 
             builder.Services.AddScoped<TokenService>();
 
-            var secretKey = jwt.GetValue<string>("SecretKey");
+            var secretKey = builder.Configuration.GetValue<string>("JwtBearer__SecretKey");
             if (secretKey == null)
             {
                 throw new Exception("The secret key cannot be null or empty. Please provide a valid secret in the TokenOptions.");
