@@ -15,6 +15,12 @@ COPY . .
 WORKDIR "/src/."
 RUN dotnet build "./amazon-backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
+## Run migrations
+FROM build as migrations
+RUN dotnet tool install --version 8.0 --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT dotnet-ef database update
+
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./amazon-backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
