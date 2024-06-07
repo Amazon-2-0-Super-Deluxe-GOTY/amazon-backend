@@ -78,7 +78,7 @@ namespace amazon_backend
 
             builder.Services.AddScoped<TokenService>();
 
-            var secretKey = jwt.GetValue<string>("SecretKey");
+            var secretKey = builder.Configuration.GetValue<string>("JwtBearer:SecretKey");
             if (secretKey == null)
             {
                 throw new Exception("The secret key cannot be null or empty. Please provide a valid secret in the TokenOptions.");
