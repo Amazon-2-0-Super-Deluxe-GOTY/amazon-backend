@@ -44,6 +44,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewImageQueryHandlers.Co
                 {
                     Id = Guid.NewGuid(),
                     ImageUrl = reviewSlug,
+                    CreatedAt = DateTime.Now
                 };
 
                 await _dataContext.AddAsync(productImage);

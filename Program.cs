@@ -46,7 +46,7 @@ namespace amazon_backend
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
             // register db context
             // enabled entity framework
-            string? connectionString = builder.Configuration.GetConnectionString("MySQL");
+            string? connectionString = builder.Configuration.GetConnectionString("MySQLLocal");
             if (connectionString == null)
             {
                 throw new Exception("No connection string in appsettings.json");
