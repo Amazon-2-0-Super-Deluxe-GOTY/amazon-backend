@@ -152,6 +152,32 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                                 }
                             }
                         }
+                        else
+                        {
+                            product.ProductProperties = new();
+                            foreach (var item in request.productDetails)
+                            {
+                                ProductProperty? pProp = await _dataContext.ProductProperties
+                                    .FirstOrDefaultAsync(pp => pp.Key.ToLower() == item.name.ToLower() && pp.Value.ToLower() == item.text.ToLower());
+                                if (pProp != null)
+                                {
+                                    product.ProductProperties.Add(pProp);
+                                }
+                                else
+                                {
+                                    pProp = new()
+                                    {
+                                        Id = Guid.NewGuid(),
+                                        Key = item.name,
+                                        Value = item.text,
+                                        IsOption = false
+                                    };
+                                    await _dataContext.AddAsync(pProp);
+                                    await _dataContext.SaveChangesAsync();
+                                    product.ProductProperties.Add(pProp);
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -168,7 +194,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                         product.ProductProperties = new();
                         foreach (var item in request.productDetails)
                         {
-                            ProductProperty? pProp = await _dataContext.ProductProperties.AsNoTracking()
+                            ProductProperty? pProp = await _dataContext.ProductProperties
                                 .FirstOrDefaultAsync(pp => pp.Key.ToLower() == item.name.ToLower() && pp.Value.ToLower() == item.text.ToLower());
                             if (pProp != null)
                             {

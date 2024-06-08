@@ -22,6 +22,8 @@ using amazon_backend.CQRS.Commands.CategoryPropertyKeyRequests;
 using amazon_backend.Services.JWTService;
 using amazon_backend.CQRS.Handlers.QueryHandlers.CategoryPropertyQueryHandlers;
 using Amazon.S3.Model;
+using System.Xml.Linq;
+using amazon_backend.DTO;
 
 namespace amazon_backend.Controllers
 {
@@ -60,8 +62,29 @@ namespace amazon_backend.Controllers
                 return BadRequest();
             }
             User user = decodeResult.data;
-            var categories = await _dataContext.Categories.ToListAsync();
-            return Ok(categories);
+            var categories = await _dataContext.Categories
+                                      .Include(c => c.CategoryPropertyKeys)
+                                      .ToListAsync();
+            var categoryDtos = categories.Select(c => new CategoryDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Description = c.Description,
+                Image = c.Image,
+                IsDeleted = c.IsDeleted,
+                IsVisible = c.IsVisible,
+                Logo = c.Logo,
+                CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
+                {
+                    Id = cp.Id,
+                    Name = cp.Name,
+                    IsDeleted = cp.IsDeleted,
+                    IsFilter = cp.IsFilter,
+                    IsRequired = cp.IsRequired
+                }).ToList()
+            }).ToList();
+
+            return Ok(categoryDtos);
         }
         [HttpGet("property_keys")]
         [Authorize]
@@ -73,7 +96,9 @@ namespace amazon_backend.Controllers
                 return BadRequest();
             }
             User user = decodeResult.data;
-            var categories = await _dataContext.CategoryPropertyKeys.ToListAsync();
+            var categories = await _dataContext.Categories
+                                    .Include(c => c.CategoryPropertyKeys)
+                                    .ToListAsync();
             return Ok(categories);
         }
 
@@ -223,7 +248,7 @@ namespace amazon_backend.Controllers
 
             return Ok();
         }
-        [HttpDelete("delete/{id}")]
+        [HttpDelete("delete_id/{id}")]
         [Authorize]
         public async Task<ActionResult> DeleteCategoryById(int id)
         {
