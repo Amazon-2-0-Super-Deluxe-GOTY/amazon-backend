@@ -55,15 +55,7 @@ namespace amazon_backend.Data.Dao
             _context.SaveChanges();
         }
 
-        public void Restore(uint id)
-        {
-            var category = _context.Categories.Find(id);
-            if (category != null)
-            {
-                category.IsDeleted = false;
-                _context.SaveChanges();
-            }
-        }
+       
 
         public void Delete(uint id)
         {
@@ -99,6 +91,15 @@ namespace amazon_backend.Data.Dao
             //    return filterItems;
             //}
             return null;
+        }
+        public void Restore(uint id)
+        {
+            var category = _context.Categories.Find(id);
+            if (category != null)
+            {
+                category.IsDeleted = false;
+                _context.SaveChanges();
+            }
         }
     }
 }
