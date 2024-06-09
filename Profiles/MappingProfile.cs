@@ -104,9 +104,9 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ProductImages != null&&src.ProductImages.Count!=0)
+                        if (src.ProductImages != null && src.ProductImages.Count != 0) 
                         {
-                            return src.ProductImages;
+                            return src.ProductImages.OrderBy(pi => pi.CreatedAt);
                         }
                         return null;
                     });
@@ -148,6 +148,17 @@ namespace amazon_backend.Profiles
                      });
                  });
             CreateMap<Product, ProductViewProfile>()
+                .ForMember(dest => dest.ProductImages, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.ProductImages != null && src.ProductImages.Count != 0)
+                        {
+                            return src.ProductImages.OrderBy(pi => pi.CreatedAt);
+                        }
+                        return null;
+                    });
+                })
                 .ForMember(dest => dest.DiscountPrice, opt =>
                 {
                     opt.MapFrom((src, dest, destMember, context) =>

@@ -7,7 +7,7 @@ using amazon_backend.Services.JWTService;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductImageHandlers.CommandHandlers
+namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHandlers
 {
     public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommandRequest, Result<string>>
     {
@@ -35,39 +35,42 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductImageHandlers.Comman
 
             try
             {
-                Product? product = await _dataContext.Products
-                    .Include(p => p.Reviews)
-                    .Include(p => p.ProductImages)
-                    .FirstOrDefaultAsync(p => p.Id == Guid.Parse(request.productId));
-                if (product == null)
+                foreach (var productId in request.productIds)
                 {
-                    return new("Product not found") { statusCode = 404 };
-                }
-
-                if (product.Reviews != null && product.Reviews.Count != 0)
-                {
-                    for (int i = 0; i < product.Reviews.Count; i++)
+                    Product? product = await _dataContext.Products
+                        .Include(p => p.Reviews)
+                        .Include(p => p.ProductImages)
+                        .FirstOrDefaultAsync(p => p.Id == Guid.Parse(productId));
+                    if (product == null)
                     {
-                        await _reviewDao.DeleteAsync(product.Reviews[i].Id);
+                        return new("Product not found") { statusCode = 404 };
                     }
-                }
-                if (product.ProductImages != null && product.ProductImages.Count != 0)
-                {
-                    for (int i = 0; i < product.ProductImages.Count; i++)
+
+                    if (product.Reviews != null && product.Reviews.Count != 0)
                     {
-                        var result = await _s3Service.DeleteFile(product.ProductImages[i].ImageUrl);
-                        if (result)
+                        for (int i = 0; i < product.Reviews.Count; i++)
                         {
-                            _dataContext.Remove(product.ProductImages[i]);
-                            await _dataContext.SaveChangesAsync();
+                            await _reviewDao.DeleteAsync(product.Reviews[i].Id);
                         }
                     }
+                    if (product.ProductImages != null && product.ProductImages.Count != 0)
+                    {
+                        for (int i = 0; i < product.ProductImages.Count; i++)
+                        {
+                            var result = await _s3Service.DeleteFile(product.ProductImages[i].ImageUrl);
+                            if (result)
+                            {
+                                _dataContext.Remove(product.ProductImages[i]);
+                                await _dataContext.SaveChangesAsync();
+                            }
+                        }
+                    }
+                    _dataContext.Remove(product);
+                    await _dataContext.SaveChangesAsync();
                 }
-                _dataContext.Remove(product);
-                await _dataContext.SaveChangesAsync();
                 return new("Ok") { statusCode = 200 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return new("See server logs") { statusCode = 500 };
