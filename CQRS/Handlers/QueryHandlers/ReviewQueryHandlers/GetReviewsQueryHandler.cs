@@ -2,6 +2,7 @@
 using amazon_backend.Data;
 using amazon_backend.Models;
 using amazon_backend.Profiles.ReviewProfiles;
+using amazon_backend.Services.JWTService;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,15 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
     {
         private readonly IMapper _mapper;
         private readonly DataContext _dataContext;
-        public GetReviewsQueryHandler(IMapper mapper, DataContext dataContext)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly TokenService _tokenService;
+
+        public GetReviewsQueryHandler(IMapper mapper, DataContext dataContext, IHttpContextAccessor httpContextAccessor, TokenService tokenService)
         {
             _mapper = mapper;
             _dataContext = dataContext;
+            _httpContextAccessor = httpContextAccessor;
+            _tokenService = tokenService;
         }
         public async Task<Result<List<ReviewProfile>>> Handle(GetReviewsQueryRequest request, CancellationToken cancellationToken)
         {
@@ -36,6 +42,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             {
                 query = query.Where(r => r.ProductId == Guid.Parse(request.productId));
             }
+            else if (!string.IsNullOrEmpty(request.userId))
+            {
+                query = query.Where(r => r.UserId == Guid.Parse(request.userId));
+            }
             if (request.rating.HasValue)
             {
                 query = query.Where(r => r.Mark == request.rating.Value);
@@ -49,17 +59,30 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                 .Skip(request.pageSize * (request.pageIndex - 1))
                 .Take(request.pageSize)
                 .ToListAsync(cancellationToken);
-            
+
+
             if (reviews != null && reviews.Count != 0)
             {
                 var reviewsProfiles = _mapper.Map<List<ReviewProfile>>(reviews);
-                if (request.userId != null) {
-                    var userId = Guid.Parse(request.userId);
-                    foreach (var item in reviewsProfiles)
+                string? token = null;
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext != null)
+                {
+                    token = httpContext.Request.Cookies["jwt"];
+                }
+                if (token != null)
+                {
+                    var decodeResult = await _tokenService.DecodeToken("Bearer " + token, false);
+                    await Console.Out.WriteLineAsync($"{decodeResult.message}");
+                    if (decodeResult.isSuccess)
                     {
-                        item.CurrentUserLiked = reviews
-                            .FirstOrDefault(r => r.Id == item.Id)?
-                            .ReviewLikes.Any(like => like.UserId == userId) ?? false;
+                        var user = decodeResult.data;
+                        foreach (var item in reviewsProfiles)
+                        {
+                            item.CurrentUserLiked = reviews
+                                .FirstOrDefault(r => r.Id == item.Id)?
+                                .ReviewLikes.Any(like => like.UserId == user.Id) ?? false;
+                        }
                     }
                 }
                 int pagesCount = (int)Math.Ceiling(query.Count() / (double)request.pageSize);

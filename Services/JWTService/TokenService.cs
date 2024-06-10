@@ -165,7 +165,7 @@ namespace amazon_backend.Services.JWTService
             return new("Token required") { statusCode = 401 };
         }
 
-        private async Task<Result<User>> DecodeToken(string token, bool checkAdminRole)
+        public async Task<Result<User>> DecodeToken(string token, bool checkAdminRole)
         {
             if (string.IsNullOrEmpty(token))
             {
