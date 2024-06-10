@@ -24,6 +24,8 @@ using amazon_backend.CQRS.Handlers.QueryHandlers.CategoryPropertyQueryHandlers;
 using Amazon.S3.Model;
 using System.Xml.Linq;
 using amazon_backend.DTO;
+using amazon_backend.CQRS.Commands.CategoryImageRequst;
+using amazon_backend.CQRS.Queries.Request.CategoryImageRequest;
 
 namespace amazon_backend.Controllers
 {
@@ -37,11 +39,14 @@ namespace amazon_backend.Controllers
         private readonly RestResponseService _restResponseService;
         private readonly IMediator _mediator;
         private readonly IValidator<GetCategoryQueryRequest> _getCategoryQueryValidator;
-        
+        private readonly RestResponseService _responseService;
+        private readonly IValidator<CreateCategoryImageCommandRequst> _createImageValidator;
+        private readonly IValidator<RemoveCategoryImageCommandRequst> _removeImageValidator;
+        private readonly IValidator<GetCategoryImageByIdQueryRequst> _getImageValidator;
         private readonly IValidator<CreateCategoryPropertyKeyCommandRequst> _createCategoryPropertyKeyCommandValidator;
         private readonly TokenService _tokenService;
 
-        public CategoriesController(ILogger<CategoriesController> logger, CategoryDao categoryDao, DataContext dataContext, RestResponseService restResponseService, IMediator mediator, IValidator<GetCategoryQueryRequest> getCategoryQueryValidator, IValidator<CreateCategoryPropertyKeyCommandRequst> createCategoryPropertyKeyCommandValidator, TokenService tokenService)
+        public CategoriesController(ILogger<CategoriesController> logger, CategoryDao categoryDao, DataContext dataContext, RestResponseService restResponseService, IMediator mediator, IValidator<GetCategoryQueryRequest> getCategoryQueryValidator, RestResponseService responseService, IValidator<CreateCategoryImageCommandRequst> createImageValidator, IValidator<RemoveCategoryImageCommandRequst> removeImageValidator, IValidator<GetCategoryImageByIdQueryRequst> getImageValidator, IValidator<CreateCategoryPropertyKeyCommandRequst> createCategoryPropertyKeyCommandValidator, TokenService tokenService)
         {
             _logger = logger;
             _categoryDao = categoryDao;
@@ -49,9 +54,14 @@ namespace amazon_backend.Controllers
             _restResponseService = restResponseService;
             _mediator = mediator;
             _getCategoryQueryValidator = getCategoryQueryValidator;
+            _responseService = responseService;
+            _createImageValidator = createImageValidator;
+            _removeImageValidator = removeImageValidator;
+            _getImageValidator = getImageValidator;
             _createCategoryPropertyKeyCommandValidator = createCategoryPropertyKeyCommandValidator;
             _tokenService = tokenService;
         }
+
         [HttpGet("category")]
         [Authorize]
         public async Task<IActionResult> GetAllCategories()
@@ -119,7 +129,7 @@ namespace amazon_backend.Controllers
       
         [HttpPost("create_category")]
         [Authorize]
-        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel)
+        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel, [FromForm] CreateCategoryImageCommandRequst request)
         {
             var decodeResult = await _tokenService.DecodeTokenFromHeaders();
             if (!decodeResult.isSuccess)
@@ -181,11 +191,17 @@ namespace amazon_backend.Controllers
                     _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
                 }
             }
-
-            // Save changes to add the category property keys
             await _dataContext.SaveChangesAsync();
+            var validationErrors = _createImageValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+           
+            
 
-            return Ok();
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
         [HttpPut("update")]
