@@ -175,11 +175,7 @@ namespace amazon_backend.Controllers
                     
                     propertyKeyModel.CategoryId = category.Id;
 
-                    var propertyKeyCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == propertyKeyModel.NameCategory);
-                    if (propertyKeyCategory == null)
-                    {
-                        return BadRequest($"Category '{propertyKeyModel.NameCategory}' does not exist");
-                    }
+                
 
                     var categoryPropertyKey = new CategoryPropertyKey
                     {
@@ -188,10 +184,9 @@ namespace amazon_backend.Controllers
                         IsDeleted = propertyKeyModel.IsDeleted,
                         IsFilter = propertyKeyModel.IsFilter,
                         IsRequired = propertyKeyModel.IsRequired,
-                        NameCategory = propertyKeyModel.NameCategory,
                         CategoryId = propertyKeyModel.CategoryId 
                     };
-
+                    categoryPropertyKey.NameCategory = category.Name; 
                     _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
                 }
             }
