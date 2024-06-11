@@ -8,8 +8,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using amazon_backend.Data;
 using FluentValidation;
-using amazon_backend.CQRS.Queries.Request.CategoryRequests;
-using amazon_backend.CQRS.Commands.CategoryRequests;
+
 using amazon_backend.Services.Response;
 using MediatR;
 using amazon_backend.Profiles.ReviewProfiles;
@@ -18,9 +17,9 @@ using amazon_backend.Services.FluentValidation;
 using amazon_backend.Data.Model;
 using amazon_backend.CQRS.Commands.ReviewRequests;
 using Microsoft.AspNetCore.Authorization;
-using amazon_backend.CQRS.Commands.CategoryPropertyKeyRequests;
+
 using amazon_backend.Services.JWTService;
-using amazon_backend.CQRS.Handlers.QueryHandlers.CategoryPropertyQueryHandlers;
+
 using Amazon.S3.Model;
 using System.Xml.Linq;
 using amazon_backend.DTO;
@@ -38,27 +37,24 @@ namespace amazon_backend.Controllers
         private readonly DataContext _dataContext;
         private readonly RestResponseService _restResponseService;
         private readonly IMediator _mediator;
-        private readonly IValidator<GetCategoryQueryRequest> _getCategoryQueryValidator;
+
         private readonly RestResponseService _responseService;
         private readonly IValidator<CreateCategoryImageCommandRequst> _createImageValidator;
         private readonly IValidator<RemoveCategoryImageCommandRequst> _removeImageValidator;
         private readonly IValidator<GetCategoryImageByIdQueryRequst> _getImageValidator;
-        private readonly IValidator<CreateCategoryPropertyKeyCommandRequst> _createCategoryPropertyKeyCommandValidator;
         private readonly TokenService _tokenService;
 
-        public CategoriesController(ILogger<CategoriesController> logger, CategoryDao categoryDao, DataContext dataContext, RestResponseService restResponseService, IMediator mediator, IValidator<GetCategoryQueryRequest> getCategoryQueryValidator, RestResponseService responseService, IValidator<CreateCategoryImageCommandRequst> createImageValidator, IValidator<RemoveCategoryImageCommandRequst> removeImageValidator, IValidator<GetCategoryImageByIdQueryRequst> getImageValidator, IValidator<CreateCategoryPropertyKeyCommandRequst> createCategoryPropertyKeyCommandValidator, TokenService tokenService)
+        public CategoriesController(ILogger<CategoriesController> logger, CategoryDao categoryDao, DataContext dataContext, RestResponseService restResponseService, IMediator mediator, RestResponseService responseService, IValidator<CreateCategoryImageCommandRequst> createImageValidator, IValidator<RemoveCategoryImageCommandRequst> removeImageValidator, IValidator<GetCategoryImageByIdQueryRequst> getImageValidator, TokenService tokenService)
         {
             _logger = logger;
             _categoryDao = categoryDao;
             _dataContext = dataContext;
             _restResponseService = restResponseService;
             _mediator = mediator;
-            _getCategoryQueryValidator = getCategoryQueryValidator;
             _responseService = responseService;
             _createImageValidator = createImageValidator;
             _removeImageValidator = removeImageValidator;
             _getImageValidator = getImageValidator;
-            _createCategoryPropertyKeyCommandValidator = createCategoryPropertyKeyCommandValidator;
             _tokenService = tokenService;
         }
 
