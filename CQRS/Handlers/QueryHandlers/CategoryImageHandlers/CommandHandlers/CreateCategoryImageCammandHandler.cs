@@ -45,7 +45,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.CategoryImageHandlers.Comma
             {
                 Id = Guid.NewGuid(),
                 ImageUrl = imageSlug,
-                CategoryId = request.CategoryId
             };
 
             await _dataContext.CategoryImages.AddAsync(categoryImage);

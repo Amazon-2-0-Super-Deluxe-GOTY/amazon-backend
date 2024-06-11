@@ -9,7 +9,6 @@ namespace amazon_backend.CQRS.Commands.CategoryImageRequst
 {
     public class CreateCategoryImageCommandRequst : IRequest<Result<List<CategoryImageProfile>>>
     {
-        public int CategoryId { get; set; }
         public IFormFile categoryImages { get; set; }
         
     }

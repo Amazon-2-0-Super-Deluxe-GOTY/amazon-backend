@@ -129,7 +129,7 @@ namespace amazon_backend.Controllers
       
         [HttpPost("create_category")]
         [Authorize]
-        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel, [FromForm] CreateCategoryImageCommandRequst request)
+        public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel)
         {
             var decodeResult = await _tokenService.DecodeTokenFromHeaders();
             if (!decodeResult.isSuccess)
@@ -147,28 +147,32 @@ namespace amazon_backend.Controllers
             {
                 return BadRequest("Category with the same name already exists");
             }
-            
+            CategoryImage? image = await _dataContext
+                        .CategoryImages.FirstOrDefaultAsync(pi => pi.Id == Guid.Parse(categoryModel.ImageId));
             var category = new Category
             {
                 Name = categoryModel.Name,
                 Description = categoryModel.Description,
-                Image = categoryModel.Image,
                 IsDeleted = false,
                 IsVisible = true,
                 ParentCategoryName = categoryModel.ParentCategoryName,
                 Logo = categoryModel.Logo
             };
 
-            _dataContext.Categories.Add(category);
+            _dataContext.Categories.AddAsync(category);
 
             
             await _dataContext.SaveChangesAsync();
+            if(image != null)
+            {
+                category.Image = image.ImageUrl;
+            }
 
             if (categoryModel.PropertyKeys != null && categoryModel.PropertyKeys.Any())
             {
                 foreach (var propertyKeyModel in categoryModel.PropertyKeys)
                 {
-                    // Set the current category id for each property key
+                    
                     propertyKeyModel.CategoryId = category.Id;
 
                     var propertyKeyCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == propertyKeyModel.NameCategory);
@@ -185,23 +189,18 @@ namespace amazon_backend.Controllers
                         IsFilter = propertyKeyModel.IsFilter,
                         IsRequired = propertyKeyModel.IsRequired,
                         NameCategory = propertyKeyModel.NameCategory,
-                        CategoryId = propertyKeyModel.CategoryId // Use the category id from the model
+                        CategoryId = propertyKeyModel.CategoryId 
                     };
 
                     _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
                 }
             }
             await _dataContext.SaveChangesAsync();
-            var validationErrors = _createImageValidator.GetErrors(request);
-            if (validationErrors != null)
-            {
-                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
-            }
-            var response = await _mediator.Send(request);
+            
            
             
 
-            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+           return Ok();
         }
 
         [HttpPut("update")]
