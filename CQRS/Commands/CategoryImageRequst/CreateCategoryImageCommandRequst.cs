@@ -16,17 +16,20 @@ namespace amazon_backend.CQRS.Commands.CategoryImageRequst
     {
         public CreateCategoryImageValidator()
         {
-            
 
-            RuleFor(x => x.categoryImages).ChildRules(categoryImages =>
-            {
-                categoryImages.RuleFor(categoryImages => categoryImages.Length).LessThanOrEqualTo(5 * 1024 * 1024)
-                    .WithMessage("File size must be less than or equal to 5 MB");
 
-                categoryImages.RuleFor(categoryImages => categoryImages.ContentType).Must(contentType =>
-                 contentType == "image/jpeg" || contentType == "image/png")
-                 .WithMessage("Only JPEG and PNG files are allowed");
-            });
+            RuleFor(x => x.categoryImages)
+                .NotNull().WithMessage("Category image is required.")
+                .DependentRules(() =>
+                {
+                    RuleFor(x => x.categoryImages.Length)
+                        .LessThanOrEqualTo(5 * 1024 * 1024)
+                        .WithMessage("File size must be less than or equal to 5 MB");
+
+                    RuleFor(x => x.categoryImages.ContentType)
+                        .Must(contentType => contentType == "image/jpeg" || contentType == "image/png")
+                        .WithMessage("Only JPEG and PNG files are allowed");
+                });
         }
     }
 }

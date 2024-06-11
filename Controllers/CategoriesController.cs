@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using amazon_backend.Data;
 using FluentValidation;
-
 using amazon_backend.Services.Response;
 using MediatR;
 using amazon_backend.Profiles.ReviewProfiles;
@@ -17,9 +16,7 @@ using amazon_backend.Services.FluentValidation;
 using amazon_backend.Data.Model;
 using amazon_backend.CQRS.Commands.ReviewRequests;
 using Microsoft.AspNetCore.Authorization;
-
 using amazon_backend.Services.JWTService;
-
 using Amazon.S3.Model;
 using System.Xml.Linq;
 using amazon_backend.DTO;
@@ -35,9 +32,7 @@ namespace amazon_backend.Controllers
         private readonly ILogger<CategoriesController> _logger;
         private readonly CategoryDao _categoryDao;
         private readonly DataContext _dataContext;
-        private readonly RestResponseService _restResponseService;
         private readonly IMediator _mediator;
-
         private readonly RestResponseService _responseService;
         private readonly IValidator<CreateCategoryImageCommandRequst> _createImageValidator;
         private readonly IValidator<RemoveCategoryImageCommandRequst> _removeImageValidator;
@@ -49,7 +44,6 @@ namespace amazon_backend.Controllers
             _logger = logger;
             _categoryDao = categoryDao;
             _dataContext = dataContext;
-            _restResponseService = restResponseService;
             _mediator = mediator;
             _responseService = responseService;
             _createImageValidator = createImageValidator;
@@ -96,12 +90,8 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<IActionResult> GetAllCategoriesPropertyKey()
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
-            if (!decodeResult.isSuccess)
-            {
-                return BadRequest();
-            }
-            User user = decodeResult.data;
+           
+            
             var categories = await _dataContext.Categories
                                     .Include(c => c.CategoryPropertyKeys)
                                     .ToListAsync();
@@ -112,12 +102,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<IActionResult> GetListPropertyKeysByNameCategory(string name)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
-            if (!decodeResult.isSuccess)
-            {
-                return BadRequest();
-            }
-            User user = decodeResult.data;
+           
             var categories = await _dataContext.CategoryPropertyKeys.Where(c => c.NameCategory == name).ToListAsync();
             return Ok(categories);
         }
@@ -127,7 +112,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -198,7 +183,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<ActionResult> UpdateCategory([FromBody] СategoryModel categoryModel)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -235,7 +220,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteCategory(string name)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -258,7 +243,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteCategoryById(int id)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
