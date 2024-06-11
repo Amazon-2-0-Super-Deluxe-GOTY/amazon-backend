@@ -53,7 +53,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Expires = token.ExpirationDate
+                    Expires = token.ExpirationDate.ToUniversalTime()
                 };
                 httpContext.Response.Cookies.Append("jwt", token.Token, cookieOptions);
             }

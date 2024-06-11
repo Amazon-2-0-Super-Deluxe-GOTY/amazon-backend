@@ -18,8 +18,6 @@ namespace amazon_backend.Data
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItemDao> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
-        public DbSet<WishList> WishLists { get; set; }
-        public DbSet<WishListItem> WishListItems { get; set; }
         public DbSet<ProductProperty> ProductProperties { get; set; }
         public DbSet<CategoryPropertyKey> CategoryPropertyKeys { get; set; }
         public DbSet<AboutProductItem> AboutProductItems { get; set; }
