@@ -31,7 +31,7 @@ namespace amazon_backend.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> AddNewItemToWishList([FromQuery] GetWishListQueryRequest request)
+        public async Task<IActionResult> GetItemFromWishList([FromQuery] GetWishListQueryRequest request)
         {
             var validationErrors = _getItemsValidator.GetErrors(request);
             if (validationErrors != null)
@@ -39,6 +39,11 @@ namespace amazon_backend.Controllers
                 return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
             var response = await _mediator.Send(request);
+            if (response.isSuccess)
+            {
+                return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data,
+                    new() { currentPage = request.pageIndex, pagesCount = response.pagesCount });
+            }
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 

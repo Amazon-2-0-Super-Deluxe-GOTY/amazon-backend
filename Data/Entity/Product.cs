@@ -28,5 +28,6 @@ namespace amazon_backend.Data.Entity
         public List<Product>? Products { get; set; }
         public List<Review>? Reviews { get; set; }
         public List<User>? WishListers { get; set; }
+        public List<CartItem>? CartItems { get; set; }
     }
 }

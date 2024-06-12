@@ -45,6 +45,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.WishListQueryHandlers.Query
             var productsQuery = _dataContext.Products
                     .Include(p => p.Reviews)
                     .Include(p => p.ProductImages)
+                    .AsSplitQuery()
                     .Where(p => wishlistedProductIds.Contains(p.Id));
 
             if (request.searchQuery != null)
@@ -62,7 +63,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.WishListQueryHandlers.Query
                 var productProfiles = _mapper.Map<List<ProductCardProfile>>(products);
                 int totalCount = await productsQuery.CountAsync();
                 int pagesCount = (int)Math.Ceiling(totalCount / (double)request.pageSize);
-                return new(productProfiles, pagesCount) { statusCode = 200 };
+                return new(productProfiles, pagesCount) { statusCode = 200, message = "Ok" };
             }
 
             return new("Items not found") { statusCode = 404 };
