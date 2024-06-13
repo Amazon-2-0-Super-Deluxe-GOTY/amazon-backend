@@ -62,7 +62,7 @@ namespace amazon_backend.Data.Dao
             var category = _context.Categories.Find(id);
             if (category != null)
             {
-                category.IsDeleted = true;
+                category.IsActive = true;
                 _context.SaveChanges();
             }
         }
@@ -97,7 +97,7 @@ namespace amazon_backend.Data.Dao
             var category = _context.Categories.Find(id);
             if (category != null)
             {
-                category.IsDeleted = false;
+                category.IsActive = false;
                 _context.SaveChanges();
             }
         }

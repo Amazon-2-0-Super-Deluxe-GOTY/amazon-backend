@@ -38,8 +38,8 @@ namespace amazon_backend.Data
             // relations
             // seeds
             modelBuilder.Entity<Category>()
-                .Property(b => b.IsDeleted)
-                .HasDefaultValue(false);
+                .Property(b => b.IsActive)
+                .HasDefaultValue(true);
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
             modelBuilder.Entity<Category>()

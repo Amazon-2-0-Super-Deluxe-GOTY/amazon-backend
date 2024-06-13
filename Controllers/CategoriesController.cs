@@ -52,11 +52,39 @@ namespace amazon_backend.Controllers
             _tokenService = tokenService;
         }
 
+
         [HttpGet("category")]
-        [Authorize]
         public async Task<IActionResult> GetAllCategories()
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+           
+            var categories = await _dataContext.Categories
+                                      .Include(c => c.CategoryPropertyKeys)
+                                      .Where(c => c.IsActive)
+                                      .ToListAsync();
+            var categoryDtos = categories.Select(c => new CategoryDto
+            {
+                Id = c.Id,
+                ParentId = c.ParentCategoryId,
+                Name = c.Name,
+                Description = c.Description,
+                Image = c.Image,
+                IsActive = c.IsActive,
+                Logo = c.Logo,
+                CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
+                {
+                    Id = cp.Id,
+                    Name = cp.Name,
+                }).ToList()
+            }).ToList();
+
+            return Ok(categoryDtos);
+        }
+
+        [HttpGet("category_admin")]
+        [Authorize]
+        public async Task<IActionResult> GetAllCategoriesAdmin()
+        {
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -68,19 +96,16 @@ namespace amazon_backend.Controllers
             var categoryDtos = categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
+                ParentId = c.ParentCategoryId,
                 Name = c.Name,
                 Description = c.Description,
                 Image = c.Image,
-                IsDeleted = c.IsDeleted,
-                IsVisible = c.IsVisible,
+                IsActive = c.IsActive,
                 Logo = c.Logo,
                 CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
                 {
                     Id = cp.Id,
                     Name = cp.Name,
-                    IsDeleted = cp.IsDeleted,
-                    IsFilter = cp.IsFilter,
-                    IsRequired = cp.IsRequired
                 }).ToList()
             }).ToList();
 
@@ -134,9 +159,7 @@ namespace amazon_backend.Controllers
             {
                 Name = categoryModel.Name,
                 Description = categoryModel.Description,
-                IsDeleted = false,
-                IsVisible = true,
-                ParentCategoryName = categoryModel.ParentCategoryName,
+                IsActive = categoryModel.IsActive,
                 Logo = categoryModel.Logo
             };
 
@@ -162,12 +185,9 @@ namespace amazon_backend.Controllers
                     {
                         Id = Guid.NewGuid(),
                         Name = propertyKeyModel.Name,
-                        IsDeleted = propertyKeyModel.IsDeleted,
-                        IsFilter = propertyKeyModel.IsFilter,
-                        IsRequired = propertyKeyModel.IsRequired,
-                        CategoryId = propertyKeyModel.CategoryId 
                     };
                     categoryPropertyKey.NameCategory = category.Name; 
+                    categoryPropertyKey.CategoryId = category.Id;
                     _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
                 }
             }
@@ -204,9 +224,7 @@ namespace amazon_backend.Controllers
 
             category.Description = categoryModel.Description;
             category.Image = categoryModel.Image;
-            category.IsDeleted = categoryModel.IsDeleted;
-            category.IsVisible = categoryModel.IsVisible;
-            category.ParentCategoryName = categoryModel.ParentCategory;
+            category.IsActive = categoryModel.IsActive;
             category.Logo = categoryModel.Logo;
 
 
@@ -233,7 +251,7 @@ namespace amazon_backend.Controllers
             }
 
 
-            category.IsDeleted = true;
+            category.IsActive = false;
             await _dataContext.SaveChangesAsync();
 
 
@@ -256,7 +274,7 @@ namespace amazon_backend.Controllers
             }
 
 
-            category.IsDeleted = true;
+            category.IsActive = true;
             await _dataContext.SaveChangesAsync();
 
 
