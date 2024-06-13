@@ -274,7 +274,7 @@ namespace amazon_backend.Controllers
             }
 
 
-            category.IsActive = true;
+            category.IsActive = false;
             await _dataContext.SaveChangesAsync();
 
 
