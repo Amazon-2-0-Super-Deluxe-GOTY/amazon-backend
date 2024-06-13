@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Newtonsoft.Json;
-namespace amazon_backend.Data.Entity
+﻿namespace amazon_backend.Data.Entity
 {
     public class User
     {
@@ -27,5 +24,6 @@ namespace amazon_backend.Data.Entity
         public List<ReviewLike>? ReviewLikes { get; set; }
         public List<Product>? WishedProducts { get; set; }
         public List<Cart>? Carts { get; set; }
+        public List<Order>? Orders { get; set; }
     }
 }

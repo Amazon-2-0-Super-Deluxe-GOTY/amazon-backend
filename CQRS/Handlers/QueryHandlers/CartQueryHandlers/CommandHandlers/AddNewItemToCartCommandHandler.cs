@@ -32,10 +32,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.CartQueryHandlers.CommandHa
             }
 
             Product? product = await _dataContext.Products
-                .Include(p=>p.ProductImages)
+                .Include(p => p.ProductImages)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(p => p.Id == Guid.Parse(request.productId));
-            if (product == null)
+            if (product == null || product.Quantity == 0)
             {
                 return new("Product not found") { statusCode = 404 };
             }
@@ -58,7 +58,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.CartQueryHandlers.CommandHa
                 var item = cart.CartItems.FirstOrDefault(ci => ci.ProductId == product.Id);
                 if (item != null)
                 {
-                    item.Quantity += request.quantity;
+                    item.Quantity = (request.quantity + item.Quantity) > product.Quantity ? product.Quantity : request.quantity + item.Quantity;
                     _dataContext.Update(item);
                     await _dataContext.SaveChangesAsync();
                     return new("Ok") { statusCode = 200, data = _mapper.Map<CartItemProfile>(item) };
@@ -69,7 +69,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.CartQueryHandlers.CommandHa
                 Id = Guid.NewGuid(),
                 CartId = cart.Id,
                 ProductId = product.Id,
-                Quantity = request.quantity,
+                Quantity = request.quantity > product.Quantity ? product.Quantity : request.quantity,
                 CreatedAt = DateTime.Now
             };
             await _dataContext.AddAsync(newItem);

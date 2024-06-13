@@ -51,7 +51,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.CartQueryHandlers.CommandHa
 
             if (cart.CartItems.Contains(cartItem))
             {
-                cartItem.Quantity = request.quantity;
+                cartItem.Quantity = request.quantity > cartItem.Product!.Quantity ? cartItem.Product!.Quantity : request.quantity;
                 await _dataContext.SaveChangesAsync();
                 return new("Ok") { statusCode = 200, data = _mapper.Map<CartItemProfile>(cartItem) };
             }

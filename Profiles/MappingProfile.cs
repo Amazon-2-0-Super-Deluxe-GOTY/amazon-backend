@@ -12,6 +12,9 @@ using amazon_backend.Profiles.ReviewTagProfiles;
 using amazon_backend.Profiles.ReviewImageProfiles;
 using amazon_backend.Profiles.CartItemProfiles;
 using amazon_backend.Profiles.CartProfiles;
+using amazon_backend.Profiles.OrderItemProfiles;
+using amazon_backend.Profiles.DeliveryAddressProfiles;
+using amazon_backend.Profiles.OrderProfiles;
 
 namespace amazon_backend.Profiles
 {
@@ -336,7 +339,7 @@ namespace amazon_backend.Profiles
                      {
                          if (dest.CartItems != null && dest.CartItems.Count != 0)
                          {
-                             return dest.CartItems.Sum(ci => ci.Price);
+                             return Math.Round(dest.CartItems.Sum(ci => ci.Price), 2);
                          }
                          return 0;
                      });
@@ -349,7 +352,44 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        return (src.Product!.Price * (1 - (src.Product.DiscountPercent.HasValue ? src.Product.DiscountPercent.Value : 0) / 100.0)) * dest.Quantity;
+                        var discountPrice = (src.Product!.Price * (1 - (src.Product.DiscountPercent.HasValue ? src.Product.DiscountPercent.Value : 0) / 100.0));
+                        var resultPrice = discountPrice * dest.Quantity;
+                        return Math.Round(resultPrice, 2);
+                    });
+                });
+            #endregion
+
+            #region OrderItem
+            CreateMap<OrderItem, OrderItemProfile>();
+            #endregion
+
+            #region DeliveryAddress
+            CreateMap<DeliveryAddress, DeliveryAddressProfile>();
+            #endregion
+
+            #region Order
+            CreateMap<Order, OrderProfile>()
+                .ForMember(dest => dest.TotalPrice, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.OrderItems != null && src.OrderItems.Count != 0)
+                        {
+                            var total = src.OrderItems.Sum(oi => oi.TotalPrice);
+                            return Math.Round(total, 2);
+                        }
+                        return 0;
+                    });
+                })
+                .ForMember(dest => dest.CustomerName, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.User != null)
+                        {
+                            return $"{src.User.FirstName} {src.User.LastName}";
+                        }
+                        return null;
                     });
                 });
             #endregion
