@@ -317,6 +317,17 @@ namespace amazon_backend.Profiles
                 });
             #endregion
 
+            #region CategoryImage
+            CreateMap<CategoryImage, CategoryImageProfile>()
+                 .ForMember(dest => dest.ImageUrl, opt =>
+                 {
+                     opt.MapFrom((src, dest, destMember, context) =>
+                     {
+                         return Path.Combine(bucketUrl, src.ImageUrl);
+                     });
+                 });
+            #endregion
+
             #region Cart
             CreateMap<Cart, CartProfile>()
                  .ForMember(dest => dest.TotalPrice, opt =>
