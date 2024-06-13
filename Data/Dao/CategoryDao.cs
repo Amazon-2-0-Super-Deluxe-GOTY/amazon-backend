@@ -7,7 +7,6 @@ namespace amazon_backend.Data.Dao
     public interface ICategoryDao : IDataAccessObject<Category, uint>
     {
         Task<Category> GetByName(string name);
-        Task<List<FilterItemModel>> GetFilterItems(uint categoryId);
         void Restore(uint id);
     }
 
@@ -62,44 +61,22 @@ namespace amazon_backend.Data.Dao
             var category = _context.Categories.Find(id);
             if (category != null)
             {
-                category.IsDeleted = true;
+                category.IsActive = false;
                 _context.SaveChanges();
             }
         }
 
-        public async Task<List<FilterItemModel>> GetFilterItems(uint categoryId)
-        {
-            //CategoryPropertyKey[]? categoryProps = await _context
-            //     .CategoryPropertyKeys
-            //     .Where(cp => cp.CategoryId == categoryId)
-            //     .ToArrayAsync();
-            //var filterItems = await _context.ProductProperties
-            //    .Join(_context.CategoryPropertyKeys,
-            //    pprops => pprops.Key,
-            //    catprops => catprops.Name,
-            //    (pprops, catprops) => new { pprops, catprops })
-            //    .Where(x => x.catprops.CategoryId == categoryId && x.catprops.IsFilter)
-            //    .GroupBy(x => new { x.pprops.Key, x.pprops.Value })
-            //    .Select(g => new FilterItemModel
-            //    {
-            //        Key = g.Key.Key,
-            //        Value = g.Key.Value,
-            //        Count = g.Count()
-            //    }).ToListAsync();
-            //if (filterItems != null && filterItems.Count != 0)
-            //{
-            //    return filterItems;
-            //}
-            return null;
-        }
+       
         public void Restore(uint id)
         {
             var category = _context.Categories.Find(id);
             if (category != null)
             {
-                category.IsDeleted = false;
+                category.IsActive = true;
                 _context.SaveChanges();
             }
         }
+
+       
     }
 }

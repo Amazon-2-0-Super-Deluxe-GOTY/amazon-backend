@@ -13,9 +13,8 @@ namespace amazon_backend.Data.Model
         [Column(TypeName = "varchar(255)")]
         public string? Image { get; set; }
         [Required]
-        public bool IsDeleted { get; set; }
-        public bool IsVisible { get; set; }
-        public uint Logo { set; get; }
+        public bool IsActive { get; set; }
+        public string Logo { set; get; }
 
     }
 }

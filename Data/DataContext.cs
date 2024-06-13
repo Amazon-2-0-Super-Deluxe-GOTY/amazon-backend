@@ -22,6 +22,7 @@ namespace amazon_backend.Data
         public DbSet<WishListItem> WishListItems { get; set; }
         public DbSet<ProductProperty> ProductProperties { get; set; }
         public DbSet<CategoryPropertyKey> CategoryPropertyKeys { get; set; }
+        public DbSet<CategoryImage> CategoryImages { get; set; }
         public DbSet<AboutProductItem> AboutProductItems { get; set; }
         public DbSet<JwtToken> JwtTokens { get; set; }
         public DbSet<TokenJournal> TokenJournals { get; set; }
@@ -38,8 +39,8 @@ namespace amazon_backend.Data
             // relations
             // seeds
             modelBuilder.Entity<Category>()
-                .Property(b => b.IsDeleted)
-                .HasDefaultValue(false);
+                .Property(b => b.IsActive)
+                .HasDefaultValue(true);
             modelBuilder.Entity<Review>()
                 .ToTable(t => t.HasCheckConstraint("ValidMark", "Mark > 0 AND Mark < 6"));
             modelBuilder.Entity<Category>()

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using amazon_backend.Data;
 
@@ -10,9 +11,11 @@ using amazon_backend.Data;
 namespace amazon_backend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240610212132_CategoryImage")]
+    partial class CategoryImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,14 +202,16 @@ namespace amazon_backend.Migrations
                     b.Property<string>("Image")
                         .HasColumnType("varchar(255)");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
-                        .HasDefaultValue(true);
+                        .HasDefaultValue(false);
 
-                    b.Property<string>("Logo")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<uint>("Logo")
+                        .HasColumnType("int unsigned");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -214,6 +219,9 @@ namespace amazon_backend.Migrations
 
                     b.Property<uint?>("ParentCategoryId")
                         .HasColumnType("int unsigned");
+
+                    b.Property<string>("ParentCategoryName")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -386,9 +394,6 @@ namespace amazon_backend.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()

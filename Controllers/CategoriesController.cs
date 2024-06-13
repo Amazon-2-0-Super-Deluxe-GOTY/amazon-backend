@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using amazon_backend.Data;
 using FluentValidation;
-using amazon_backend.CQRS.Queries.Request.CategoryRequests;
-using amazon_backend.CQRS.Commands.CategoryRequests;
 using amazon_backend.Services.Response;
 using MediatR;
 using amazon_backend.Profiles.ReviewProfiles;
@@ -18,12 +16,12 @@ using amazon_backend.Services.FluentValidation;
 using amazon_backend.Data.Model;
 using amazon_backend.CQRS.Commands.ReviewRequests;
 using Microsoft.AspNetCore.Authorization;
-using amazon_backend.CQRS.Commands.CategoryPropertyKeyRequests;
 using amazon_backend.Services.JWTService;
-using amazon_backend.CQRS.Handlers.QueryHandlers.CategoryPropertyQueryHandlers;
 using Amazon.S3.Model;
 using System.Xml.Linq;
 using amazon_backend.DTO;
+using amazon_backend.CQRS.Commands.CategoryImageRequst;
+using amazon_backend.CQRS.Queries.Request.CategoryImageRequest;
 
 namespace amazon_backend.Controllers
 {
@@ -34,29 +32,59 @@ namespace amazon_backend.Controllers
         private readonly ILogger<CategoriesController> _logger;
         private readonly CategoryDao _categoryDao;
         private readonly DataContext _dataContext;
-        private readonly RestResponseService _restResponseService;
         private readonly IMediator _mediator;
-        private readonly IValidator<GetCategoryQueryRequest> _getCategoryQueryValidator;
-        
-        private readonly IValidator<CreateCategoryPropertyKeyCommandRequst> _createCategoryPropertyKeyCommandValidator;
+        private readonly RestResponseService _responseService;
+        private readonly IValidator<CreateCategoryImageCommandRequst> _createImageValidator;
+        private readonly IValidator<RemoveCategoryImageCommandRequst> _removeImageValidator;
+        private readonly IValidator<GetCategoryImageByIdQueryRequst> _getImageValidator;
         private readonly TokenService _tokenService;
 
-        public CategoriesController(ILogger<CategoriesController> logger, CategoryDao categoryDao, DataContext dataContext, RestResponseService restResponseService, IMediator mediator, IValidator<GetCategoryQueryRequest> getCategoryQueryValidator, IValidator<CreateCategoryPropertyKeyCommandRequst> createCategoryPropertyKeyCommandValidator, TokenService tokenService)
+        public CategoriesController(ILogger<CategoriesController> logger, CategoryDao categoryDao, DataContext dataContext, RestResponseService restResponseService, IMediator mediator, RestResponseService responseService, IValidator<CreateCategoryImageCommandRequst> createImageValidator, IValidator<RemoveCategoryImageCommandRequst> removeImageValidator, IValidator<GetCategoryImageByIdQueryRequst> getImageValidator, TokenService tokenService)
         {
             _logger = logger;
             _categoryDao = categoryDao;
             _dataContext = dataContext;
-            _restResponseService = restResponseService;
             _mediator = mediator;
-            _getCategoryQueryValidator = getCategoryQueryValidator;
-            _createCategoryPropertyKeyCommandValidator = createCategoryPropertyKeyCommandValidator;
+            _responseService = responseService;
+            _createImageValidator = createImageValidator;
+            _removeImageValidator = removeImageValidator;
+            _getImageValidator = getImageValidator;
             _tokenService = tokenService;
         }
+
+
         [HttpGet("category")]
-        [Authorize]
         public async Task<IActionResult> GetAllCategories()
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+           
+            var categories = await _dataContext.Categories
+                                      .Include(c => c.CategoryPropertyKeys)
+                                      .Where(c => c.IsActive)
+                                      .ToListAsync();
+            var categoryDtos = categories.Select(c => new CategoryDto
+            {
+                Id = c.Id,
+                ParentId = c.ParentCategoryId,
+                Name = c.Name,
+                Description = c.Description,
+                Image = c.Image,
+                IsActive = c.IsActive,
+                Logo = c.Logo,
+                CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
+                {
+                    Id = cp.Id,
+                    Name = cp.Name,
+                }).ToList()
+            }).ToList();
+
+            return Ok(categoryDtos);
+        }
+
+        [HttpGet("category_admin")]
+        [Authorize]
+        public async Task<IActionResult> GetAllCategoriesAdmin()
+        {
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -68,19 +96,16 @@ namespace amazon_backend.Controllers
             var categoryDtos = categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
+                ParentId = c.ParentCategoryId,
                 Name = c.Name,
                 Description = c.Description,
                 Image = c.Image,
-                IsDeleted = c.IsDeleted,
-                IsVisible = c.IsVisible,
+                IsActive = c.IsActive,
                 Logo = c.Logo,
                 CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
                 {
                     Id = cp.Id,
                     Name = cp.Name,
-                    IsDeleted = cp.IsDeleted,
-                    IsFilter = cp.IsFilter,
-                    IsRequired = cp.IsRequired
                 }).ToList()
             }).ToList();
 
@@ -90,12 +115,8 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<IActionResult> GetAllCategoriesPropertyKey()
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
-            if (!decodeResult.isSuccess)
-            {
-                return BadRequest();
-            }
-            User user = decodeResult.data;
+           
+            
             var categories = await _dataContext.Categories
                                     .Include(c => c.CategoryPropertyKeys)
                                     .ToListAsync();
@@ -106,12 +127,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<IActionResult> GetListPropertyKeysByNameCategory(string name)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
-            if (!decodeResult.isSuccess)
-            {
-                return BadRequest();
-            }
-            User user = decodeResult.data;
+           
             var categories = await _dataContext.CategoryPropertyKeys.Where(c => c.NameCategory == name).ToListAsync();
             return Ok(categories);
         }
@@ -121,7 +137,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -137,62 +153,57 @@ namespace amazon_backend.Controllers
             {
                 return BadRequest("Category with the same name already exists");
             }
-            
+            CategoryImage? image = await _dataContext
+                        .CategoryImages.FirstOrDefaultAsync(pi => pi.Id == Guid.Parse(categoryModel.ImageId));
             var category = new Category
             {
                 Name = categoryModel.Name,
                 Description = categoryModel.Description,
-                Image = categoryModel.Image,
-                IsDeleted = false,
-                IsVisible = true,
-                ParentCategoryName = categoryModel.ParentCategoryName,
+                IsActive = categoryModel.IsActive,
                 Logo = categoryModel.Logo
             };
 
-            _dataContext.Categories.Add(category);
+            _dataContext.Categories.AddAsync(category);
 
             
             await _dataContext.SaveChangesAsync();
+            if(image != null)
+            {
+                category.Image = image.ImageUrl;
+            }
 
             if (categoryModel.PropertyKeys != null && categoryModel.PropertyKeys.Any())
             {
                 foreach (var propertyKeyModel in categoryModel.PropertyKeys)
                 {
-                    // Set the current category id for each property key
+                    
                     propertyKeyModel.CategoryId = category.Id;
 
-                    var propertyKeyCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == propertyKeyModel.NameCategory);
-                    if (propertyKeyCategory == null)
-                    {
-                        return BadRequest($"Category '{propertyKeyModel.NameCategory}' does not exist");
-                    }
+                
 
                     var categoryPropertyKey = new CategoryPropertyKey
                     {
                         Id = Guid.NewGuid(),
                         Name = propertyKeyModel.Name,
-                        IsDeleted = propertyKeyModel.IsDeleted,
-                        IsFilter = propertyKeyModel.IsFilter,
-                        IsRequired = propertyKeyModel.IsRequired,
-                        NameCategory = propertyKeyModel.NameCategory,
-                        CategoryId = propertyKeyModel.CategoryId // Use the category id from the model
                     };
-
+                    categoryPropertyKey.NameCategory = category.Name; 
+                    categoryPropertyKey.CategoryId = category.Id;
                     _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
                 }
             }
-
-            // Save changes to add the category property keys
             await _dataContext.SaveChangesAsync();
+            
+           
+            
 
-            return Ok();
+           return Ok();
         }
 
         [HttpPut("update")]
         [Authorize]
         public async Task<ActionResult> UpdateCategory([FromBody] СategoryModel categoryModel)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -213,9 +224,7 @@ namespace amazon_backend.Controllers
 
             category.Description = categoryModel.Description;
             category.Image = categoryModel.Image;
-            category.IsDeleted = categoryModel.IsDeleted;
-            category.IsVisible = categoryModel.IsVisible;
-            category.ParentCategoryName = categoryModel.ParentCategory;
+            category.IsActive = categoryModel.IsActive;
             category.Logo = categoryModel.Logo;
 
 
@@ -229,7 +238,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteCategory(string name)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -242,7 +251,7 @@ namespace amazon_backend.Controllers
             }
 
 
-            category.IsDeleted = true;
+            category.IsActive = false;
             await _dataContext.SaveChangesAsync();
 
 
@@ -252,7 +261,7 @@ namespace amazon_backend.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteCategoryById(int id)
         {
-            var decodeResult = await _tokenService.DecodeTokenFromHeaders();
+            var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
@@ -265,7 +274,7 @@ namespace amazon_backend.Controllers
             }
 
 
-            category.IsDeleted = true;
+            category.IsActive = false;
             await _dataContext.SaveChangesAsync();
 
 
