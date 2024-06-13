@@ -1,78 +1,92 @@
-﻿using amazon_backend.Data.Dao;
-using amazon_backend.Data.Entity;
+﻿using amazon_backend.CQRS.Commands.CartRequests;
+using amazon_backend.CQRS.Queries.Request.CartRequests;
+using amazon_backend.Services.FluentValidation;
+using amazon_backend.Services.Response;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 namespace amazon_backend.Controllers
 {
 
     [ApiController]
-    [Route("controller")]
+    [Route("api/cart")]
     public class CartController : ControllerBase
     {
-        private readonly ICartDao _cartDao;
-        private readonly ILogger<CartController> _logger;
+        private readonly IMediator _mediator;
+        private readonly RestResponseService _responseService;
+        private readonly IValidator<AddNewItemToCartCommandRequest> _addNewItemValidator;
+        private readonly IValidator<GetItemsFromCartQueryRequest> _getItemsValidator;
+        private readonly IValidator<RemoveItemsFromCartCommandRequest> _removeItemsValidator;
+        private readonly IValidator<UpdateCartItemCommandRequest> _updateItemValidator;
 
-        public CartController(ICartDao cartDao, ILogger<CartController> logger)
+        public CartController(IMediator mediator, RestResponseService responseService, IValidator<AddNewItemToCartCommandRequest> addNewItemValidator, IValidator<GetItemsFromCartQueryRequest> getItemsValidator, IValidator<RemoveItemsFromCartCommandRequest> removeItemsValidator, IValidator<UpdateCartItemCommandRequest> updateItemValidator)
         {
-            _cartDao = cartDao;
-            _logger = logger;
+            _mediator = mediator;
+            _responseService = responseService;
+            _addNewItemValidator = addNewItemValidator;
+            _getItemsValidator = getItemsValidator;
+            _removeItemsValidator = removeItemsValidator;
+            _updateItemValidator = updateItemValidator;
         }
 
         [HttpGet]
-        public IEnumerable<Cart> GetCarts()
+        [Authorize]
+        public async Task<IActionResult> GetCart([FromQuery] GetItemsFromCartQueryRequest request)
         {
-            return _cartDao.GetAll();
-        }
-
-        [HttpGet("{id}")]
-        public Cart GetCart(Guid id)
-        {
-            return _cartDao.GetById(id);
+            var validationErrors = _getItemsValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            if (response.isSuccess)
+            {
+                return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data,
+                    new() { currentPage = request.pageIndex, pagesCount = response.pagesCount });
+            }
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
         [HttpPost]
-        public void AddCart(Cart cart)
+        [Authorize]
+        public async Task<IActionResult> AddNewItemToCart([FromBody] AddNewItemToCartCommandRequest request)
         {
-            _cartDao.Add(cart);
-        }
-
-        [HttpPut("{id}")]
-        public void UpdateCart(int id, Cart cart)
-        {
-            if (id != cart.Id)
+            var validationErrors = _addNewItemValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                throw new ArgumentException("Cart ID mismatch");
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
-            _cartDao.Update(cart);
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
-        [HttpDelete("{id}")]
-        public void DeleteCart(Guid id)
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> UpdateCartItem([FromBody] UpdateCartItemCommandRequest request)
         {
-            _cartDao.Delete(id);
+            var validationErrors = _updateItemValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
-        [HttpGet("{id}/items")]
-        public CartItemDao[] GetItemsInCart(Guid id)
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> DeleteItemsFromCart([FromBody] RemoveItemsFromCartCommandRequest request)
         {
-            return _cartDao.GetItemsInCart(id);
+            var validationErrors = _removeItemsValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
-        [HttpPost("{id}/items")]
-        public void AddItemToCart(Guid id, Product product, int quantity)
-        {
-            _cartDao.AddItemToCart(id, product, quantity);
-        }
-
-        [HttpDelete("{cartId}/items/{productId}")]
-        public void RemoveItemFromCart(Guid cartId, Guid productId)
-        {
-            _cartDao.RemoveItemFromCart(cartId, productId);
-        }
-
-        [HttpPut("{cartId}/items/{productId}")]
-        public void UpdateItemQuantity(Guid cartId, Guid productId, int quantity)
-        {
-            _cartDao.UpdateItemQuantity(cartId, productId, quantity);
-        }
     }
 }

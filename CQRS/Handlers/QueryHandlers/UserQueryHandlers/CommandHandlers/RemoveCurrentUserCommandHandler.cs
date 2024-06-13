@@ -12,10 +12,13 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
     {
         private readonly DataContext _dataContext;
         private readonly TokenService _tokenService;
-        public RemoveCurrentUserCommandHandler(DataContext dataContext, TokenService tokenService)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public RemoveCurrentUserCommandHandler(DataContext dataContext, TokenService tokenService, IHttpContextAccessor httpContextAccessor)
         {
             _dataContext = dataContext;
             _tokenService = tokenService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<Result<string>> Handle(RemoveCurrentUserCommandRequest request, CancellationToken cancellationToken)
         {
@@ -40,6 +43,15 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
             user.DeletedAt= DateTime.UtcNow;
             _dataContext.Update(user);
             await _dataContext.SaveChangesAsync();
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null)
+            {
+                var cookieOptions = new CookieOptions
+                {
+                    Expires = DateTime.Now.AddDays(-1)
+                };
+                httpContext.Response.Cookies.Append("jwt", string.Empty, cookieOptions);
+            }
             return new() { message = "Ok", statusCode = 200 };
         }
     }

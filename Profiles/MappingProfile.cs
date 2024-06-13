@@ -10,6 +10,11 @@ using amazon_backend.Profiles.ProductImageProfiles;
 using amazon_backend.Profiles.ProductPropertyProfiles;
 using amazon_backend.Profiles.ReviewTagProfiles;
 using amazon_backend.Profiles.ReviewImageProfiles;
+using amazon_backend.Profiles.CartItemProfiles;
+using amazon_backend.Profiles.CartProfiles;
+using amazon_backend.Profiles.OrderItemProfiles;
+using amazon_backend.Profiles.DeliveryAddressProfiles;
+using amazon_backend.Profiles.OrderProfiles;
 
 namespace amazon_backend.Profiles
 {
@@ -104,7 +109,7 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.ProductImages != null && src.ProductImages.Count != 0) 
+                        if (src.ProductImages != null && src.ProductImages.Count != 0)
                         {
                             return src.ProductImages.OrderBy(pi => pi.CreatedAt);
                         }
@@ -137,7 +142,7 @@ namespace amazon_backend.Profiles
                  {
                      opt.MapFrom((src, dest, destMember, context) =>
                      {
-                         if (src.DiscountPercent.HasValue && src.Price > 0)
+                         if (src.DiscountPercent.HasValue && src.DiscountPercent.Value > 0)
                          {
                              return src.Price * (1 - src.DiscountPercent.Value / 100.0);
                          }
@@ -163,7 +168,7 @@ namespace amazon_backend.Profiles
                 {
                     opt.MapFrom((src, dest, destMember, context) =>
                     {
-                        if (src.DiscountPercent.HasValue && src.Price > 0)
+                        if (src.DiscountPercent.HasValue && src.DiscountPercent.Value > 0)
                         {
                             return src.Price * (1 - src.DiscountPercent.Value / 100.0);
                         }
@@ -193,6 +198,32 @@ namespace amazon_backend.Profiles
                             return Math.Round(src.Reviews.Average(r => r.Mark), 1);
                         }
                         return 0;
+                    });
+                });
+            CreateMap<Product, ProductCartItemProfile>()
+                .ForMember(dest => dest.ImageUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.ProductImages != null && src.ProductImages.Count != 0)
+                        {
+                            return Path.Combine(bucketUrl, src.ProductImages.First().ImageUrl);
+                        }
+                        return null;
+                    });
+                })
+                .ForMember(dest => dest.DiscountPrice, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.DiscountPercent.HasValue && src.DiscountPercent.Value > 0)
+                        {
+                            return src.Price * (1 - src.DiscountPercent.Value / 100.0);
+                        }
+                        else
+                        {
+                            return 0;
+                        }
                     });
                 });
             #endregion
@@ -298,6 +329,69 @@ namespace amazon_backend.Profiles
                          return Path.Combine(bucketUrl, src.ImageUrl);
                      });
                  });
+            #endregion
+
+            #region Cart
+            CreateMap<Cart, CartProfile>()
+                 .ForMember(dest => dest.TotalPrice, opt =>
+                 {
+                     opt.MapFrom((src, dest, destMember, context) =>
+                     {
+                         if (dest.CartItems != null && dest.CartItems.Count != 0)
+                         {
+                             return Math.Round(dest.CartItems.Sum(ci => ci.Price), 2);
+                         }
+                         return 0;
+                     });
+                 });
+            #endregion
+
+            #region CartItem
+            CreateMap<CartItem, CartItemProfile>()
+                .ForMember(dest => dest.Price, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        var discountPrice = (src.Product!.Price * (1 - (src.Product.DiscountPercent.HasValue ? src.Product.DiscountPercent.Value : 0) / 100.0));
+                        var resultPrice = discountPrice * dest.Quantity;
+                        return Math.Round(resultPrice, 2);
+                    });
+                });
+            #endregion
+
+            #region OrderItem
+            CreateMap<OrderItem, OrderItemProfile>();
+            #endregion
+
+            #region DeliveryAddress
+            CreateMap<DeliveryAddress, DeliveryAddressProfile>();
+            #endregion
+
+            #region Order
+            CreateMap<Order, OrderProfile>()
+                .ForMember(dest => dest.TotalPrice, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.OrderItems != null && src.OrderItems.Count != 0)
+                        {
+                            var total = src.OrderItems.Sum(oi => oi.TotalPrice);
+                            return Math.Round(total, 2);
+                        }
+                        return 0;
+                    });
+                })
+                .ForMember(dest => dest.CustomerName, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (src.User != null)
+                        {
+                            return $"{src.User.FirstName} {src.User.LastName}";
+                        }
+                        return null;
+                    });
+                });
             #endregion
 
         }

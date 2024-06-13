@@ -16,7 +16,10 @@ namespace amazon_backend.Services.Random
         {
             _hashService = hashService;
         }
-
+        public string RandomNumberUseDate()
+        {
+            return $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day}{random.Next(1000, 9999)}";
+        }
         public string ConfirmCode(int length)
         {
             string result = "";

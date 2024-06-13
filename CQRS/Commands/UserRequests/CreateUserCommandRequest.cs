@@ -3,6 +3,7 @@ using amazon_backend.Models;
 using amazon_backend.Profiles.JwtTokenProfiles;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.CQRS.Commands.UserRequests
 {
@@ -24,7 +25,7 @@ namespace amazon_backend.CQRS.Commands.UserRequests
 
             RuleFor(x => x.email).MustAsync(async (email, cancellation) =>
             {
-                var user = _dataContext.Users.FirstOrDefault(u => u.Email == email);
+                var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == email);
                 return user == null;
             }).WithMessage("Email already used");
 

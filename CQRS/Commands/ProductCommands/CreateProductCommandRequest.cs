@@ -10,7 +10,7 @@ namespace amazon_backend.CQRS.Commands.ProductCommands
     public class CreateProductCommandRequest : IRequest<Result<ProductViewProfile>>
     {
         public string name { get; set; }
-        public string? code { get; set; }
+        public string code { get; set; }
         public int categoryId { get; set; }
         public double price { get; set; }
         public int? discount { get; set; }
@@ -46,7 +46,7 @@ namespace amazon_backend.CQRS.Commands.ProductCommands
             }).WithMessage("Barcode is invalid")
             .Length(13)
             .WithMessage("Barcode length must be 13 characters")
-            .When(x => x.code != null);
+            .NotEmpty().WithMessage("Code cannot be empty");
 
             // category validate
             RuleFor(x => x.categoryId)

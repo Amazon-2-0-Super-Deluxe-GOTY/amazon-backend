@@ -15,8 +15,8 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<GetProductsQueryHandler> _logger;
 
-        private readonly char COMMA_DELIMETER = ',';
-        private readonly char DASH_DELIMETER = '-';
+        private readonly char COMMA_DELIMETER;
+        private readonly char DASH_DELIMETER;
 
         public GetProductsQueryHandler(IMapper mapper, DataContext dataContext, IHttpContextAccessor httpContextAccessor, ILogger<GetProductsQueryHandler> logger)
         {
@@ -24,6 +24,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
             _dataContext = dataContext;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+
+            COMMA_DELIMETER = ',';
+            DASH_DELIMETER = '-';
         }
 
         public async Task<Result<List<ProductCardProfile>>> Handle(GetProductsQueryRequest request, CancellationToken cancellationToken)
@@ -34,6 +37,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                     .Include(p => p.Reviews)
                     .Include(p => p.ProductImages)
                     .Include(p => p.ProductProperties)
+                    .AsSplitQuery()
                     .AsQueryable();
 
                 if (request.categoryId.HasValue)
@@ -41,14 +45,14 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                     productsQuery = productsQuery.Where(p => p.CategoryId == request.categoryId);
                 }
 
-                if (request.discount.HasValue)
+                if (request.discount.HasValue && request.discount.Value == true)
                 {
-                    productsQuery = productsQuery.Where(p => p.DiscountPercent != 0);
+                    productsQuery = productsQuery.Where(p => p.DiscountPercent.HasValue && p.DiscountPercent.Value > 0);
                 }
 
                 if (request.searchQuery != null)
                 {
-                    productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(request.searchQuery));
+                    productsQuery = productsQuery.Where(p => p.Name.ToLower().Contains(request.searchQuery.Replace("+", " ")));
                 }
 
                 if (request.price != null)
@@ -56,7 +60,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                     var parsedPrice = request.price.Split(DASH_DELIMETER);
                     int minPrice = int.Parse(parsedPrice[0]);
                     int maxPrice = int.Parse(parsedPrice[1]);
-                    productsQuery = productsQuery.Where(p => p.Price >= minPrice && p.Price <= maxPrice);
+                    productsQuery = productsQuery
+                        .Where(p => (p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0)) >= minPrice &&
+                        (p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0)) <= maxPrice);
                 }
                 if (request.rating != null)
                 {
@@ -128,10 +134,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                                 .Select(p => p.Product);
                             break;
                         case "cheap":
-                            productsQuery = productsQuery.OrderByDescending(p => p.Price);
+                            productsQuery = productsQuery.OrderByDescending(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
                             break;
                         case "exp":
-                            productsQuery = productsQuery.OrderBy(p => p.Price);
+                            productsQuery = productsQuery.OrderBy(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
                             break;
                         default:
                             productsQuery = productsQuery.OrderByDescending(p => p.CreatedAt);
