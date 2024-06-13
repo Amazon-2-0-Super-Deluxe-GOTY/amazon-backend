@@ -147,5 +147,12 @@ namespace amazon_backend.Data.Dao
             }
             return null!;
         }
+
+        public static double GetDiscountPrice(Product item)
+        {
+            if (item == null) return 0;
+            var price = item.Price * (1 - (item.DiscountPercent.HasValue ? item.DiscountPercent.Value : 0)) / 100.0;
+            return price;
+        }
     }
 }

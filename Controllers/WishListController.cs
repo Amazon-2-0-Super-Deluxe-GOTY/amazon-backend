@@ -1,86 +1,77 @@
-﻿using amazon_backend.Data.Dao;
-using amazon_backend.Data.Entity;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using amazon_backend.CQRS.Commands.WishListRequests;
+using amazon_backend.CQRS.Queries.Request.WishListRequests;
+using amazon_backend.Services.FluentValidation;
+using amazon_backend.Services.Response;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace amazon_backend.Controllers
 {
-    [Route("wishlists")]
+    [Route("api/wishlist")]
     [ApiController]
     public class WishListController : ControllerBase
     {
-        private readonly WishListDao wishListDao;
-        public WishListController(WishListDao wishListDao)
+
+        private readonly RestResponseService _responseService;
+        private readonly IMediator _mediator;
+        private readonly IValidator<AddItemToWishCommandRequest> _addItemValidator;
+        private readonly IValidator<RemoveItemsFromWishCommandRequest> _removeItemsValidator;
+        private readonly IValidator<GetWishListQueryRequest> _getItemsValidator;
+
+        public WishListController(RestResponseService responseService, IMediator mediator, IValidator<AddItemToWishCommandRequest> addItemValidator, IValidator<RemoveItemsFromWishCommandRequest> removeItemsValidator, IValidator<GetWishListQueryRequest> getItemsValidator)
         {
-            this.wishListDao = wishListDao;
+            _responseService = responseService;
+            _mediator = mediator;
+            _addItemValidator = addItemValidator;
+            _removeItemsValidator = removeItemsValidator;
+            _getItemsValidator = getItemsValidator;
         }
+
         [HttpGet]
-        public WishList[] GetWishLists()
+        [Authorize]
+        public async Task<IActionResult> GetItemFromWishList([FromQuery] GetWishListQueryRequest request)
         {
-            return wishListDao.GetAll();
+            var validationErrors = _getItemsValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            if (response.isSuccess)
+            {
+                return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data,
+                    new() { currentPage = request.pageIndex, pagesCount = response.pagesCount });
+            }
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
         [HttpPost]
-        public WishList CreateWishList()
+        [Authorize]
+        public async Task<IActionResult> AddNewItemToWishList([FromBody]AddItemToWishCommandRequest request)
         {
-            var wishList = new WishList
+            var validationErrors = _addItemValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                Name = "NewWishList",
-                CreatedAt = DateTime.Now
-            };
-            wishListDao.Add(wishList);
-            return wishList;
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
-        [HttpGet]
-        [Route("{id}")]
-        public Results<NotFound, Ok<WishList>> GetWishListById(string id)
-        {
-            Guid wishListId;
-            try
-            {
-                wishListId = Guid.Parse(id);
-            }
-            catch
-            {
-                return TypedResults.NotFound();
-            }
-            WishList? wishList = wishListDao.GetById(wishListId);
-            if (wishList is not null) return TypedResults.Ok(wishList);
-            return TypedResults.NotFound();
-        }
-        [HttpPut]
-        [Route("/restore-wishlist/{id}")]
-        public IActionResult RestoreWishList(string id)
-        {
-            Guid wishListId;
-            try
-            {
-                wishListId = Guid.Parse(id);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
-            wishListDao.Restore(wishListId);
-            return Ok();
-        }
+
         [HttpDelete]
-        [Route("/delete-wishlist/{id}")]
-        public IActionResult DeleteWishList(string id)
+        [Authorize]
+        public async Task<IActionResult> RemoveItemsFromWishList([FromBody] RemoveItemsFromWishCommandRequest request)
         {
-            Guid wishListId;
-            try
+            var validationErrors = _removeItemsValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                wishListId = Guid.Parse(id);
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
-            catch
-            {
-                return StatusCode(500);
-            }
-            wishListDao.Delete(wishListId);
-            return Ok();
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
     }
 }

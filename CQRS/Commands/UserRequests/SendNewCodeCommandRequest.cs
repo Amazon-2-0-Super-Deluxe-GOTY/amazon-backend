@@ -24,7 +24,7 @@ namespace amazon_backend.CQRS.Commands.UserRequests
             RuleFor(x => x.email).MustAsync(async (email, cancellation) =>
             {
                 if (email == null) return true;
-                var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == email && u.DeletedAt == null);
+                var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == email);
                 return user == null;
             }).WithMessage("Email already used").When(x => x.email != null);
         }

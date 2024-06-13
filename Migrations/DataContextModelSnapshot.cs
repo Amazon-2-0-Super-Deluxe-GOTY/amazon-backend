@@ -19,20 +19,6 @@ namespace amazon_backend.Migrations
                 .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            modelBuilder.Entity("Cart", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Carts");
-                });
-
             modelBuilder.Entity("ProductProductImage", b =>
                 {
                     b.Property<Guid>("ProductImagesId")
@@ -61,6 +47,21 @@ namespace amazon_backend.Migrations
                     b.HasIndex("ProductsId");
 
                     b.ToTable("ProductProductProperty");
+                });
+
+            modelBuilder.Entity("ProductUser", b =>
+                {
+                    b.Property<Guid>("WishListersId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("WishedProductsId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("WishListersId", "WishedProductsId");
+
+                    b.HasIndex("WishedProductsId");
+
+                    b.ToTable("ProductUser");
                 });
 
             modelBuilder.Entity("Review", b =>
@@ -132,28 +133,6 @@ namespace amazon_backend.Migrations
                     b.ToTable("ReviewReviewTag");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Dao.CartItemDao", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("CartId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("CartItems");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.AboutProductItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -179,6 +158,55 @@ namespace amazon_backend.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("AboutProductItems");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.Cart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.CartItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CartId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Category", b =>
@@ -277,6 +305,38 @@ namespace amazon_backend.Migrations
                     b.ToTable("CategoryPropertyKeys");
                 });
 
+            modelBuilder.Entity("amazon_backend.Data.Entity.DeliveryAddress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("PostIndex")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("DeliveryAddresses");
+                });
+
             modelBuilder.Entity("amazon_backend.Data.Entity.JwtToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -307,32 +367,58 @@ namespace amazon_backend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("double");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
                     b.Property<double>("TotalPrice")
                         .HasColumnType("double");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("orderKey")
-                        .HasColumnType("char(36)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("OrderId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Orders");
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
@@ -526,7 +612,7 @@ namespace amazon_backend.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<string>("AvatarUrl")
-                        .HasColumnType("varchar(2083)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("datetime(6)");
@@ -539,88 +625,38 @@ namespace amazon_backend.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("EmailCode")
                         .HasColumnType("longtext");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("PasswordSalt")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("varchar(32)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("varchar(128)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("TempEmail")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("WishLists");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.WishListItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid>("WishListId")
-                        .HasColumnType("char(36)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("WishListId");
-
-                    b.ToTable("WishListItems");
                 });
 
             modelBuilder.Entity("ProductProductImage", b =>
@@ -649,6 +685,21 @@ namespace amazon_backend.Migrations
                     b.HasOne("amazon_backend.Data.Entity.Product", null)
                         .WithMany()
                         .HasForeignKey("ProductsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProductUser", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("WishListersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("amazon_backend.Data.Entity.Product", null)
+                        .WithMany()
+                        .HasForeignKey("WishedProductsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -702,17 +753,6 @@ namespace amazon_backend.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Dao.CartItemDao", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("amazon_backend.Data.Entity.AboutProductItem", b =>
                 {
                     b.HasOne("amazon_backend.Data.Entity.Product", "Product")
@@ -720,6 +760,36 @@ namespace amazon_backend.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.Cart", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.User", "User")
+                        .WithMany("Carts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.CartItem", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.Cart", "Cart")
+                        .WithMany("CartItems")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
+                        .WithMany("CartItems")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
 
                     b.Navigation("Product");
                 });
@@ -752,23 +822,37 @@ namespace amazon_backend.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
+            modelBuilder.Entity("amazon_backend.Data.Entity.DeliveryAddress", b =>
                 {
-                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
+                    b.HasOne("amazon_backend.Data.Entity.Order", "Order")
+                        .WithMany("DeliveryAddresses")
+                        .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
+                {
                     b.HasOne("amazon_backend.Data.Entity.User", "User")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Product");
-
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.OrderItem", b =>
+                {
+                    b.HasOne("amazon_backend.Data.Entity.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
@@ -833,39 +917,14 @@ namespace amazon_backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("amazon_backend.Data.Entity.WishList", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("amazon_backend.Data.Entity.WishListItem", b =>
-                {
-                    b.HasOne("amazon_backend.Data.Entity.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("amazon_backend.Data.Entity.WishList", "WishList")
-                        .WithMany()
-                        .HasForeignKey("WishListId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("WishList");
-                });
-
             modelBuilder.Entity("Review", b =>
                 {
                     b.Navigation("ReviewLikes");
+                });
+
+            modelBuilder.Entity("amazon_backend.Data.Entity.Cart", b =>
+                {
+                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("amazon_backend.Data.Entity.Category", b =>
@@ -888,9 +947,18 @@ namespace amazon_backend.Migrations
                     b.Navigation("TokenJournals");
                 });
 
+            modelBuilder.Entity("amazon_backend.Data.Entity.Order", b =>
+                {
+                    b.Navigation("DeliveryAddresses");
+
+                    b.Navigation("OrderItems");
+                });
+
             modelBuilder.Entity("amazon_backend.Data.Entity.Product", b =>
                 {
                     b.Navigation("AboutProductItems");
+
+                    b.Navigation("CartItems");
 
                     b.Navigation("Products");
 
@@ -899,6 +967,10 @@ namespace amazon_backend.Migrations
 
             modelBuilder.Entity("amazon_backend.Data.Entity.User", b =>
                 {
+                    b.Navigation("Carts");
+
+                    b.Navigation("Orders");
+
                     b.Navigation("ReviewImages");
 
                     b.Navigation("ReviewLikes");

@@ -4,6 +4,7 @@ using amazon_backend.Data.Entity;
 using amazon_backend.Models;
 using amazon_backend.Services.JWTService;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
@@ -32,6 +33,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
             {
                 if (user.TempEmail != null)
                 {
+                    var temp = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == user.TempEmail);
+                    if (temp != null)
+                    {
+                        return new("Bad request") { data = "Email already exist", statusCode = 400 };
+                    }
                     user.EmailCode = null;
                     user.Email = user.TempEmail;
                     user.TempEmail = null;

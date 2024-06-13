@@ -1,90 +1,76 @@
-﻿using amazon_backend.Data.Dao;
-using amazon_backend.Data.Entity;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using amazon_backend.CQRS.Commands.OrderRequests;
+using amazon_backend.CQRS.Queries.Request.OrderRequests;
+using amazon_backend.Services.FluentValidation;
+using amazon_backend.Services.Response;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace amazon_backend.Controllers
 {
-    [Route("orders")]
+    [Route("api/orders")]
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly OrderDao orderDao;
-        public OrderController(OrderDao orderDao)
+        private readonly IMediator _mediator;
+        private readonly RestResponseService _responseService;
+        private readonly IValidator<NewOrderFromCartCommandRequest> _newItemFromCartValidator;
+        private readonly IValidator<GetOrdersQueryRequest> _getOrdersValidator;
+        private readonly IValidator<CancelOrderCommandRequest> _cancelOrderValidator;
+
+        public OrderController(IMediator mediator, RestResponseService responseService, IValidator<NewOrderFromCartCommandRequest> newItemFromCartValidator, IValidator<GetOrdersQueryRequest> getOrdersValidator, IValidator<CancelOrderCommandRequest> cancelOrderValidator)
         {
-            this.orderDao = orderDao;
+            _mediator = mediator;
+            _responseService = responseService;
+            _newItemFromCartValidator = newItemFromCartValidator;
+            _getOrdersValidator = getOrdersValidator;
+            _cancelOrderValidator = cancelOrderValidator;
         }
+
         [HttpGet]
-        public Order[] GetOrders()
+        [Authorize]
+        public async Task<IActionResult> GetOrders([FromQuery] GetOrdersQueryRequest request)
         {
-            return orderDao.GetAll();
+            var validationErrors = _getOrdersValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            if (response.isSuccess)
+            {
+                return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data,
+                    new() { currentPage = request.pageIndex, pagesCount = response.pagesCount });
+            }
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
         [HttpPost]
-        public Order CreateOrder()
+        [Authorize]
+        public async Task<IActionResult> NewOrderFromCart([FromBody] NewOrderFromCartCommandRequest request)
         {
-            var order = new Order
+            var validationErrors = _newItemFromCartValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                Id = Guid.NewGuid(),
-                orderKey = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                ProductId = Guid.NewGuid(),
-                Quantity = 2,
-                TotalPrice = 100,
-                Status = "Processing",
-                CreatedAt = DateTime.Now
-            };
-            orderDao.Add(order);
-            return order;
-        }
-        [HttpGet]
-        [Route("{id}")]
-        public Results<NotFound, Ok<Order>> GetOrderById(string id)
-        {
-            Guid orderId;
-            try
-            {
-                orderId = Guid.Parse(id);
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
-            catch
-            {
-                return TypedResults.NotFound();
-            }
-            Order? order = orderDao.GetById(orderId);
-            if (order is not null) return TypedResults.Ok(order);
-            return TypedResults.NotFound();
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
+
         [HttpPut]
-        [Route("/restore-order/{id}")]
-        public IActionResult RestoreOrder(string id)
+        [Authorize]
+        public async Task<IActionResult> CancelOrder([FromBody] CancelOrderCommandRequest request)
         {
-            Guid orderId;
-            try
+            var validationErrors = _cancelOrderValidator.GetErrors(request);
+            if (validationErrors != null)
             {
-                orderId = Guid.Parse(id);
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
             }
-            catch
-            {
-                return StatusCode(500);
-            }
-            orderDao.Restore(orderId);
-            return Ok();
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
-        [HttpDelete]
-        [Route("/delete-order/{id}")]
-        public IActionResult DeleteOrder(string id)
-        {
-            Guid orderId;
-            try
-            {
-                orderId = Guid.Parse(id);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
-            orderDao.Delete(orderId);
-            return Ok();
-        }
+
     }
 }

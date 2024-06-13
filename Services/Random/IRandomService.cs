@@ -4,6 +4,7 @@
     {
         String RandomString(int length);
         String ConfirmCode(int length);
-        
+        String RandomNumberUseDate();
+
     }
 }
