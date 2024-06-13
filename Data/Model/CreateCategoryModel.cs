@@ -1,4 +1,6 @@
-﻿namespace amazon_backend.Data.Model
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace amazon_backend.Data.Model
 {
     public class CreateCategoryModel
     {
@@ -6,8 +8,9 @@
         public string Name { get; set; }
         public string? Description { get; set; }
         public string ImageId { get; set; }
-        public string? ParentCategoryName { get; set; }
-        public uint Logo { set; get; }
+        [Required]
+        public bool IsActive {  get; set; }
+        public string Logo { set; get; }
         public List<CategoryPropertyKeyModel> PropertyKeys { get; set; }
     }
 }

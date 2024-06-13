@@ -9,7 +9,6 @@ namespace amazon_backend.Data.Entity
         public uint Id { get; set; }
         public uint? ParentCategoryId { get; set; }
         public Category? ParentCategory { get; set; }
-        public string? ParentCategoryName { get; set; }
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string Name { get; set; }
@@ -18,9 +17,8 @@ namespace amazon_backend.Data.Entity
         [Column(TypeName = "varchar(255)")]
         public string? Image { get; set; }
         [Required]
-        public bool IsDeleted { get; set; }
-        public bool IsVisible { get; set; }
-        public uint Logo { set; get; }
+        public bool IsActive{ get; set; }
+        public string Logo { set; get; }
         public List<CategoryPropertyKey>? CategoryPropertyKeys { get; set; }
 
     }
