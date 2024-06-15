@@ -163,7 +163,7 @@ namespace amazon_backend.Controllers
                 Logo = categoryModel.Logo
             };
 
-            _dataContext.Categories.AddAsync(category);
+            await _dataContext.Categories.AddAsync(category);
 
             
             await _dataContext.SaveChangesAsync();

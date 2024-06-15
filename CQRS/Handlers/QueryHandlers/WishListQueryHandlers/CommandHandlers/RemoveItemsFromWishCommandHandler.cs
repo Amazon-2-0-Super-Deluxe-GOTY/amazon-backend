@@ -28,7 +28,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.WishListQueryHandlers.Comma
                 return new() { isSuccess = decodeResult.isSuccess, message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
             var user = await _dataContext.Users.Include(u => u.WishedProducts).FirstAsync(u => u.Id == decodeResult.data.Id);
-            if (user.WishedProducts == null)
+            if (user.WishedProducts == null || user.WishedProducts.Count == 0)
             {
                 return new("Wish list is empty") { statusCode = 400 };
             }

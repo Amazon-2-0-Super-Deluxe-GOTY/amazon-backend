@@ -88,26 +88,38 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.OrderHandlers.CommandHandle
                 if (quantity == 0)
                 {
                     continue;
-                }   
+                }
                 var price = item.Product!.Price * (1 - (item.Product!.DiscountPercent.HasValue ? item.Product!.DiscountPercent.Value : 0) / 100.0);
                 OrderItem newItem = new()
                 {
                     Id = Guid.NewGuid(),
                     OrderId = newOrder.Id,
                     Quantity = quantity,
-                    Price = item.Product!.Price,
+                    Price = price,
                     TotalPrice = Math.Round(price * quantity, 2),
                     Name = item.Product!.Name,
                     ProductId = item.Product!.Id
                 };
+                Product product = await _dataContext.Products
+                    .FirstAsync(p => p.Id == newItem.ProductId);
+                int newQuantity = 0;
+                if (product.Quantity > quantity)
+                {
+                    newQuantity = product.Quantity - quantity == 0 ? 0 : product.Quantity - quantity;
+                }
+                else
+                {
+                    newQuantity = quantity - product.Quantity == 0 ? 0 : quantity - product.Quantity;
+                }
+                product.Quantity = newQuantity;
                 await _dataContext.AddAsync(newItem);
                 await _dataContext.SaveChangesAsync();
             }
-            for(int i = 0; i < cart.CartItems.Count; i++)
+            for (int i = 0; i < cart.CartItems.Count; i++)
             {
                 _dataContext.Remove(cart.CartItems[i]);
-                await _dataContext.SaveChangesAsync();
             }
+            await _dataContext.SaveChangesAsync();
             return new("Created") { statusCode = 201, data = _mapper.Map<OrderProfile>(newOrder) };
         }
     }

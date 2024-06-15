@@ -25,10 +25,23 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.OrderHandlers.CommandHandle
                 return new() { isSuccess = decodeResult.isSuccess, message = decodeResult.message, statusCode = decodeResult.statusCode };
             }
             var user = decodeResult.data;
-            Order? order = await _dataContext.Orders.FirstOrDefaultAsync(o => o.Id == Guid.Parse(request.OrderId) && o.Status != "Canceled");
+            Order? order = await _dataContext.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == Guid.Parse(request.OrderId) && o.Status != "Canceled");
             if (order != null && order.UserId == user.Id)
             {
                 order.Status = "Canceled";
+                if (order.OrderItems != null && order.OrderItems.Count != 0)
+                {
+                    foreach (var item in order.OrderItems)
+                    {
+                        Product? product = await _dataContext.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
+                        if (product != null)
+                        {
+                            product.Quantity += item.Quantity;
+                        }
+                    }
+                }
                 await _dataContext.SaveChangesAsync();
                 return new("Ok") { statusCode = 200 };
             }
