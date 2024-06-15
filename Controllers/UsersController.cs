@@ -6,7 +6,6 @@ using FluentValidation;
 using amazon_backend.Services.FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using amazon_backend.CQRS.Queries.Request.UserRequests;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 
 namespace amazon_backend.Controllers
@@ -23,9 +22,13 @@ namespace amazon_backend.Controllers
         private readonly IValidator<UpdateUserAvatarCommandRequest> _updateUserlAvatarValidator;
         private readonly IValidator<ChangeEmailCommandRequest> _changeEmailValidator;
         private readonly IValidator<SendNewCodeCommandRequest> _sendNewEmailCodeValidator;
+        private readonly IValidator<ChangeUserRoleCommandRequest> _userRoleValidator;
+        private readonly IValidator<GetUsersQueryRequest> _getUsersValidator;
+        private readonly IValidator<RemoveUsersCommandRequest> _removeUsersValidator;
+        private readonly IValidator<RestoreUserCommandRequest> _restoreUserValidator;
         private readonly IMediator _mediator;
 
-        public UsersController(RestResponseService responseService, IValidator<LoginUserCommandRequest> loginUserValidator, IMediator mediator, IValidator<CreateUserCommandRequest> createUserValidator, IValidator<ConfirmEmailCommandRequest> confirmEmailValidator, IValidator<UpdateUserCommandRequest> updateUserlValidator, IValidator<UpdateUserAvatarCommandRequest> updateUserlAvatarValidator, IValidator<ChangeEmailCommandRequest> changeEmailValidator, IValidator<SendNewCodeCommandRequest> sendNewEmailCodeValidator)
+        public UsersController(RestResponseService responseService, IValidator<LoginUserCommandRequest> loginUserValidator, IMediator mediator, IValidator<CreateUserCommandRequest> createUserValidator, IValidator<ConfirmEmailCommandRequest> confirmEmailValidator, IValidator<UpdateUserCommandRequest> updateUserlValidator, IValidator<UpdateUserAvatarCommandRequest> updateUserlAvatarValidator, IValidator<ChangeEmailCommandRequest> changeEmailValidator, IValidator<SendNewCodeCommandRequest> sendNewEmailCodeValidator, IValidator<ChangeUserRoleCommandRequest> userRoleValidator, IValidator<GetUsersQueryRequest> getUsersValidator, IValidator<RemoveUsersCommandRequest> removeUsersValidator, IValidator<RestoreUserCommandRequest> restoreUserValidator)
         {
             _responseService = responseService;
             _loginUserValidator = loginUserValidator;
@@ -36,6 +39,28 @@ namespace amazon_backend.Controllers
             _updateUserlAvatarValidator = updateUserlAvatarValidator;
             _changeEmailValidator = changeEmailValidator;
             _sendNewEmailCodeValidator = sendNewEmailCodeValidator;
+            _userRoleValidator = userRoleValidator;
+            _getUsersValidator = getUsersValidator;
+            _removeUsersValidator = removeUsersValidator;
+            _restoreUserValidator = restoreUserValidator;
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetUsers([FromQuery] GetUsersQueryRequest request)
+        {
+            var validationErrors = _getUsersValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            if (response.isSuccess)
+            {
+                return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data,
+                    new() { currentPage = request.pageIndex, pagesCount = response.pagesCount });
+            }
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
         [HttpGet("profile")]
@@ -147,6 +172,32 @@ namespace amazon_backend.Controllers
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 
+        [HttpPut("role")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUserRole([FromBody] ChangeUserRoleCommandRequest request)
+        {
+            var validationErrors = _userRoleValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpPut("restore")]
+        [Authorize]
+        public async Task<IActionResult> RestoreUser([FromBody] RestoreUserCommandRequest request)
+        {
+            var validationErrors = _restoreUserValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
         [HttpDelete("avatar")]
         [Authorize]
         public async Task<IActionResult> RemoveUserAvatar()
@@ -160,6 +211,19 @@ namespace amazon_backend.Controllers
         public async Task<IActionResult> RemoveCurrentUser()
         {
             var response = await _mediator.Send(new RemoveCurrentUserCommandRequest());
+            return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
+        }
+
+        [HttpDelete("removeUsers")]
+        [Authorize]
+        public async Task<IActionResult> RemoveCurrentUser([FromBody] RemoveUsersCommandRequest request)
+        {
+            var validationErrors = _removeUsersValidator.GetErrors(request);
+            if (validationErrors != null)
+            {
+                return _responseService.SendResponse(HttpContext, StatusCodes.Status400BadRequest, "Bad request", validationErrors);
+            }
+            var response = await _mediator.Send(request);
             return _responseService.SendResponse(HttpContext, response.statusCode, response.message, response.data);
         }
 

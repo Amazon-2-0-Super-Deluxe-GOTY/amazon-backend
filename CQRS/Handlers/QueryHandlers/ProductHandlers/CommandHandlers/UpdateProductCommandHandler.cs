@@ -4,11 +4,9 @@ using amazon_backend.Data.Entity;
 using amazon_backend.Models;
 using amazon_backend.Profiles.ProductProfiles;
 using amazon_backend.Services.JWTService;
-using amazon_backend.Services.Random;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Slugify;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHandlers
 {
@@ -17,18 +15,14 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
         private readonly TokenService _tokenService;
         private readonly DataContext _dataContext;
         private readonly IMapper _mapper;
-        private readonly ISlugHelper _slugHelper;
         private readonly ILogger<UpdateProductCommandHandler> _logger;
-        private readonly IRandomService _randomService;
 
-        public UpdateProductCommandHandler(TokenService tokenService, DataContext dataContext, IMapper mapper, ISlugHelper slugHelper, ILogger<UpdateProductCommandHandler> logger, IRandomService randomService)
+        public UpdateProductCommandHandler(TokenService tokenService, DataContext dataContext, IMapper mapper, ILogger<UpdateProductCommandHandler> logger)
         {
             _tokenService = tokenService;
             _dataContext = dataContext;
             _mapper = mapper;
-            _slugHelper = slugHelper;
             _logger = logger;
-            _randomService = randomService;
         }
 
         public async Task<Result<ProductViewProfile>> Handle(UpdateProductCommandRequest request, CancellationToken cancellationToken)
@@ -53,7 +47,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                 if (request.name != null)
                 {
                     product.Name = request.name;
-                    product.Slug = _slugHelper.GenerateSlug(request.name) + $"-{_randomService.ConfirmCode(4)}";
                 }
                 if (request.price.HasValue)
                 {

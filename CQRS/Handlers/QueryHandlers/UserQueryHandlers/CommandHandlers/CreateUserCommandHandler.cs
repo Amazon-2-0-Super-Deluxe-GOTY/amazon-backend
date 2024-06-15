@@ -4,7 +4,7 @@ using amazon_backend.Data.Entity;
 using amazon_backend.Models;
 using amazon_backend.Profiles.JwtTokenProfiles;
 using amazon_backend.Services.Email;
-using amazon_backend.Services.KDF;
+using amazon_backend.Services.Hash;
 using amazon_backend.Services.Random;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,15 +17,15 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
         private readonly DataContext _dataContext;
         private readonly IEmailService _emailService;
         private readonly IRandomService _randomService;
-        private readonly IKdfService _kdfService;
+        private readonly IHashService<BcryptHashService> _hashService;
 
-        public CreateUserCommandHandler(IMediator mediator, DataContext dataContext, IEmailService emailService, IRandomService randomService, IKdfService kdfService)
+        public CreateUserCommandHandler(IMediator mediator, DataContext dataContext, IEmailService emailService, IRandomService randomService, IHashService<BcryptHashService> hashService)
         {
             _mediator = mediator;
             _dataContext = dataContext;
             _emailService = emailService;
             _randomService = randomService;
-            _kdfService = kdfService;
+            _hashService = hashService;
         }
         public async Task<Result<JwtTokenProfile>> Handle(CreateUserCommandRequest request, CancellationToken cancellationToken)
         {
@@ -37,7 +37,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
                 FirstName = "New",
                 LastName = "User",
                 Email = request.email,
-                PasswordHash = _kdfService.GetDerivedKey(request.password, passwordSalt),
+                PasswordHash = _hashService.HashPassword(request.password),
                 PasswordSalt = passwordSalt,
                 CreatedAt = DateTime.Now,
                 Role = "User",

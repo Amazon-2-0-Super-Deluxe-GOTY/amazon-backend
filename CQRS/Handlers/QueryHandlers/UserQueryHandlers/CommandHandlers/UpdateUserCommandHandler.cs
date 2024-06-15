@@ -3,12 +3,11 @@ using amazon_backend.Data;
 using amazon_backend.Data.Entity;
 using amazon_backend.Models;
 using amazon_backend.Profiles.UserProfiles;
+using amazon_backend.Services.Hash;
 using amazon_backend.Services.JWTService;
-using amazon_backend.Services.KDF;
 using amazon_backend.Services.Random;
 using AutoMapper;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHandlers
 {
@@ -16,17 +15,19 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
     {
         private readonly DataContext _dataContext;
         private readonly TokenService _tokenService;
-        private readonly IKdfService _kdfService;
         private readonly IRandomService _randomService;
         private readonly IMapper _mapper;
+        private readonly IHashService<Md5HashService> _md5HashService;
+        private readonly IHashService<BcryptHashService> _bcryptHashService;
 
-        public UpdateUserCommandHandler(DataContext dataContext, TokenService tokenService, IKdfService kdfService, IRandomService randomService, IMapper mapper)
+        public UpdateUserCommandHandler(DataContext dataContext, TokenService tokenService, IRandomService randomService, IMapper mapper, IHashService<Md5HashService> md5HashService, IHashService<BcryptHashService> bcryptHashService)
         {
             _dataContext = dataContext;
             _tokenService = tokenService;
-            _kdfService = kdfService;
             _randomService = randomService;
             _mapper = mapper;
+            _md5HashService = md5HashService;
+            _bcryptHashService = bcryptHashService;
         }
         public async Task<Result<ClientProfile>> Handle(UpdateUserCommandRequest request, CancellationToken cancellationToken)
         {
@@ -54,14 +55,15 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
             }
             if (request.oldPassword != null && request.newPassword != null)
             {
-                var oldPasswordHash = _kdfService.GetDerivedKey(request.oldPassword, user.PasswordSalt);
-                if (user.PasswordHash != oldPasswordHash)
+                var result = _md5HashService.VerifyPassword(request.oldPassword, user.PasswordSalt, user.PasswordHash);
+                if (!result)
                 {
-                    return new("Invalid old password") { statusCode = 400 };
+                    result = _bcryptHashService.VerifyPassword(request.oldPassword, user.PasswordSalt, user.PasswordHash);
+                    if (result == false) return new("Invalid old password") { statusCode = 400 };
                 }
                 var newSalt = _randomService.RandomString(16);
                 user.PasswordSalt = newSalt;
-                user.PasswordHash = _kdfService.GetDerivedKey(request.newPassword, newSalt);
+                user.PasswordHash = _bcryptHashService.HashPassword(request.newPassword, newSalt);
             }
             _dataContext.Update(user);
             await _dataContext.SaveChangesAsync();

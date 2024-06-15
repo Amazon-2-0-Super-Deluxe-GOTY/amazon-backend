@@ -51,9 +51,28 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                 query = query.Where(r => r.Mark == request.rating.Value);
             }
 
-            query = request.byAsc.GetValueOrDefault()
-            ? query.OrderBy(r => r.CreatedAt)
-                : query.OrderByDescending(r => r.CreatedAt);
+            if (!string.IsNullOrEmpty(request.orderBy))
+            {
+                switch (request.orderBy)
+                {
+                    case "asc":
+                        query = query.OrderBy(q => q.CreatedAt);
+                        break;
+                    case "desc":
+                        query = query.OrderByDescending(q => q.CreatedAt);
+                        break;
+                    case "like":
+                        query = query.OrderByDescending(q => q.ReviewLikes!.Count());
+                        break;
+                    default:
+                        query = query.OrderByDescending(q => q.CreatedAt);
+                        break;
+                }
+            }
+            else
+            {
+                query = query.OrderByDescending(q => q.CreatedAt);
+            }
 
             var reviews = await query
                 .Skip(request.pageSize * (request.pageIndex - 1))
