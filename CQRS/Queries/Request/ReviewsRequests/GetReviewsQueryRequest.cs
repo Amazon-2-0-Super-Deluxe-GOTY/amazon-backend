@@ -12,7 +12,7 @@ namespace amazon_backend.CQRS.Queries.Request.ReviewsRequests
         public string? productId { get; set; }
         public string? userId { get; set; }
         public int? rating { get; set; }
-        public bool? byAsc { get; set; }
+        public string? orderBy { get; set; }
     }
     public class GetReviewQueryValidator:AbstractValidator<GetReviewsQueryRequest>
     {

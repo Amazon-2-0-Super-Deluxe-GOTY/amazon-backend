@@ -5,7 +5,6 @@ using amazon_backend.Profiles;
 using amazon_backend.Services.Email;
 using amazon_backend.Services.Hash;
 using amazon_backend.Services.JWTService;
-using amazon_backend.Services.KDF;
 using amazon_backend.Services.Random;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
@@ -41,8 +40,9 @@ namespace amazon_backend
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddSingleton<IHashService, Md5HashService>();
-            builder.Services.AddSingleton<IKdfService, HashKdfService>();
+            builder.Services.AddSingleton<IHashFunction, BcryptHashService>();
+            builder.Services.AddScoped<IHashService<Md5HashService>, HashService<Md5HashService>>();
+            builder.Services.AddScoped<IHashService<BcryptHashService>, HashService<BcryptHashService>>();
             builder.Services.AddSingleton<IRandomService, RandomService>();
             builder.Services.AddSingleton<IEmailService, EmailService>();
             builder.Services.AddSingleton<ISlugHelper, SlugHelper>();

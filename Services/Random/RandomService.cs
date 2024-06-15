@@ -1,6 +1,4 @@
-﻿using amazon_backend.Services.Hash;
-using System;
-
+﻿
 namespace amazon_backend.Services.Random
 {
     public class RandomService : IRandomService
@@ -10,12 +8,6 @@ namespace amazon_backend.Services.Random
         private readonly String _safeChars = new String(
             Enumerable.Range(20, 107).Select(x => (char)x).ToArray());
         
-        private readonly IHashService _hashService;
-
-        public RandomService(IHashService hashService)
-        {
-            _hashService = hashService;
-        }
         public string RandomNumberUseDate()
         {
             return $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day}{random.Next(1000, 9999)}";
