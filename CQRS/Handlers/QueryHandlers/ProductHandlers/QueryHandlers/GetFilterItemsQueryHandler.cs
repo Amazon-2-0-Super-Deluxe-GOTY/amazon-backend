@@ -22,13 +22,18 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
         {
             try
             {
-                Category? category = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Id == request.categoryId);
-                if (category == null)
+                var query = _dataContext.Products.AsQueryable();
+                if (request.categoryId.HasValue)
                 {
-                    return new("Category not found") { statusCode = 404 };
+                    Category? category = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Id == request.categoryId.Value);
+                    if (category == null)
+                    {
+                        return new("Category not found") { statusCode = 404 };
+                    }
+                    query = query.Where(p => p.CategoryId == request.categoryId.Value);
                 }
-                var queryResult = await _dataContext.Products
-                    .Where(p => p.CategoryId == category.Id)
+
+                var queryResult = await query
                     .SelectMany(
                     p => p.ProductProperties.DefaultIfEmpty(),
                     (p, pp) => new
@@ -46,8 +51,8 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                     .ToListAsync();
                 if (queryResult != null)
                 {
-                    var maxPrice = await _dataContext.Products.Where(p => p.CategoryId == category.Id).MaxAsync(p => p.Price);
-                    var minPrice = await _dataContext.Products.Where(p => p.CategoryId == category.Id).MinAsync(p => p.Price);
+                    var maxPrice = await query.MaxAsync(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
+                    var minPrice = await query.MinAsync(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
                     var filterItems = queryResult
                         .GroupBy(d => d.Key)
                         .ToDictionary(
