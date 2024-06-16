@@ -63,7 +63,7 @@ namespace amazon_backend.CQRS.Commands.ProductCommands
                 .When(x => x.price.HasValue);
 
             // discount validate
-            RuleFor(x => x.discount).GreaterThan(0).LessThan(101).WithMessage("Discount must be a positive number. Only numbers from 0 to 100 are allowed")
+            RuleFor(x => x.discount).GreaterThan(-1).LessThan(101).WithMessage("Discount must be a positive number. Only numbers from 0 to 100 are allowed")
                 .When(x => x.discount.HasValue);
 
             // quantity validate
