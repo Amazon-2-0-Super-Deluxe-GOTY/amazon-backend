@@ -69,7 +69,7 @@ namespace amazon_backend.Services.JWTService
             List<TokenJournal>? tokenJournal = await _dataContext
                 .TokenJournals
                 .Include(tj => tj.Token)
-                .Where(tj => tj.UserId == userId && tj.DeactivatedAt != null)
+                .Where(tj => tj.UserId == userId)
                 .ToListAsync();
             if (tokenJournal != null)
             {

@@ -86,31 +86,39 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                 var httpContext = _httpContextAccessor.HttpContext;
                 if (httpContext != null)
                 {
+                    // get filter items from request
+                    // exmp: Brand=Apple%2CSamsung&Color=Red%2CGreen
                     var queryParams = httpContext.Request.Query;
+                    List<string> propValues = new();
+                    List<string> propKeys = new();
                     if (queryParams != null)
                     {
+                        // parse filter items
                         var pProps = await _dataContext.ProductProperties.AsNoTracking().ToListAsync();
-                        Dictionary<string, string[]> filterItems = new();
                         foreach (var item in queryParams)
                         {
                             var prop = pProps.Where(pp => pp.Key.ToLower() == item.Key.ToLower()).FirstOrDefault();
                             if (prop != null)
                             {
-                                filterItems.Add(item.Key, item.Value.ToString().Split(COMMA_DELIMETER)
+                                var valueArr = item.Value.ToString().Split(COMMA_DELIMETER)
                                     .Select((v) =>
                                     {
                                         return v.Replace("+", " ").ToLower();
-                                    }).ToArray());
+                                    }).ToArray();
+                                propValues.AddRange(valueArr);
+                                propKeys.Add(item.Key);
                             }
                         }
-                        if (filterItems.Count != 0)
+                        // filter products
+                        if (propValues.Count != 0 && propKeys.Count != 0)
                         {
-                            foreach (var item in filterItems)
-                            {
-                                productsQuery = productsQuery
+                            productsQuery = productsQuery
                                     .Where(p => p.ProductProperties
-                                    .Any(pp => pp.Key.ToLower() == item.Key.ToLower() && item.Value.Contains(pp.Value.ToLower())));
-                            }
+                                    .Any(pp => propKeys.Contains(pp.Key.ToLower())));
+
+                            productsQuery = productsQuery
+                                .Where(p => p.ProductProperties
+                                .Any(pp => propValues.Contains(pp.Value.ToLower())));
                         }
                     }
                 }
