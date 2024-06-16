@@ -142,10 +142,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                                 .Select(p => p.Product);
                             break;
                         case "cheap":
-                            productsQuery = productsQuery.OrderByDescending(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
+                            productsQuery = productsQuery.OrderBy(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
                             break;
                         case "exp":
-                            productsQuery = productsQuery.OrderBy(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
+                            productsQuery = productsQuery.OrderByDescending(p => p.Price * (1 - (p.DiscountPercent.HasValue ? p.DiscountPercent.Value : 0) / 100.0));
                             break;
                         default:
                             productsQuery = productsQuery.OrderByDescending(p => p.CreatedAt);
