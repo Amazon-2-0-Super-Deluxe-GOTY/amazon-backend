@@ -22,6 +22,7 @@ using System.Xml.Linq;
 using amazon_backend.DTO;
 using amazon_backend.CQRS.Commands.CategoryImageRequst;
 using amazon_backend.CQRS.Queries.Request.CategoryImageRequest;
+using Google.Protobuf.WellKnownTypes;
 
 namespace amazon_backend.Controllers
 {
@@ -54,13 +55,27 @@ namespace amazon_backend.Controllers
 
 
         [HttpGet("category")]
-        public async Task<IActionResult> GetAllCategories()
+        public async Task<IActionResult> GetAllCategories([FromQuery] PaginationDto paginationDto)
         {
-           
+
+            if (paginationDto.PageNumber <= 0 || paginationDto.PageSize <= 0)
+            {
+                return BadRequest("Invalid pagination parameters.");
+            }
+
+            var totalCategories = await _dataContext.Categories.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
+
+            if (paginationDto.PageNumber > paginationDto.PageSize)
+            {
+                return BadRequest("Page number exceeds total pages.");
+            }
+
             var categories = await _dataContext.Categories
-                                      .Include(c => c.CategoryPropertyKeys)
-                                      .Where(c => c.IsActive)
-                                      .ToListAsync();
+                              .Include(c => c.CategoryPropertyKeys)
+                              .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
+                              .Take(paginationDto.PageSize)
+                              .ToListAsync();
             var categoryDtos = categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
@@ -76,23 +91,41 @@ namespace amazon_backend.Controllers
                     Name = cp.Name,
                 }).ToList()
             }).ToList();
+
+            
 
             return Ok(categoryDtos);
         }
 
         [HttpGet("category_admin")]
         [Authorize]
-        public async Task<IActionResult> GetAllCategoriesAdmin()
+        public async Task<IActionResult> GetAllCategoriesAdmin([FromQuery] PaginationDto paginationDto)
         {
+            if (paginationDto.PageNumber <= 0 || paginationDto.PageSize <= 0)
+            {
+                return BadRequest("Invalid pagination parameters.");
+            }
             var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
                 return BadRequest();
             }
             User user = decodeResult.data;
+
+
+            var totalCategories = await _dataContext.Categories.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
+
+            if (paginationDto.PageNumber > paginationDto.PageSize)
+            {
+                return BadRequest("Page number exceeds total pages.");
+            }
+
             var categories = await _dataContext.Categories
-                                      .Include(c => c.CategoryPropertyKeys)
-                                      .ToListAsync();
+                              .Include(c => c.CategoryPropertyKeys)
+                              .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
+                              .Take(paginationDto.PageSize)
+                              .ToListAsync();
             var categoryDtos = categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
@@ -109,8 +142,44 @@ namespace amazon_backend.Controllers
                 }).ToList()
             }).ToList();
 
+          
+
             return Ok(categoryDtos);
         }
+
+
+        [HttpGet("category/{id}")]
+        public async Task<IActionResult> GetCategoryById(int id)
+        {
+
+            var category = await _dataContext.Categories
+                                      .Include(c => c.CategoryPropertyKeys)
+                                      .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            var categoryDto = new CategoryDto
+            {
+                Id = category.Id,
+                ParentId = category.ParentCategoryId,
+                Name = category.Name,
+                Description = category.Description,
+                Image = category.Image,
+                IsActive = category.IsActive,
+                Logo = category.Logo,
+                CategoryPropertyKeys = category.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
+                {
+                    Id = cp.Id,
+                    Name = cp.Name,
+                }).ToList()
+            };
+
+            return Ok(categoryDto);
+        }
+
         [HttpGet("property_keys")]
         [Authorize]
         public async Task<IActionResult> GetAllCategoriesPropertyKey()
@@ -163,7 +232,7 @@ namespace amazon_backend.Controllers
                 Logo = categoryModel.Logo
             };
 
-            await _dataContext.Categories.AddAsync(category);
+            _dataContext.Categories.AddAsync(category);
 
             
             await _dataContext.SaveChangesAsync();
@@ -220,12 +289,23 @@ namespace amazon_backend.Controllers
             {
                 return NotFound();
             }
-
-
-            category.Description = categoryModel.Description;
-            category.Image = categoryModel.Image;
+         
+            category.ParentCategoryId = categoryModel.ParentCategoryId;
+            
+            if (categoryModel.Description != "")
+            {
+                category.Description = categoryModel.Description;
+            }
+            if(categoryModel.Image != "")
+            {
+                category.Image = categoryModel.Image;
+            }
             category.IsActive = categoryModel.IsActive;
-            category.Logo = categoryModel.Logo;
+            if(categoryModel.Logo  != "")
+            {
+                category.Logo = categoryModel.Logo;
+            }
+
 
 
 

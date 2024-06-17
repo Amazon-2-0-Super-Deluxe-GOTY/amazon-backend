@@ -5,6 +5,7 @@ namespace amazon_backend.Data.Model
 {
     public class СategoryModel
     {
+        public uint? ParentCategoryId {  get; set; }
         public string? ParentCategory { get; set; }
         [Required]
         public string Name { get; set; }
