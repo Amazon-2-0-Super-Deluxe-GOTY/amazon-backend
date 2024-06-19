@@ -11,6 +11,7 @@ namespace amazon_backend.CQRS.Queries.Request.UserRequests
         public int pageIndex { get; set; }
         public string? searchQuery { get; set; }
         public string? orderBy { get; set; }
+        public string? role { get; set; }
     }
     public class GetUsersValidator : AbstractValidator<GetUsersQueryRequest>
     {
