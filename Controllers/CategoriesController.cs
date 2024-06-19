@@ -23,6 +23,7 @@ using amazon_backend.DTO;
 using amazon_backend.CQRS.Commands.CategoryImageRequst;
 using amazon_backend.CQRS.Queries.Request.CategoryImageRequest;
 using Google.Protobuf.WellKnownTypes;
+using amazon_backend.Migrations;
 
 namespace amazon_backend.Controllers
 {
@@ -57,7 +58,6 @@ namespace amazon_backend.Controllers
         [HttpGet("category")]
         public async Task<IActionResult> GetAllCategories([FromQuery] PaginationDto paginationDto)
         {
-
             if (paginationDto.PageNumber <= 0 || paginationDto.PageSize <= 0)
             {
                 return BadRequest("Invalid pagination parameters.");
@@ -66,23 +66,26 @@ namespace amazon_backend.Controllers
             var totalCategories = await _dataContext.Categories.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
 
-            if (paginationDto.PageNumber > paginationDto.PageSize)
-            {
-                return BadRequest("Page number exceeds total pages.");
-            }
+          
 
             var categories = await _dataContext.Categories
-                              .Include(c => c.CategoryPropertyKeys)
-                              .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
-                              .Take(paginationDto.PageSize)
-                              .ToListAsync();
+                               .Include(c => c.CategoryPropertyKeys)
+                               .Include(c => c.Image)
+                               .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
+                               .Take(paginationDto.PageSize)
+                               .ToListAsync();
+
             var categoryDtos = categories.Select(c => new CategoryDto
             {
                 Id = c.Id,
                 ParentId = c.ParentCategoryId,
                 Name = c.Name,
                 Description = c.Description,
-                Image = c.Image,
+                Image = new CategoryImageDTO
+                {
+                    Id = c.Image.Id, 
+                    Url = "https://perry11.s3.eu-north-1.amazonaws.com/" + c.Image.ImageUrl 
+                },
                 IsActive = c.IsActive,
                 Logo = c.Logo,
                 CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
@@ -92,11 +95,8 @@ namespace amazon_backend.Controllers
                 }).ToList()
             }).ToList();
 
-            
-
             return Ok(categoryDtos);
         }
-
         [HttpGet("category_admin")]
         [Authorize]
         public async Task<IActionResult> GetAllCategoriesAdmin([FromQuery] PaginationDto paginationDto)
@@ -116,13 +116,11 @@ namespace amazon_backend.Controllers
             var totalCategories = await _dataContext.Categories.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
 
-            if (paginationDto.PageNumber > paginationDto.PageSize)
-            {
-                return BadRequest("Page number exceeds total pages.");
-            }
-
+            
             var categories = await _dataContext.Categories
                               .Include(c => c.CategoryPropertyKeys)
+                              .Include(c => c.Image)
+                              .Where(c => c.IsActive == true)
                               .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                               .Take(paginationDto.PageSize)
                               .ToListAsync();
@@ -132,7 +130,11 @@ namespace amazon_backend.Controllers
                 ParentId = c.ParentCategoryId,
                 Name = c.Name,
                 Description = c.Description,
-                Image = c.Image,
+                Image = new CategoryImageDTO
+                {
+                    Id = c.Image.Id,
+                    Url = "https://perry11.s3.eu-north-1.amazonaws.com/" + c.Image.ImageUrl
+                },
                 IsActive = c.IsActive,
                 Logo = c.Logo,
                 CategoryPropertyKeys = c.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
@@ -142,7 +144,7 @@ namespace amazon_backend.Controllers
                 }).ToList()
             }).ToList();
 
-          
+
 
             return Ok(categoryDtos);
         }
@@ -151,9 +153,9 @@ namespace amazon_backend.Controllers
         [HttpGet("category/{id}")]
         public async Task<IActionResult> GetCategoryById(int id)
         {
-
             var category = await _dataContext.Categories
                                       .Include(c => c.CategoryPropertyKeys)
+                                      .Include(c => c.Image) 
                                       .FirstOrDefaultAsync(c => c.Id == id);
 
             if (category == null)
@@ -167,9 +169,13 @@ namespace amazon_backend.Controllers
                 ParentId = category.ParentCategoryId,
                 Name = category.Name,
                 Description = category.Description,
-                Image = category.Image,
                 IsActive = category.IsActive,
                 Logo = category.Logo,
+                Image = category.Image != null ? new CategoryImageDTO
+                {
+                    Id = category.Image.Id,
+                    Url = "https://perry11.s3.eu-north-1.amazonaws.com/" + category.Image.ImageUrl
+                } : null,
                 CategoryPropertyKeys = category.CategoryPropertyKeys?.Select(cp => new CategoryPropertyKeyDto
                 {
                     Id = cp.Id,
@@ -178,10 +184,10 @@ namespace amazon_backend.Controllers
             };
 
             return Ok(categoryDto);
+
         }
 
         [HttpGet("property_keys")]
-        [Authorize]
         public async Task<IActionResult> GetAllCategoriesPropertyKey()
         {
            
@@ -193,7 +199,6 @@ namespace amazon_backend.Controllers
         }
 
         [HttpGet("listPropertyKeysByNameCategory/{name}")]
-        [Authorize]
         public async Task<IActionResult> GetListPropertyKeysByNameCategory(string name)
         {
            
@@ -209,108 +214,138 @@ namespace amazon_backend.Controllers
             var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
-                return BadRequest();
+                return Unauthorized();
             }
+
             User user = decodeResult.data;
+
             if (categoryModel == null)
             {
                 return BadRequest("Category model is null");
             }
-            var existingCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryModel.Name);
 
+            var existingCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryModel.Name);
             if (existingCategory != null)
             {
                 return BadRequest("Category with the same name already exists");
             }
-            CategoryImage? image = await _dataContext
-                        .CategoryImages.FirstOrDefaultAsync(pi => pi.Id == Guid.Parse(categoryModel.ImageId));
-            var category = new Category
+
+            
+            var imageId = Guid.Parse(categoryModel.ImageId);
+            var image = await _dataContext.CategoryImages.FirstOrDefaultAsync(pi => pi.Id == imageId);
+            if (image == null)
+            {
+                return BadRequest("Image not found.");
+            }
+
+            var category = new Data.Entity.Category
             {
                 Name = categoryModel.Name,
                 Description = categoryModel.Description,
+                ParentCategoryId = categoryModel.ParentCategoryId,
                 IsActive = categoryModel.IsActive,
-                Logo = categoryModel.Logo
+                Logo = categoryModel.Logo,
+                Image = image
             };
 
-            _dataContext.Categories.AddAsync(category);
-
-            
+            await _dataContext.Categories.AddAsync(category);
             await _dataContext.SaveChangesAsync();
-            if(image != null)
-            {
-                category.Image = image.ImageUrl;
-            }
 
             if (categoryModel.PropertyKeys != null && categoryModel.PropertyKeys.Any())
             {
                 foreach (var propertyKeyModel in categoryModel.PropertyKeys)
                 {
-                    
-                    propertyKeyModel.CategoryId = category.Id;
-
-                
-
                     var categoryPropertyKey = new CategoryPropertyKey
                     {
                         Id = Guid.NewGuid(),
                         Name = propertyKeyModel.Name,
+                        CategoryId = category.Id,
+                        NameCategory = category.Name
                     };
-                    categoryPropertyKey.NameCategory = category.Name; 
-                    categoryPropertyKey.CategoryId = category.Id;
+
                     _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
                 }
             }
-            await _dataContext.SaveChangesAsync();
-            
-           
-            
 
-           return Ok();
+            await _dataContext.SaveChangesAsync();
+
+            return Ok();
         }
+
+    
 
         [HttpPut("update")]
         [Authorize]
-        public async Task<ActionResult> UpdateCategory([FromBody] СategoryModel categoryModel)
+        public async Task<ActionResult> UpdateCategory([FromBody] UpdateCategoryModel categoryModel)
         {
             var decodeResult = await _tokenService.DecodeTokenFromHeaders(true);
             if (!decodeResult.isSuccess)
             {
-                return BadRequest();
-            }
-            User user = decodeResult.data;
-            if (categoryModel == null)
-            {
-                return BadRequest("Category is null");
+                return Unauthorized();
             }
 
-            var category = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryModel.Name);
+            User user = decodeResult.data;
+
+            if (categoryModel == null)
+            {
+                return BadRequest("Category model is null");
+            }
+
+            var category = await _dataContext.Categories
+                .Include(c => c.CategoryPropertyKeys)
+                .FirstOrDefaultAsync(c => c.Id == categoryModel.Id);
 
             if (category == null)
             {
-                return NotFound();
+                return NotFound("Category not found");
             }
-         
-            category.ParentCategoryId = categoryModel.ParentCategoryId;
+
+            var existingCategory = await _dataContext.Categories
+                .FirstOrDefaultAsync(c => c.Name == categoryModel.Name && c.Id != categoryModel.Id);
+
+            if (existingCategory != null)
+            {
+                return BadRequest("Category with the same name already exists");
+            }
+
             
-            if (categoryModel.Description != "")
-            {
-                category.Description = categoryModel.Description;
-            }
-            if(categoryModel.Image != "")
-            {
-                category.Image = categoryModel.Image;
-            }
+            category.Name = categoryModel.Name;
+            category.ParentCategoryId = (uint?)categoryModel.ParentCategoryId;
+            category.Description = categoryModel.Description;
             category.IsActive = categoryModel.IsActive;
-            if(categoryModel.Logo  != "")
+            category.Logo = categoryModel.Logo;
+
+          
+            var imageId = Guid.Parse(categoryModel.ImageId);
+            var image = await _dataContext.CategoryImages.FirstOrDefaultAsync(pi => pi.Id == imageId);
+            if (image == null)
             {
-                category.Logo = categoryModel.Logo;
+                return BadRequest("Image not found.");
             }
+            category.Image = image;
 
+         
+            _dataContext.CategoryPropertyKeys.RemoveRange(category.CategoryPropertyKeys);
 
+            if (categoryModel.PropertyKeys != null && categoryModel.PropertyKeys.Any())
+            {
+                foreach (var propertyKeyModel in categoryModel.PropertyKeys)
+                {
+                    var categoryPropertyKey = new CategoryPropertyKey
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = propertyKeyModel.Name,
+                        CategoryId = category.Id,
+                        NameCategory = category.Name
+                    };
 
+                    _dataContext.CategoryPropertyKeys.Add(categoryPropertyKey);
+                }
+            }
 
             _dataContext.Categories.Update(category);
             await _dataContext.SaveChangesAsync();
+
             return Ok();
         }
 
