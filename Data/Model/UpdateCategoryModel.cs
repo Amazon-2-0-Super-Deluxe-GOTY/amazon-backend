@@ -8,7 +8,7 @@
         public string Description { get; set; }
         public string ImageId { get; set; }
         public bool IsActive { get; set; }
-        public string Logo { get; set; }
+        public string? Logo { get; set; }
         public List<CategoryPropertyKeyModel> PropertyKeys { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace amazon_backend.CQRS.Commands.OrderRequests
     {
         public string country { get; set; }
         public string state { get; set; }
-        public string city { get; set; }
+        public string? city { get; set; }
         public string postIndex { get; set; }
         public string paymentMethod { get; set; }
     }
@@ -19,7 +19,6 @@ namespace amazon_backend.CQRS.Commands.OrderRequests
         {
             RuleFor(x => x.country).NotEmpty().WithMessage("Country cannot be empty");
             RuleFor(x => x.state).NotEmpty().WithMessage("State cannot be empty");
-            RuleFor(x => x.city).NotEmpty().WithMessage("City cannot be empty");
             RuleFor(x => x.postIndex)
                 .Must((PostIndex) =>
                 {

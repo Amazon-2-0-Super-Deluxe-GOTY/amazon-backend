@@ -35,7 +35,18 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.QueryHand
             {
                 userQuery = userQuery.Where(u => (u.FirstName + " " + u.LastName).Contains(request.searchQuery));
             }
-
+            if (!string.IsNullOrEmpty(request.role))
+            {
+                switch (request.role.ToLower())
+                {
+                    case "admin":
+                        userQuery = userQuery.Where(u => u.Role == "Admin");
+                        break;
+                    case "user":
+                        userQuery = userQuery.Where(u => u.Role == "User");
+                        break;
+                }
+            }
             if (!string.IsNullOrEmpty(request.orderBy))
             {
                 if (request.orderBy.ToLower() == "email")
