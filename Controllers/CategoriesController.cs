@@ -71,6 +71,7 @@ namespace amazon_backend.Controllers
             var categories = await _dataContext.Categories
                                .Include(c => c.CategoryPropertyKeys)
                                .Include(c => c.Image)
+                               .Where(c => c.IsActive == true)
                                .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                                .Take(paginationDto.PageSize)
                                .ToListAsync();
@@ -120,7 +121,7 @@ namespace amazon_backend.Controllers
             var categories = await _dataContext.Categories
                               .Include(c => c.CategoryPropertyKeys)
                               .Include(c => c.Image)
-                              .Where(c => c.IsActive == true)
+                              
                               .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                               .Take(paginationDto.PageSize)
                               .ToListAsync();
@@ -324,8 +325,11 @@ namespace amazon_backend.Controllers
             }
             category.Image = image;
 
-         
-            _dataContext.CategoryPropertyKeys.RemoveRange(category.CategoryPropertyKeys);
+
+            var existingPropertyKeys = await _dataContext.CategoryPropertyKeys
+                .Where(cpk => cpk.CategoryId == existingCategory.Id)
+                .ToListAsync();
+            _dataContext.CategoryPropertyKeys.RemoveRange(existingPropertyKeys);
 
             if (categoryModel.PropertyKeys != null && categoryModel.PropertyKeys.Any())
             {
