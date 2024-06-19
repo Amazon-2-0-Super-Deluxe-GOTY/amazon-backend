@@ -15,10 +15,10 @@ namespace amazon_backend.Data.Entity
         [Column(TypeName = "varchar(255)")]
         public string? Description { get; set; }
         [Column(TypeName = "varchar(255)")]
-        public string? Image { get; set; }
+        public CategoryImage Image { get; set; }
         [Required]
         public bool IsActive{ get; set; }
-        public string Logo { set; get; }
+        public string? Logo { set; get; }
         public List<CategoryPropertyKey>? CategoryPropertyKeys { get; set; }
 
     }

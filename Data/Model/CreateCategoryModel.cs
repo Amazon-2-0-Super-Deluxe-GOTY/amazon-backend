@@ -10,7 +10,7 @@ namespace amazon_backend.Data.Model
         public string ImageId { get; set; }
         [Required]
         public bool IsActive {  get; set; }
-        public string Logo { set; get; }
+        public string? Logo { set; get; }
         public List<CategoryPropertyKeyModel> PropertyKeys { get; set; }
     }
 }
