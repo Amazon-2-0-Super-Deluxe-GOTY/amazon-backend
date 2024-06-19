@@ -1,87 +1,72 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Net.Mail;
-using System.Net;
-using amazon_backend.Data.Entity;
-using Microsoft.AspNetCore.Hosting;
-
-
+﻿using MailKit.Net.Smtp;
+using MimeKit;
 
 namespace amazon_backend.Services.Email
 {
     public class EmailService : IEmailService, IDisposable
     {
         private readonly IConfiguration _configuration;
+        private readonly GmailClient _gmailClient;
+        private readonly ILogger<EmailService> _logger;
         private readonly SmtpClient _smtpClient;
         private bool _disposed;
-        private readonly string? _fromEmail;
-        private readonly string? _fromPassword;
-        private readonly ILogger<EmailService> _logger;
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
+            _logger = logger;
             _configuration = configuration;
+            _gmailClient = new();
             _disposed = false;
-            #region create smtp client
-            string? host = _configuration["Smtp:Gmail:Host"];
-            if (host is null)
-                throw new MissingFieldException(":Missing configuration 'Smtp:Gmail:Host'");
-            _fromEmail = _configuration["Smtp:Gmail:Email"];
-            if (_fromEmail is null)
-                throw new MissingFieldException(":Missing configuration 'Smtp:Gmail:Email'");
-            _fromPassword = _configuration["Smtp:Gmail:Password"];
-            if (_fromPassword is null)
-                throw new MissingFieldException(":Missing configuration 'Smtp:Gmail:Password'");
-            int port; try
-            {
-                port = Convert.ToInt32(_configuration["Smtp:Gmail:Port"]);
-            }
-            catch
-            {
-                throw new MissingFieldException(":Missing or invalid configuration 'Smtp:Gmail:Port'");
-            }
-            bool ssl;
             try
             {
-                ssl = Convert.ToBoolean(_configuration["Smtp:Gmail:Ssl"]);
+                configuration.GetSection("Smtp:Gmail").Bind(_gmailClient);
             }
-            catch
+            catch (Exception _)
             {
-                throw new MissingFieldException(":Missing or invalid configuration 'Smtp:Gmail:Ssl'");
+                throw new Exception("Not found section SMTP:Gmail");
             }
-            _smtpClient = new(host, port)
+            _smtpClient = new();
+            try
             {
-                EnableSsl = ssl,
-                Credentials = new NetworkCredential(_fromEmail, _fromPassword)
-            };
-            _logger = logger;
-            #endregion
+                _smtpClient.Connect(_gmailClient.Host, _gmailClient.Port, MailKit.Security.SecureSocketOptions.StartTls);
+                _smtpClient.Authenticate(_gmailClient.Email, _gmailClient.Password);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed connect to SMTP: {ex.Message}");
+            }
         }
+
         public async Task<bool> SendEmailAsync(string recipient, string subject, string message)
         {
-            MailMessage mailMessage = new MailMessage()
-            {
-                From = new MailAddress(_fromEmail!),
-                Subject = subject,
-                Body = message
-            };
-            mailMessage.To.Add(recipient);
+            using var mailMessage = new MimeMessage();
+            mailMessage.From.Add(new MailboxAddress("Perry Team", _gmailClient.Email));
+            mailMessage.To.Add(new MailboxAddress("", recipient));
+            mailMessage.Subject = subject;
+            mailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = message };
             try
             {
-                await _smtpClient.SendMailAsync(mailMessage);
+                await _smtpClient.SendAsync(mailMessage);
+                await _smtpClient.DisconnectAsync(true);
+                return true;
             }
-            catch(SmtpException ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex.Message);
-                return false;
+                _logger.LogError($"Email service failed: {ex.Message}");
+
             }
-            return true;
+            return false;
         }
+
         public void Dispose()
         {
             if (!_disposed)
             {
+                if (_smtpClient.IsConnected)
+                {
+                    _smtpClient.Disconnect(true);
+                }
                 _smtpClient.Dispose();
-                _disposed = true;
             }
         }
     }
