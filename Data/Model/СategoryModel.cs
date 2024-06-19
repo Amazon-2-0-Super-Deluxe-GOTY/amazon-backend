@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using MediatR;
 
 namespace amazon_backend.Data.Model
 {
@@ -16,6 +17,6 @@ namespace amazon_backend.Data.Model
         [Required]
         public bool IsActive { get; set; }
         public string Logo { set; get; }
-
+        public uint Id { set; get; }   
     }
 }
