@@ -36,7 +36,8 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.OrderHandlers.CommandHandle
             var user = decodeResult.data;
             Cart? cart = await _dataContext.Carts
                 .Include(c => c.CartItems!)
-                .ThenInclude(ci => ci.Product)
+                .ThenInclude(ci=>ci.Product)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(c => c.UserId == user.Id);
             if (cart == null)
             {
@@ -84,12 +85,17 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.OrderHandlers.CommandHandle
 
             foreach (var item in cart.CartItems)
             {
-                var quantity = item.Product!.Quantity < item.Quantity ? item.Product!.Quantity : item.Quantity;
+                var product = await _dataContext.Products
+                    .Include(p => p.ProductImages)
+                    .FirstAsync(p => p.Id == item.ProductId);
+                var quantity = product.Quantity < item.Quantity ? product.Quantity : item.Quantity;
                 if (quantity == 0)
                 {
                     continue;
                 }
-                var price = item.Product!.Price * (1 - (item.Product!.DiscountPercent.HasValue ? item.Product!.DiscountPercent.Value : 0) / 100.0);
+                var price = product.Price * (1 - (product.DiscountPercent.HasValue ? product.DiscountPercent.Value : 0) / 100.0);
+                string imageUrl = null!;
+                if (product.ProductImages != null && product.ProductImages.Count != 0) imageUrl = product.ProductImages.First().ImageUrl;
                 OrderItem newItem = new()
                 {
                     Id = Guid.NewGuid(),
@@ -97,11 +103,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.OrderHandlers.CommandHandle
                     Quantity = quantity,
                     Price = price,
                     TotalPrice = Math.Round(price * quantity, 2),
-                    Name = item.Product!.Name,
-                    ProductId = item.Product!.Id
+                    Name = product.Name,
+                    ProductId = product.Id,
+                    ImageUrl = imageUrl
                 };
-                Product product = await _dataContext.Products
-                    .FirstAsync(p => p.Id == newItem.ProductId);
                 int newQuantity = 0;
                 if (product.Quantity > quantity)
                 {

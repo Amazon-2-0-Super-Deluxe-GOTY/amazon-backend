@@ -360,7 +360,15 @@ namespace amazon_backend.Profiles
             #endregion
 
             #region OrderItem
-            CreateMap<OrderItem, OrderItemProfile>();
+            CreateMap<OrderItem, OrderItemProfile>()
+                .ForMember(dest => dest.ImageUrl, opt =>
+                {
+                    opt.MapFrom((src, dest, destMember, context) =>
+                    {
+                        if (string.IsNullOrEmpty(src.ImageUrl)) return null;
+                        return Path.Combine(bucketUrl, src.ImageUrl);
+                    });
+                });
             #endregion
 
             #region DeliveryAddress
