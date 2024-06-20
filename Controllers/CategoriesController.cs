@@ -309,15 +309,17 @@ namespace amazon_backend.Controllers
                 return BadRequest("Category with the same name already exists");
             }
 
-            
             category.Name = categoryModel.Name;
             category.ParentCategoryId = (uint?)categoryModel.ParentCategoryId;
             category.Description = categoryModel.Description;
             category.IsActive = categoryModel.IsActive;
             category.Logo = categoryModel.Logo;
 
-          
-            var imageId = Guid.Parse(categoryModel.ImageId);
+            if (string.IsNullOrEmpty(categoryModel.ImageId) || !Guid.TryParse(categoryModel.ImageId, out var imageId))
+            {
+                return BadRequest("Invalid or missing image ID.");
+            }
+
             var image = await _dataContext.CategoryImages.FirstOrDefaultAsync(pi => pi.Id == imageId);
             if (image == null)
             {
@@ -325,9 +327,8 @@ namespace amazon_backend.Controllers
             }
             category.Image = image;
 
-
             var existingPropertyKeys = await _dataContext.CategoryPropertyKeys
-                .Where(cpk => cpk.CategoryId == existingCategory.Id)
+                .Where(cpk => cpk.CategoryId == category.Id)
                 .ToListAsync();
             _dataContext.CategoryPropertyKeys.RemoveRange(existingPropertyKeys);
 
