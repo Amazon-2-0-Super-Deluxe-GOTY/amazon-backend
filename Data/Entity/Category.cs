@@ -12,7 +12,6 @@ namespace amazon_backend.Data.Entity
         [Required]
         [Column(TypeName = "varchar(255)")]
         public string Name { get; set; }
-        [Column(TypeName = "varchar(255)")]
         public string? Description { get; set; }
         [Column(TypeName = "varchar(255)")]
         public CategoryImage Image { get; set; }
