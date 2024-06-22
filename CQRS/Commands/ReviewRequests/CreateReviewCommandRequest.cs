@@ -27,7 +27,7 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
 
             RuleFor(x => x.title).MaximumLength(250);
 
-            RuleFor(x => x.text).MaximumLength(250);
+            RuleFor(x => x.text).MaximumLength(1000);
 
             RuleFor(x => x.reviewImagesIds).Must(x => x.Count > 0 && x.Count <= 10)
                 .When(x => x.reviewImagesIds != null && x.reviewImagesIds.Count != 0)

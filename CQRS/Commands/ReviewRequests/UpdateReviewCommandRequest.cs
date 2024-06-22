@@ -36,7 +36,7 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
 
             RuleFor(x => x.title).MaximumLength(250).When(x => !string.IsNullOrEmpty(x.title));
 
-            RuleFor(x => x.text).MaximumLength(250).When(x=>!string.IsNullOrEmpty(x.text));
+            RuleFor(x => x.text).MaximumLength(1000).When(x=>!string.IsNullOrEmpty(x.text));
 
             RuleForEach(x => x.reviewTagsIds).ChildRules(tags =>
             {

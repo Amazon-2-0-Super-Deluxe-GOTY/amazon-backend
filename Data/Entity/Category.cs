@@ -18,6 +18,7 @@ namespace amazon_backend.Data.Entity
         [Required]
         public bool IsActive{ get; set; }
         public string? Logo { set; get; }
+        public DateTime CreatedAt { get; set; }
         public List<CategoryPropertyKey>? CategoryPropertyKeys { get; set; }
 
     }
