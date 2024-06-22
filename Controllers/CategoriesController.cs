@@ -226,13 +226,6 @@ namespace amazon_backend.Controllers
                 return BadRequest("Category model is null");
             }
 
-            var existingCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryModel.Name);
-            if (existingCategory != null)
-            {
-                return BadRequest("Category with the same name already exists");
-            }
-
-
             var imageId = Guid.Parse(categoryModel.ImageId);
             var image = await _dataContext.CategoryImages.FirstOrDefaultAsync(pi => pi.Id == imageId);
             if (image == null)
@@ -301,14 +294,6 @@ namespace amazon_backend.Controllers
             if (category == null)
             {
                 return NotFound("Category not found");
-            }
-
-            var existingCategory = await _dataContext.Categories
-                .FirstOrDefaultAsync(c => c.Name == categoryModel.Name && c.Id != categoryModel.Id);
-
-            if (existingCategory != null)
-            {
-                return BadRequest("Category with the same name already exists");
             }
 
             category.Name = categoryModel.Name;
