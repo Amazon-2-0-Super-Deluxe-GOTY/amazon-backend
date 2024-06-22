@@ -24,7 +24,7 @@ namespace amazon_backend.CQRS.Commands.ProductCommands
     {
         private readonly int imagesMaxCount = 10;
         private readonly int propTextMaxCharCount = 30;
-        private readonly int aboutProductTextMaxCharCount = 250;
+        private readonly int aboutProductTextMaxCharCount = 500;
 
         public UpdateProductValidator()
         {
