@@ -66,12 +66,13 @@ namespace amazon_backend.Controllers
             var totalCategories = await _dataContext.Categories.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
 
-          
+
 
             var categories = await _dataContext.Categories
                                .Include(c => c.CategoryPropertyKeys)
                                .Include(c => c.Image)
                                .Where(c => c.IsActive == true)
+                               .OrderBy(c => c.CreatedAt)
                                .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                                .Take(paginationDto.PageSize)
                                .ToListAsync();
@@ -84,8 +85,8 @@ namespace amazon_backend.Controllers
                 Description = c.Description,
                 Image = new CategoryImageDTO
                 {
-                    Id = c.Image.Id, 
-                    Url = "https://perry11.s3.eu-north-1.amazonaws.com/" + c.Image.ImageUrl 
+                    Id = c.Image.Id,
+                    Url = "https://perry11.s3.eu-north-1.amazonaws.com/" + c.Image.ImageUrl
                 },
                 IsActive = c.IsActive,
                 Logo = c.Logo,
@@ -117,11 +118,11 @@ namespace amazon_backend.Controllers
             var totalCategories = await _dataContext.Categories.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
 
-            
+
             var categories = await _dataContext.Categories
                               .Include(c => c.CategoryPropertyKeys)
                               .Include(c => c.Image)
-                              
+                              .OrderBy(c => c.CreatedAt)
                               .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                               .Take(paginationDto.PageSize)
                               .ToListAsync();
@@ -156,7 +157,7 @@ namespace amazon_backend.Controllers
         {
             var category = await _dataContext.Categories
                                       .Include(c => c.CategoryPropertyKeys)
-                                      .Include(c => c.Image) 
+                                      .Include(c => c.Image)
                                       .FirstOrDefaultAsync(c => c.Id == id);
 
             if (category == null)
@@ -191,8 +192,8 @@ namespace amazon_backend.Controllers
         [HttpGet("property_keys")]
         public async Task<IActionResult> GetAllCategoriesPropertyKey()
         {
-           
-            
+
+
             var categories = await _dataContext.Categories
                                     .Include(c => c.CategoryPropertyKeys)
                                     .ToListAsync();
@@ -202,12 +203,12 @@ namespace amazon_backend.Controllers
         [HttpGet("listPropertyKeysByNameCategory/{name}")]
         public async Task<IActionResult> GetListPropertyKeysByNameCategory(string name)
         {
-           
+
             var categories = await _dataContext.CategoryPropertyKeys.Where(c => c.NameCategory == name).ToListAsync();
             return Ok(categories);
         }
 
-      
+
         [HttpPost("create_category")]
         [Authorize]
         public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryModel categoryModel)
@@ -225,13 +226,6 @@ namespace amazon_backend.Controllers
                 return BadRequest("Category model is null");
             }
 
-            var existingCategory = await _dataContext.Categories.FirstOrDefaultAsync(c => c.Name == categoryModel.Name);
-            if (existingCategory != null)
-            {
-                return BadRequest("Category with the same name already exists");
-            }
-
-            
             var imageId = Guid.Parse(categoryModel.ImageId);
             var image = await _dataContext.CategoryImages.FirstOrDefaultAsync(pi => pi.Id == imageId);
             if (image == null)
@@ -246,7 +240,8 @@ namespace amazon_backend.Controllers
                 ParentCategoryId = categoryModel.ParentCategoryId,
                 IsActive = categoryModel.IsActive,
                 Logo = categoryModel.Logo,
-                Image = image
+                Image = image,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _dataContext.Categories.AddAsync(category);
@@ -273,7 +268,7 @@ namespace amazon_backend.Controllers
             return Ok();
         }
 
-    
+
 
         [HttpPut("update")]
         [Authorize]
@@ -299,14 +294,6 @@ namespace amazon_backend.Controllers
             if (category == null)
             {
                 return NotFound("Category not found");
-            }
-
-            var existingCategory = await _dataContext.Categories
-                .FirstOrDefaultAsync(c => c.Name == categoryModel.Name && c.Id != categoryModel.Id);
-
-            if (existingCategory != null)
-            {
-                return BadRequest("Category with the same name already exists");
             }
 
             category.Name = categoryModel.Name;

@@ -10,9 +10,7 @@ namespace amazon_backend.Data.Entity
         public string? Slug { get; set; }
         public uint CategoryId { get; set; }
         public Guid? ProductId { get; set; }
-        [Column(TypeName = "varchar(255)")]
         public string Name { get; set; }
-        [Column(TypeName = "varchar(255)")]
         public string? Code { get; set; }
         public double Price { get; set; }
         public int? DiscountPercent { get; set; }
