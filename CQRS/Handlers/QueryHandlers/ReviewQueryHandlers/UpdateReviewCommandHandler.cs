@@ -32,7 +32,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
             }
             User user = decodeResult.data;
 
-            if (request.text == null && request.title == null && !request.rating.HasValue && (request.reviewTagsIds == null || request.reviewTagsIds.Count == 0)
+            if (request.text == null && request.title == null && !request.rating.HasValue && request.reviewTagsIds == null
                 && (request.reviewImagesIds == null || request.reviewImagesIds.Count == 0))
             {
                 return new("No parameters for update") { statusCode = 400 };
@@ -86,12 +86,13 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                         }
                     }
                 }
-                if (request.reviewTagsIds != null && request.reviewTagsIds.Count != 0)
+                if (request.reviewTagsIds != null)
                 {
                     if (review.ReviewTags == null)
                     {
                         review.ReviewTags = new List<ReviewTag>();
                     }
+                    review.ReviewTags.Clear();
                     foreach (var rTag in request.reviewTagsIds)
                     {
                         ReviewTag? tag = await _dataContext.ReviewTags.Where(t => t.Id == Guid.Parse(rTag)).FirstOrDefaultAsync();

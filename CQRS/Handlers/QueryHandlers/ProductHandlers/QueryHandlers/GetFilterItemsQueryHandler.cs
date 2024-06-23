@@ -31,6 +31,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                         return new("Category not found") { statusCode = 404 };
                     }
                     query = query.Where(p => p.CategoryId == request.categoryId.Value);
+                    int count = await query.CountAsync();
+                    if (count <= 0)
+                    {
+                        return new("Category is empty") { statusCode = 404 };
+                    }
                 }
 
                 var queryResult = await query
@@ -61,8 +66,8 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                     var resultData = new
                     {
                         filterItems = filterItems,
-                        minPrice = minPrice,
-                        maxPrice = maxPrice
+                        minPrice = (int)minPrice,
+                        maxPrice = (int)maxPrice
                     };
                     return new("Ok") { data = resultData, statusCode = 200 };
                 }
