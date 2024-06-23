@@ -41,8 +41,8 @@ namespace amazon_backend.CQRS.Commands.ReviewRequests
             RuleForEach(x => x.reviewTagsIds).ChildRules(tags =>
             {
                 tags.RuleFor(x => x).Must(id => Guid.TryParse(id, out var result) == true)
-                .WithMessage("Incorrect {PropertyName} format"); ;
-            });
+                .WithMessage("Incorrect {PropertyName} format");
+            }).When(x => x.reviewTagsIds != null && x.reviewTagsIds.Count > 0);
         }
     }
 }
