@@ -47,7 +47,6 @@ namespace amazon_backend.Services.Email
             try
             {
                 await _smtpClient.SendAsync(mailMessage);
-                await _smtpClient.DisconnectAsync(true);
                 return true;
             }
             catch (Exception ex)

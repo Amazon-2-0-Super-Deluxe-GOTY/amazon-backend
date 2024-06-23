@@ -29,6 +29,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
         }
         public async Task<Result<JwtTokenProfile>> Handle(CreateUserCommandRequest request, CancellationToken cancellationToken)
         {
+            User? exst = await _dataContext.Users.FirstOrDefaultAsync(u => u.Email == request.email);
+            if (exst != null)
+            {
+                return new("Email already exist") { statusCode = 400 };
+            }
             var passwordSalt = _randomService.RandomString(16);
             var emailConfirm = _randomService.ConfirmCode(6);
             User newUser = new()
@@ -43,10 +48,10 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.UserQueryHandlers.CommandHa
                 Role = "User",
                 EmailCode = emailConfirm
             };
-
-            await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
             await _dataContext.Users.AddAsync(newUser);
             await _dataContext.SaveChangesAsync();
+
+            await _emailService.SendEmailAsync(request.email, "Welcome to PERRY:)", $"Your register code: {emailConfirm}");
             var loginRequest = new LoginUserCommandRequest()
             {
                 email = request.email,

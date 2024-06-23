@@ -24,6 +24,7 @@ using amazon_backend.CQRS.Commands.CategoryImageRequst;
 using amazon_backend.CQRS.Queries.Request.CategoryImageRequest;
 using Google.Protobuf.WellKnownTypes;
 using amazon_backend.Migrations;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace amazon_backend.Controllers
 {
@@ -66,14 +67,30 @@ namespace amazon_backend.Controllers
             var totalCategories = await _dataContext.Categories.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
 
-
-
-            var categories = await _dataContext.Categories
+            var query = _dataContext.Categories
                                .Include(c => c.CategoryPropertyKeys)
                                .Include(c => c.Image)
-                               .Where(c => c.IsActive == true)
-                               .OrderBy(c => c.CreatedAt)
-                               .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
+                               .Where(c => c.IsActive)
+                               .AsQueryable();
+            if (!string.IsNullOrEmpty(paginationDto.orderBy))
+            {
+                switch (paginationDto.orderBy)
+                {
+                    case "asc":
+                        query.OrderBy(c => c.CreatedAt);
+                        break;
+                    case "desc":
+                        query.OrderByDescending(c => c.CreatedAt);
+                        break;
+                    default:
+                        query.OrderByDescending(c => c.CreatedAt);
+                        break;
+
+                }
+            }
+            else query.OrderByDescending(c => c.CreatedAt);
+
+            var categories = await query.Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                                .Take(paginationDto.PageSize)
                                .ToListAsync();
 
@@ -112,17 +129,34 @@ namespace amazon_backend.Controllers
             {
                 return BadRequest();
             }
-            User user = decodeResult.data;
-
 
             var totalCategories = await _dataContext.Categories.CountAsync();
             var totalPages = (int)Math.Ceiling(totalCategories / (double)paginationDto.PageSize);
 
-
-            var categories = await _dataContext.Categories
+            var query = _dataContext.Categories
                               .Include(c => c.CategoryPropertyKeys)
                               .Include(c => c.Image)
-                              .OrderBy(c => c.CreatedAt)
+                              .AsQueryable();
+
+            if (!string.IsNullOrEmpty(paginationDto.orderBy))
+            {
+                switch (paginationDto.orderBy)
+                {
+                    case "asc":
+                        query.OrderBy(c => c.CreatedAt);
+                        break;
+                    case "desc":
+                        query.OrderByDescending(c => c.CreatedAt);
+                        break;
+                    default:
+                        query.OrderByDescending(c => c.CreatedAt);
+                        break;
+
+                }
+            }
+            else query.OrderByDescending(c => c.CreatedAt);
+
+            var categories = await query
                               .Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                               .Take(paginationDto.PageSize)
                               .ToListAsync();
