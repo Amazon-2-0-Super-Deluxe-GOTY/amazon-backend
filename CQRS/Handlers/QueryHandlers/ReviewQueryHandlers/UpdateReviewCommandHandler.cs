@@ -79,9 +79,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ReviewQueryHandlers
                                 if (!review.ReviewImages.Contains(image))
                                 {
                                     review.ReviewImages.Add(image);
+                                    count++;
                                 }
                             }
-                            count++;
                             if (canAddCount == count) break;
                         }
                     }
