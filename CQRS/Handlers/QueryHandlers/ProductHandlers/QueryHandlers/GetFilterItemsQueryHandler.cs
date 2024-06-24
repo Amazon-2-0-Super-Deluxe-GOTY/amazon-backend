@@ -67,7 +67,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                     {
                         filterItems = filterItems,
                         minPrice = (int)minPrice,
-                        maxPrice = (int)maxPrice
+                        maxPrice = (int)Math.Ceiling(maxPrice)
                     };
                     return new("Ok") { data = resultData, statusCode = 200 };
                 }

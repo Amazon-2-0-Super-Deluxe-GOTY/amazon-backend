@@ -1,6 +1,7 @@
 ﻿using amazon_backend.CQRS.Queries.Request.ProductRequests;
 using amazon_backend.Data;
 using amazon_backend.Models;
+using amazon_backend.Profiles.ProductImageProfiles;
 using amazon_backend.Profiles.ProductProfiles;
 using AutoMapper;
 using MediatR;
@@ -35,7 +36,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
             {
                 var productsQuery = _dataContext.Products
                     .Include(p => p.Reviews)
-                    .Include(p => p.ProductImages)
                     .Include(p => p.ProductProperties)
                     .AsSplitQuery()
                     .AsQueryable();
@@ -73,8 +73,6 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                         rating.Add(int.Parse(item));
                     }
                     productsQuery = productsQuery
-                        .Include(p => p.Reviews)
-                        .AsSplitQuery()
                         .Select(p => new
                         {
                             Product = p,
@@ -131,8 +129,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                             break;
                         case "rate":
                             productsQuery = productsQuery
-                                .Include(p => p.Reviews)
-                                .AsSplitQuery()
+                                .Include(p => p.ProductImages)
                                 .Select(p => new
                                 {
                                     Product = p,
@@ -165,6 +162,11 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                 if (products != null && products.Count != 0)
                 {
                     var productProfiles = _mapper.Map<List<ProductCardProfile>>(products);
+                    foreach (var item in productProfiles)
+                    {
+                        var product = await _dataContext.Products.Include(p => p.ProductImages).FirstAsync(p => p.Id == item.Id);
+                        item.ProductImages = _mapper.Map<List<ProductImageCardProfile>>(product.ProductImages);
+                    }
                     int totalCount = await productsQuery.CountAsync();
                     int pagesCount = (int)Math.Ceiling(totalCount / (double)request.pageSize);
                     return new(productProfiles, pagesCount) { statusCode = 200 };
