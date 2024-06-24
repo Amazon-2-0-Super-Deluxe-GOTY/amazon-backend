@@ -70,6 +70,7 @@ namespace amazon_backend.Controllers
             var query = _dataContext.Categories
                                .Include(c => c.CategoryPropertyKeys)
                                .Include(c => c.Image)
+                               .AsSplitQuery()
                                .Where(c => c.IsActive)
                                .AsQueryable();
             if (!string.IsNullOrEmpty(paginationDto.orderBy))
@@ -77,18 +78,18 @@ namespace amazon_backend.Controllers
                 switch (paginationDto.orderBy)
                 {
                     case "asc":
-                        query.OrderBy(c => c.CreatedAt);
+                        query = query.OrderBy(c => c.CreatedAt);
                         break;
                     case "desc":
-                        query.OrderByDescending(c => c.CreatedAt);
+                        query = query.OrderByDescending(c => c.CreatedAt);
                         break;
                     default:
-                        query.OrderByDescending(c => c.CreatedAt);
+                        query = query.OrderByDescending(c => c.CreatedAt);
                         break;
 
                 }
             }
-            else query.OrderByDescending(c => c.CreatedAt);
+            else query = query.OrderByDescending(c => c.CreatedAt);
 
             var categories = await query.Skip((paginationDto.PageNumber - 1) * paginationDto.PageSize)
                                .Take(paginationDto.PageSize)

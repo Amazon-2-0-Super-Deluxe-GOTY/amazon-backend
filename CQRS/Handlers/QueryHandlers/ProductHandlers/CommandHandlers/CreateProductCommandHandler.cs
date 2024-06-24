@@ -5,6 +5,7 @@ using amazon_backend.Models;
 using amazon_backend.Profiles.ProductProfiles;
 using amazon_backend.Services.JWTService;
 using amazon_backend.Services.Random;
+using amazon_backend.Services.SlugService;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -17,18 +18,16 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
         private readonly TokenService _tokenService;
         private readonly DataContext _dataContext;
         private readonly IMapper _mapper;
-        private readonly ISlugHelper _slugHelper;
+        private readonly ISlugService _slugService;
         private readonly ILogger<CreateProductCommandHandler> _logger;
-        private readonly IRandomService _randomService;
 
-        public CreateProductCommandHandler(TokenService tokenService, DataContext dataContext, IMapper mapper, ISlugHelper slugHelper, ILogger<CreateProductCommandHandler> logger, IRandomService randomService)
+        public CreateProductCommandHandler(TokenService tokenService, DataContext dataContext, IMapper mapper, ILogger<CreateProductCommandHandler> logger, ISlugService slugService)
         {
             _tokenService = tokenService;
             _dataContext = dataContext;
             _mapper = mapper;
-            _slugHelper = slugHelper;
             _logger = logger;
-            _randomService = randomService;
+            _slugService = slugService;
         }
 
         public async Task<Result<ProductViewProfile>> Handle(CreateProductCommandRequest request, CancellationToken cancellationToken)
@@ -56,12 +55,13 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                         return new("The product does not contain all the required features") { statusCode = 400 };
                     }
                 }
+                var productSlug = _slugService.GetSlug(request.name);
                 Product newProduct = new()
                 {
                     Id = Guid.NewGuid(),
                     CreatedAt = DateTime.Now,
                     Name = request.name,
-                    Slug = _slugHelper.GenerateSlug(request.name) + $"-{_randomService.ConfirmCode(4)}",
+                    Slug = productSlug,
                     Price = request.price,
                     DiscountPercent = request.discount,
                     CategoryId = category.Id,
