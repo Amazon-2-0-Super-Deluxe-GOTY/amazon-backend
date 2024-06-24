@@ -234,9 +234,9 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.CommandHand
                                     if (!product.ProductImages.Contains(image))
                                     {
                                         product.ProductImages.Add(image);
+                                        count++;
                                     }
                                 }
-                                count++;
                                 if (canAddCount == count) break;
                             }
                         }
