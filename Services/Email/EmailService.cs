@@ -42,10 +42,10 @@ namespace amazon_backend.Services.Email
             if (!_smtpClient.IsConnected)
             {
                 await _smtpClient.ConnectAsync(_gmailClient.Host, _gmailClient.Port, MailKit.Security.SecureSocketOptions.StartTls);
-                if (!_smtpClient.IsAuthenticated)
-                {
-                    await _smtpClient.AuthenticateAsync(_gmailClient.Email, _gmailClient.Password);
-                }
+            }
+            if (!_smtpClient.IsAuthenticated)
+            {
+                await _smtpClient.AuthenticateAsync(_gmailClient.Email, _gmailClient.Password);
             }
             using var mailMessage = new MimeMessage();
             mailMessage.From.Add(new MailboxAddress("Perry Team", _gmailClient.Email));
