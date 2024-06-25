@@ -17,6 +17,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
         private readonly ILogger<GetProductsQueryHandler> _logger;
 
         private readonly string FILTER_SEPARATOR;
+        private readonly char RATING_SEPARATOR;
         private readonly char DASH_DELIMETER;
 
         public GetProductsQueryHandler(IMapper mapper, DataContext dataContext, IHttpContextAccessor httpContextAccessor, ILogger<GetProductsQueryHandler> logger)
@@ -27,6 +28,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
             _logger = logger;
 
             FILTER_SEPARATOR = "--";
+            RATING_SEPARATOR = ',';
             DASH_DELIMETER = '-';
         }
 
@@ -67,7 +69,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                 if (request.rating != null)
                 {
                     var rating = new List<int>();
-                    var parsedRating = request.rating.Split(FILTER_SEPARATOR);
+                    var parsedRating = request.rating.Split(RATING_SEPARATOR);
                     foreach (var item in parsedRating)
                     {
                         rating.Add(int.Parse(item));
