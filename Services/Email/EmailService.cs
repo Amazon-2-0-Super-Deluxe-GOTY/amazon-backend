@@ -39,6 +39,14 @@ namespace amazon_backend.Services.Email
 
         public async Task<bool> SendEmailAsync(string recipient, string subject, string message)
         {
+            if (!_smtpClient.IsConnected)
+            {
+                await _smtpClient.ConnectAsync(_gmailClient.Host, _gmailClient.Port, MailKit.Security.SecureSocketOptions.StartTls);
+                if (!_smtpClient.IsAuthenticated)
+                {
+                    await _smtpClient.AuthenticateAsync(_gmailClient.Email, _gmailClient.Password);
+                }
+            }
             using var mailMessage = new MimeMessage();
             mailMessage.From.Add(new MailboxAddress("Perry Team", _gmailClient.Email));
             mailMessage.To.Add(new MailboxAddress("", recipient));
@@ -52,7 +60,6 @@ namespace amazon_backend.Services.Email
             catch (Exception ex)
             {
                 _logger.LogError($"Email service failed: {ex.Message}");
-
             }
             return false;
         }
