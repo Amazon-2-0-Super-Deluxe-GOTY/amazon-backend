@@ -16,7 +16,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<GetProductsQueryHandler> _logger;
 
-        private readonly char COMMA_DELIMETER;
+        private readonly string FILTER_SEPARATOR;
         private readonly char DASH_DELIMETER;
 
         public GetProductsQueryHandler(IMapper mapper, DataContext dataContext, IHttpContextAccessor httpContextAccessor, ILogger<GetProductsQueryHandler> logger)
@@ -26,7 +26,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
 
-            COMMA_DELIMETER = ',';
+            FILTER_SEPARATOR = "--";
             DASH_DELIMETER = '-';
         }
 
@@ -67,7 +67,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                 if (request.rating != null)
                 {
                     var rating = new List<int>();
-                    var parsedRating = request.rating.Split(COMMA_DELIMETER);
+                    var parsedRating = request.rating.Split(FILTER_SEPARATOR);
                     foreach (var item in parsedRating)
                     {
                         rating.Add(int.Parse(item));
@@ -85,7 +85,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                 if (httpContext != null)
                 {
                     // get filter items from request
-                    // exmp: Brand=Apple%2CSamsung&Color=Red%2CGreen
+                    // exmp: Brand=Apple--Samsung&Color=Red--Green
                     var queryParams = httpContext.Request.Query;
                     List<string> propValues = new();
                     List<string> propKeys = new();
@@ -98,7 +98,7 @@ namespace amazon_backend.CQRS.Handlers.QueryHandlers.ProductHandlers.QueryHandle
                             var prop = pProps.Where(pp => pp.Key.ToLower() == item.Key.ToLower()).FirstOrDefault();
                             if (prop != null)
                             {
-                                var valueArr = item.Value.ToString().Split(COMMA_DELIMETER)
+                                var valueArr = item.Value.ToString().Split(FILTER_SEPARATOR)
                                     .Select((v) =>
                                     {
                                         return v.Replace("+", " ").ToLower();
